@@ -54,7 +54,7 @@ _RESUME_EXTRACT_SYSTEM = (
 _RESUME_EXTRACT_PROMPT = """Extract information from this resume.
 
 Return JSON with exactly these keys:
-- "skills": list of objects, each {"skill": string, "evidence": string} where
+- "skills": list of objects, each {{"skill": string, "evidence": string}} where
   "evidence" is a short verbatim quote from the resume showing that skill
 - "experience_years": number, total years of professional experience (0 if unclear)
 - "education": string, highest education ("" if not stated)
