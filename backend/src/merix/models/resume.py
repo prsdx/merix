@@ -23,6 +23,13 @@ class Resume(Base, TimestampMixin):
     __tablename__ = "resumes"
 
     id: Mapped[uuid.UUID] = uuid_pk()
+    # Denormalised tenant key so RLS policies need no joins.
+    org_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("organisations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
     job_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),
         ForeignKey("job_descriptions.id", ondelete="CASCADE"),

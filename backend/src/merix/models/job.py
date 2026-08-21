@@ -4,7 +4,7 @@ import uuid
 from typing import TYPE_CHECKING, Any
 
 from pgvector.sqlalchemy import Vector
-from sqlalchemy import String, Text
+from sqlalchemy import ForeignKey, String, Text
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -24,9 +24,12 @@ class JobDescription(Base, TimestampMixin):
     __tablename__ = "job_descriptions"
 
     id: Mapped[uuid.UUID] = uuid_pk()
-    # Multi-tenant-ready: nullable until auth/orgs land (later task), but the
-    # column exists now so we never need a migration to add it.
-    org_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    org_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("organisations.id", ondelete="CASCADE"),
+        nullable=False,
+        index=True,
+    )
 
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     raw_text: Mapped[str] = mapped_column(Text, nullable=False)
