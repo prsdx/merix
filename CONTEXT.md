@@ -29,11 +29,11 @@ Traditional ATS systems are black boxes: they reject resumes with no explanation
 
 ## Current Architecture
 
-**Backend**: FastAPI (async) + PostgreSQL/pgvector (Supabase) + SQLAlchemy 2.0 (async) + Alembic (migrations, pending)
+**Backend**: FastAPI (async) + PostgreSQL/pgvector (Supabase) + SQLAlchemy 2.0 (async, NullPool) + Alembic (migrations applied)
 
 **Frontend**: React SPA (existing, in `frontend/`)
 
-**Status**: Task 0 scaffolding complete. No feature code yet.
+**Status**: Task 1 complete - core matching pipeline works end-to-end (upload resume + JD -> extract -> embed -> match -> ranked explainable result -> persisted to Postgres). 17 tests passing.
 
 ### Project Structure
 
@@ -64,13 +64,26 @@ backend/
   - Git workflow setup (Conventional Commits, branch naming, CHANGELOG)
   - GitHub templates (PR, issue templates)
 
+- **Task 1**: Core matching pipeline (vertical slice, end-to-end)
+  - **Models + schema** (`models/`): JobDescription, Resume, MatchResult. MatchResult carries explainability (matched_skills, missing_skills, rationale). Resume has DPDP fields (consent_given, consent_timestamp, retention_expires_at). pgvector embedding columns (dim 1536). Alembic migrations applied to live Supabase DB.
+  - **Text extraction** (`services/extraction.py`): PyMuPDF PDF extraction with input validation (5MB limit, magic bytes, corrupt/encrypted/scanned rejection) and PII scrubbing.
+  - **Clients** (`clients/`): GroqLLMClient + OpenAIEmbeddingClient behind provider-agnostic protocols (LLMClient/EmbeddingClient). Token-usage logging for cost tracking.
+  - **Matching** (`services/matching.py`): LLM structured extraction (temp=0) -> deterministic Python skill comparison -> weighted score (required 70% / preferred 20% / experience 10%) -> LLM rationale. Explainable by construction.
+  - **Pipeline** (`services/pipeline.py`): orchestrates create_job / add_resume / run_match_for_job / list_matches.
+  - **API** (`api/v1/`): POST /api/jobs, GET /api/jobs/{id}, POST /api/jobs/{id}/resumes, POST /api/jobs/{id}/match, GET /api/jobs/{id}/matches, GET /api/matches/{id}. Pydantic validation, domain-exception-to-HTTP mapping (404/413/415/422/409/400).
+  - **Tests**: 17 passing (10 unit: matching + extraction; 3 integration: full vertical slice against live DB with fake LLM/embedding clients).
+
+### Known gaps / pending
+- **Live OpenAI embedding call not yet verified** (no OPENAI_API_KEY in .env). Integration tests use fake embedders; the real provider path is code-complete but unverified end-to-end.
+- **Live Groq LLM call verified** (single call), but not yet exercised through the full API path with a real key.
+- No auth/multi-tenancy enforcement (org_id column exists, nullable).
+- No consent/retention workflow (schema fields only).
+
 ---
 
-## What's Next (Task 1)
+## What's Next (Task 2)
 
-- Database models and Alembic migrations (organisations, users, jobs, candidates, resumes, matches)
-- Auth endpoints (JWT-based signup/login)
-- Basic health/readiness endpoints with real DB connectivity checks
+Auth + multi-tenancy (JWT, organisations, row scoping by org_id) OR consent/retention workflow (DPDP). Confirm choice before starting.
 
 ---
 
