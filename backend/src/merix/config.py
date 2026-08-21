@@ -1,4 +1,6 @@
-﻿"""Application settings."""
+"""Application settings."""
+
+from pathlib import Path
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -34,7 +36,12 @@ class Settings(BaseSettings):
 
     DATA_RETENTION_DAYS: int = 90
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    # Resolve .env relative to the backend/ dir (this file is at backend/src/merix/config.py),
+    # so settings load correctly regardless of the process working directory.
+    model_config = SettingsConfigDict(
+        env_file=str(Path(__file__).resolve().parents[2] / ".env"),
+        extra="ignore",
+    )
 
 
 settings = Settings()
