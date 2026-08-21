@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from merix.models.resume import Resume
 
 # Embedding dimension for the confirmed default model (all-MiniLM-L6-v2).
-EMBEDDING_DIM = 384
+EMBEDDING_DIM = 1536
 
 
 class JobDescription(Base, TimestampMixin):
