@@ -5,20 +5,12 @@ never on a concrete provider. Default provider for v1 is Groq (fast/cheap).
 """
 
 import logging
-from dataclasses import dataclass
 
 from groq import AsyncGroq
 
+from merix.clients.base import LLMResult
+
 logger = logging.getLogger("merix.clients.llm")
-
-
-@dataclass
-class LLMResult:
-    """Result of an LLM call, including token usage for cost tracking."""
-
-    text: str
-    prompt_tokens: int = 0
-    completion_tokens: int = 0
 
 
 class GroqLLMClient:

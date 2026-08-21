@@ -26,10 +26,7 @@ class OpenAIEmbeddingClient:
     async def embed_batch(self, texts: list[str]) -> list[list[float]]:
         if not texts:
             return []
-        response = await self._client.embeddings.create(
-            model=self._model,
-            input=texts,
-        )
+        response = await self._client.embeddings.create(model=self._model, input=texts)
         # OpenAI returns results ordered by index; sort defensively.
         ordered = sorted(response.data, key=lambda d: d.index)
         if response.usage:
