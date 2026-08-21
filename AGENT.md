@@ -123,12 +123,24 @@ Merix processes candidate resumes containing PII. The India Digital Personal Dat
 
 ## Cost-Conscious LLM Usage
 
-- Cache embeddings and extraction results aggressively
-- Batch LLM calls where possible
-- Use temperature 0 for deterministic extraction
-- Track token usage per request for cost tracking
-- Prefer smaller models when quality is sufficient
-- Never send PII to LLM providers (scrub first)
+### Production rules (baked into the app)
+- **Cache aggressively.** Key extraction/matching results by content hash (input text + model + prompt version). Never re-call the LLM for identical input - resume re-uploads are extremely common in batch screening.
+- **Extract the JD once.** Parse a JD a single time, store the structured result, and match all resumes against that stored structure. Never re-extract the JD per candidate.
+- **Right-size the model.** Use the cheapest model that meets quality. Default to Groq `openai/gpt-oss-120b`; reserve expensive models for hard cases only.
+- **Tight, structured prompts.** Request only the fields we need (skills/exp/edu + evidence). Shorter prompts + constrained JSON output = fewer input and output tokens. No filler instructions.
+- **Deterministic, capped output.** Use `temperature = 0` and a `max_tokens` cap on all extraction calls.
+- **Batch and dedupe.** Process batches through a queue with concurrency limits; dedupe identical resumes within a batch before any LLM call.
+- **Truncate safely.** Cap extracted text length (head + tail strategy) so a large PDF doesn't blow up token count. Still scrub PII before sending.
+- **Validate locally.** Use Pydantic to validate LLM output before use so you don't pay for blind retry loops.
+- **Track tokens per call.** Log prompt/completion token counts as a metric - you can't reduce what you don't measure. Feeds the "LLM cost per batch" PRD success metric.
+- **Never send PII to LLM providers** (scrub first).
+
+### Working-session guidance (for you and any AI pair-programmer)
+- Read files by absolute path and line-range instead of pasting large content into prompts.
+- Scope tasks narrowly; batch several small changes into one task rather than many tiny prompts.
+- Ask for targeted diffs, not full-file rewrites, when only part of a file changes.
+- Use `CONTEXT.md` as the cheap hand-off for a fresh session; reference `AGENT.md` conventions instead of re-explaining the project.
+- Use plan mode for design decisions (cheap, no code churn), act mode for execution.
 
 ---
 
