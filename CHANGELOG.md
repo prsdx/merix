@@ -18,6 +18,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Domain-exception-to-HTTP mapping (404/413/415/422/409/400)
   - 17 tests (unit + integration)
 
+### Changed
+- Task 1 follow-up: default embedding provider switched from OpenAI (account had no quota) to **Google Gemini** `gemini-embedding-001` at `output_dimensionality=768`; added provider factory `get_embedding_client(provider=...)`; embedding columns migrated 1536 -> 768
+
 ### Added
 - Task 0: Project scaffolding
   - FastAPI backend structure (`backend/`) with modular separation
