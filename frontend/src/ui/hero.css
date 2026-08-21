@@ -1,0 +1,71 @@
+/* Hero — editorial product hero with mint wash, cursor glow, count-up stats */
+
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 18vh 6vw 10vh;
+  overflow: hidden;
+}
+
+/* soft mint wash, parallaxed on scroll */
+.hero-glow {
+  position: absolute; inset: -12% 0 0 0; pointer-events: none;
+  background: radial-gradient(900px 480px at 50% -8%, rgba(221, 243, 232, 0.95), rgba(221, 243, 232, 0) 70%);
+}
+
+/* cursor-follow glow — visible mint halo with a deeper green core */
+.hero-mouse {
+  position: absolute; left: 0; top: 0;
+  width: 720px; height: 720px; border-radius: 50%;
+  pointer-events: none; opacity: 0;
+  background:
+    radial-gradient(circle, rgba(47, 107, 83, 0.22) 0%, rgba(47, 107, 83, 0.10) 30%, rgba(47, 107, 83, 0) 62%),
+    radial-gradient(circle, rgba(221, 243, 232, 0.9) 0%, rgba(221, 243, 232, 0) 55%);
+}
+@media (hover: none), (pointer: coarse) {
+  .hero-mouse { display: none; }
+}
+
+.hero-inner { position: relative; z-index: 1; max-width: 880px; }
+
+[data-hero] { opacity: 0; }
+
+.hero-title {
+  font-size: clamp(2.9rem, 7vw, 5.4rem);
+  color: var(--text);
+  letter-spacing: -0.02em;
+  line-height: 1.06;
+}
+
+.hero-sub {
+  max-width: 600px; margin: 1.8rem auto 0;
+  font-size: clamp(1rem, 1.6vw, 1.15rem);
+  color: var(--text-2);
+}
+
+.hero-ctas { display: flex; gap: .9rem; justify-content: center; flex-wrap: wrap; margin-top: 2.6rem; }
+
+.hero-stats {
+  margin-top: 4.4rem; padding-top: 2rem;
+  border-top: 1px solid var(--border);
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+}
+.hero-stat .n {
+  display: block;
+  font-family: var(--font-display); font-size: 2rem; line-height: 1;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.hero-stat .l {
+  display: block; margin-top: .5rem;
+  font-family: var(--font-mono); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--text-3);
+}
+
+@media (max-width: 680px) {
+  .hero-stats { grid-template-columns: 1fr; gap: 1.2rem; }
+}

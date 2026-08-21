@@ -1,0 +1,13 @@
+﻿# Auto detect text files and perform LF normalization
+* text=auto
+
+# Ensure shell scripts use LF
+*.sh text eol=lf
+
+# Ensure Python files use LF
+*.py text eol=lf
+
+# Mark as binary
+*.pdf binary
+*.png binary
+*.jpg binary
