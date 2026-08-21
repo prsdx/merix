@@ -36,8 +36,8 @@ frontend/dist/
 .DS_Store
 Thumbs.db
 
-# Project-specific
-resume/                    # Sample PDFs (may contain PII - do not commit)
-preparation/               # Interview prep material (private)
-interview.md               # Interview instructions (private)
+# Project-specific (do not commit)
+resume/
+preparation/
+interview.md
 .env.example.local
