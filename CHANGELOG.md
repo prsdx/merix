@@ -8,6 +8,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Task 2: Auth + multi-tenancy (Supabase Auth + Postgres RLS)
+  - Supabase Auth (GoTrue) identity: `clients/auth.py` minimal httpx client (admin create/delete user, password grant); signup = org + auth identity + profile in one flow
+  - Local HS256 verification of GoTrue access tokens (`core/security.py`); `/api/auth/signup`, `/api/auth/login`, `/api/auth/me`
+  - Organisation + User models; `org_id` NOT NULL FK on job_descriptions/resumes/match_results (Task 1 NULL-org test data discarded)
+  - Row-level security: FORCE RLS + `org_isolation` policy on tenant tables; app connects via `SET ROLE merix_app` and pins `app.current_org_id` per transaction; unset context fails closed
+  - All Task 1 routes now require auth and auto-scope to the caller's org; cross-org access returns 404 (no existence leak); 401 for missing/invalid/expired tokens
+  - 18 new integration tests: six 401 auth failure paths, signup/login flows, org isolation at API and DB (RLS) layers - 32 tests total
+  - Verified live: two real GoTrue signups, full Org A pipeline, Org B 404 on all Org A resources
+
+### Fixed
+- Signup org PK flush (org.id was None when referenced as user FK)
+- RLS policy empty-string-safe (`current_setting(..., true)` returns '' not NULL; `NULLIF` so unset context fails closed instead of raising)
+- `GRANT merix_app TO postgres` in migration (`SET ROLE` requires role membership)
+
+### Known issue
+- New Supabase projects sign access tokens with ES256; local verifier is HS256-only. Production fix: JWKS verification (tracked in CONTEXT.md).
+
+### Added
 - Task 1: Core resume-to-JD matching pipeline (end-to-end vertical slice)
   - SQLAlchemy models: JobDescription, Resume, MatchResult (explainability: matched_skills, missing_skills, rationale; DPDP fields on Resume; pgvector embeddings)
   - Alembic migrations (initial schema + embedding dim 1536) applied to Supabase Postgres

@@ -33,7 +33,7 @@ Traditional ATS systems are black boxes: they reject resumes with no explanation
 
 **Frontend**: React SPA (existing, in `frontend/`)
 
-**Status**: Task 1 complete - core matching pipeline works end-to-end (upload resume + JD -> extract -> embed -> match -> ranked explainable result -> persisted to Postgres). 17 tests passing. Default embedding provider is Google Gemini (gemini-embedding-001, dim 768).
+**Status**: Task 2 complete - auth + multi-tenancy live end-to-end. All matching routes require a Supabase Auth session; every job/resume/match row is org-scoped and isolated by Postgres RLS (merix_app role + app.current_org_id GUC, plus org filter returning 404 cross-org). 32 tests passing. Task 1 pipeline re-verified under auth.
 
 ### Project Structure
 
@@ -73,19 +73,26 @@ backend/
   - **API** (`api/v1/`): POST /api/jobs, GET /api/jobs/{id}, POST /api/jobs/{id}/resumes, POST /api/jobs/{id}/match, GET /api/jobs/{id}/matches, GET /api/matches/{id}. Pydantic validation, domain-exception-to-HTTP mapping (404/413/415/422/409/400).
   - **Tests**: 17 passing (10 unit: matching + extraction; 3 integration: full vertical slice against live DB with fake LLM/embedding clients).
 
+- **Task 2**: Auth + multi-tenancy (Supabase Auth + Postgres RLS)
+  - **Auth provider**: Supabase Auth (GoTrue) - passwords never touch our DB; clients/auth.py is a minimal httpx GoTrue client (admin create/delete + password grant). Signup = org + auth identity + profile in one flow; orphan GoTrue users cleaned up on DB rollback.
+  - **Token verification**: local HS256 verify of GoTrue access tokens (core/security.py), aud=authenticated, sub=user UUID -> profile lookup in public.users.
+  - **Models/migration**: Organisation + User (id = auth.users UUID, single role per user, single org per user); org_id NOT NULL FK on job_descriptions/resumes/match_results. Task 1 NULL-org test data discarded in the migration (confirmed disposable).
+  - **Row-level security**: FORCE RLS + org_isolation policy on all three tenant tables; app connections SET ROLE merix_app (non-superuser, so RLS binds) and pin app.current_org_id per transaction via scoped_session(org_id). Unset context fails closed (NULLIF '' -> NULL). Cross-org access returns 404 (no existence leak), enforced in the pipeline's org filter AND at the DB layer.
+  - **API**: POST /api/auth/signup, POST /api/auth/login, GET /api/auth/me. All Task 1 routes now require auth and auto-scope to the caller's org. 401s: missing/invalid/expired token, unknown user.
+  - **Tests**: 32 passing (14 unit + 18 integration). New: six 401 auth failure paths, signup/login via in-memory GoTrue fake, Org-B-cannot-access-Org-A via API (all five endpoints), direct RLS proof (scoped session can't SELECT/forge foreign-org rows; unscoped fails closed).
+  - **Verified live**: two real GoTrue signups -> real sessions -> Org A full pipeline (score 80.0) -> Org B 404 on job/match/matches; 401 on missing/garbage token. Proof data cleaned up.
+
 ### Known gaps / pending
-- **All external services verified live**: Groq LLM, Postgres+pgvector, and Gemini embeddings (real embed -> pgvector store -> cosine query all confirmed).
-- **OpenAI embedding path implemented but unused** (account has no quota). Available behind the same interface by setting EMBEDDING_PROVIDER=openai.
+- **GoTrue token algorithm**: new Supabase projects sign access tokens with ES256; our verifier is HS256-only (SUPABASE_JWT_SECRET). Production fix: JWKS verification against {SUPABASE_URL}/auth/v1/.well-known/jwks.json - needed before real frontend use.
 - **Live Groq LLM call verified** (single call), but not yet exercised through the full API path with a real key.
-- No auth/multi-tenancy enforcement (org_id column exists, nullable).
-- No consent/retention workflow (schema fields only).
-- Embedding dimension is 768 (Gemini). Switching to a provider with a different dim requires an Alembic migration (dim is a column type).
+- No consent/retention workflow (schema fields only) - Task 3.
+- Embedding dimension is 768 (Gemini). Switching providers requires an Alembic migration.
 
 ---
 
-## What's Next (Task 2)
+## What's Next (Task 3)
 
-Auth + multi-tenancy (JWT, organisations, row scoping by org_id) OR consent/retention workflow (DPDP). Confirm choice before starting.
+DPDP consent/retention workflow (PRD section 3.4): consent capture at resume upload, 90-day retention sweep (anonymise/delete), erasure endpoint, audit log - all hang off the org/user context Task 2 added.
 
 ---
 
