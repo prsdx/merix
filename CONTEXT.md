@@ -74,7 +74,7 @@ backend/
   - **Tests**: 17 passing (10 unit: matching + extraction; 3 integration: full vertical slice against live DB with fake LLM/embedding clients).
 
 ### Known gaps / pending
-- **Live Gemini embedding call not yet verified** (waiting on a free Google AI Studio API key in `.env` as EMBEDDING_API_KEY). Code + migration complete and unit/integration-tested with fake embedders; only the real provider call is unverified.
+- **All external services verified live**: Groq LLM, Postgres+pgvector, and Gemini embeddings (real embed -> pgvector store -> cosine query all confirmed).
 - **OpenAI embedding path implemented but unused** (account has no quota). Available behind the same interface by setting EMBEDDING_PROVIDER=openai.
 - **Live Groq LLM call verified** (single call), but not yet exercised through the full API path with a real key.
 - No auth/multi-tenancy enforcement (org_id column exists, nullable).
