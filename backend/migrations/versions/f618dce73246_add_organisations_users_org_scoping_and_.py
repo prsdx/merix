@@ -83,6 +83,11 @@ def upgrade() -> None:
         "organisations, users, job_descriptions, resumes, match_results "
         "TO merix_app"
     )
+    # The app connects as `postgres` and issues `SET ROLE merix_app` per
+    # connection (see db.py). SET ROLE requires membership, so grant it —
+    # without this every app connection fails with "permission denied to
+    # set role". Idempotent: re-granting is a no-op.
+    op.execute("GRANT merix_app TO postgres")
     # Future tables created by the migrator (postgres) are usable by the app.
     op.execute(
         "ALTER DEFAULT PRIVILEGES IN SCHEMA public "
@@ -91,14 +96,16 @@ def upgrade() -> None:
 
     # --- Row level security on tenant-owned tables -----------------------
     # Fail closed: when app.current_org_id is unset, current_setting(..., true)
-    # returns NULL and no rows are visible or writable.
+    # returns '' (empty string), NULLIF turns it into NULL, and no rows are
+    # visible or writable.
+    org_ctx = "NULLIF(current_setting('app.current_org_id', true), '')::uuid"
     for table in TENANT_TABLES:
         op.execute(f"ALTER TABLE {table} ENABLE ROW LEVEL SECURITY")
         op.execute(f"ALTER TABLE {table} FORCE ROW LEVEL SECURITY")
         op.execute(
             f"CREATE POLICY org_isolation ON {table} "
-            "USING (org_id = current_setting('app.current_org_id', true)::uuid) "
-            "WITH CHECK (org_id = current_setting('app.current_org_id', true)::uuid)"
+            f"USING (org_id = {org_ctx}) "
+            f"WITH CHECK (org_id = {org_ctx})"
         )
 
 
@@ -107,6 +114,7 @@ def downgrade() -> None:
         op.execute(f"DROP POLICY IF EXISTS org_isolation ON {table}")
         op.execute(f"ALTER TABLE {table} NO FORCE ROW LEVEL SECURITY")
         op.execute(f"ALTER TABLE {table} DISABLE ROW LEVEL SECURITY")
+    op.execute("REVOKE merix_app FROM postgres")
     op.execute(
         "ALTER DEFAULT PRIVILEGES IN SCHEMA public "
         "REVOKE SELECT, INSERT, UPDATE, DELETE ON TABLES FROM merix_app"
