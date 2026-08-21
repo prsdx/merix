@@ -1,4 +1,4 @@
-﻿# Merix - Product Requirements Document
+# Merix - Product Requirements Document
 
 **Version**: 0.1 (Draft)
 **Status**: Task 0 complete, Task 1 not started

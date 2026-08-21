@@ -1,1 +1,1 @@
-﻿"""Matching service (TODO: Task 3)."""
+"""Matching service (TODO: Task 3)."""

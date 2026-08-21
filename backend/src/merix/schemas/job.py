@@ -1,1 +1,1 @@
-﻿"""Job schemas (TODO: Task 2)."""
+"""Job schemas (TODO: Task 2)."""

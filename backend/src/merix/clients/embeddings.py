@@ -1,4 +1,4 @@
-﻿"""Embedding client implementations (scaffold).
+"""Embedding client implementations (scaffold).
 
 TODO: Implement in Task 2
 - SentenceTransformers provider (local)

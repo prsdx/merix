@@ -1,4 +1,4 @@
-﻿"""Security utilities (hashing, tokens).
+"""Security utilities (hashing, tokens).
 
 TODO: Implement in Task 1
 - Password hashing (bcrypt/argon2)

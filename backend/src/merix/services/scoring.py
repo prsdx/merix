@@ -1,1 +1,1 @@
-﻿"""Scoring service (TODO: Task 3)."""
+"""Scoring service (TODO: Task 3)."""

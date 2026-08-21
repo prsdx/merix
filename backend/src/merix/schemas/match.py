@@ -1,1 +1,1 @@
-﻿"""Match schemas (TODO: Task 3)."""
+"""Match schemas (TODO: Task 3)."""

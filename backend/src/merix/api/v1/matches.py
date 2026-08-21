@@ -1,4 +1,4 @@
-﻿"""Matching endpoints (scaffold).
+"""Matching endpoints (scaffold).
 
 TODO: Implement in Task 3
 - POST /matches - Run batch matching (JD + resumes)

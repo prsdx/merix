@@ -1,1 +1,1 @@
-﻿"""Extraction service (TODO: Task 2)."""
+"""Extraction service (TODO: Task 2)."""

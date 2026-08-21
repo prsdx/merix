@@ -1,1 +1,1 @@
-﻿"""Candidate repository (TODO: Task 2)."""
+"""Candidate repository (TODO: Task 2)."""

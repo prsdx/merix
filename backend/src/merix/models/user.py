@@ -1,1 +1,1 @@
-﻿"""User model (TODO: Task 1)."""
+"""User model (TODO: Task 1)."""

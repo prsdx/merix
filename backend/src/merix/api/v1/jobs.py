@@ -1,4 +1,4 @@
-﻿"""Job description endpoints (scaffold).
+"""Job description endpoints (scaffold).
 
 TODO: Implement in Task 2
 - POST /jobs - Create JD

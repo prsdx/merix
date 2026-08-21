@@ -1,1 +1,1 @@
-﻿"""Merix backend application."""
+"""Merix backend application."""

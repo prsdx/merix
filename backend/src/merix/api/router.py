@@ -1,4 +1,4 @@
-﻿"""Aggregate API router."""
+"""Aggregate API router."""
 
 from fastapi import APIRouter
 

@@ -1,4 +1,4 @@
-﻿# Merix
+# Merix
 
 AI-powered resume-to-job-description matching platform for Indian recruiters and campus placement teams.
 

@@ -1,4 +1,4 @@
-﻿"""LLM client implementations (scaffold).
+"""LLM client implementations (scaffold).
 
 TODO: Implement in Task 2
 - Groq provider

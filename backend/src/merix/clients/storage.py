@@ -1,4 +1,4 @@
-﻿"""Storage client implementations (scaffold).
+"""Storage client implementations (scaffold).
 
 TODO: Implement in Task 2
 - Supabase Storage provider

@@ -1,4 +1,4 @@
-﻿"""Provider-agnostic client protocols."""
+"""Provider-agnostic client protocols."""
 
 from typing import Protocol, runtime_checkable
 

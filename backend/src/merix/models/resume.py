@@ -1,1 +1,1 @@
-﻿"""Resume model (TODO: Task 2)."""
+"""Resume model (TODO: Task 2)."""

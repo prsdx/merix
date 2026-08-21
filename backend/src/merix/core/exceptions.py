@@ -1,4 +1,4 @@
-﻿"""Domain exceptions."""
+"""Domain exceptions."""
 
 
 class MerixError(Exception):

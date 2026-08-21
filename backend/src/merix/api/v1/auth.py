@@ -1,4 +1,4 @@
-﻿"""Authentication endpoints (scaffold).
+"""Authentication endpoints (scaffold).
 
 TODO: Implement in Task 1
 - POST /auth/signup - Register new user

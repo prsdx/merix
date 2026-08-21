@@ -1,4 +1,4 @@
-﻿# Merix Agent Guidelines
+# Merix Agent Guidelines
 
 This document is the persistent house-style guide for all AI-assisted development on Merix. Read it before making any changes.
 

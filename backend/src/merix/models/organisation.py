@@ -1,1 +1,1 @@
-﻿"""Organisation model (TODO: Task 1)."""
+"""Organisation model (TODO: Task 1)."""

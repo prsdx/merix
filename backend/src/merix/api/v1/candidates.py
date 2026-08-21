@@ -1,4 +1,4 @@
-﻿"""Candidate endpoints (scaffold).
+"""Candidate endpoints (scaffold).
 
 TODO: Implement in Task 2
 - POST /candidates - Upload candidate resumes

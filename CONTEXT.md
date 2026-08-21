@@ -1,4 +1,4 @@
-﻿# Merix - Project Context
+# Merix - Project Context
 
 > Read this file first to get up to speed on Merix without reading the entire codebase. Updated at the end of every task.
 

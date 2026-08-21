@@ -1,1 +1,1 @@
-﻿"""DPDP consent service (TODO: Task 2)."""
+"""DPDP consent service (TODO: Task 2)."""
