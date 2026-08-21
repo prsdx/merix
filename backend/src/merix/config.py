@@ -30,9 +30,10 @@ class Settings(BaseSettings):
     SUPABASE_URL: str = ""
     SUPABASE_SERVICE_KEY: str = ""
 
-    JWT_SECRET_KEY: str = ""
+    # Auth: Supabase Auth (GoTrue) issues tokens; we verify them locally with
+    # the project JWT secret (Project Settings -> API -> JWT Secret).
+    SUPABASE_JWT_SECRET: str = ""
     JWT_ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     DATA_RETENTION_DAYS: int = 90
 

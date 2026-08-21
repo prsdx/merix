@@ -21,6 +21,10 @@ class ConflictError(MerixError):
     """Resource conflict."""
 
 
+class AuthenticationError(MerixError):
+    """Missing or invalid authentication credentials."""
+
+
 class FileTooLargeError(ValidationError):
     """Uploaded file exceeds the size limit."""
 

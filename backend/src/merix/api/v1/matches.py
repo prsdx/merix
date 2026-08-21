@@ -1,22 +1,28 @@
-"""Match result endpoints (read-side of the vertical slice)."""
+"""Match result endpoints (read-side of the vertical slice).
+
+Authenticated and org-scoped like the rest of the API.
+"""
 
 import uuid
 
 from fastapi import APIRouter, Depends
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from merix.dependencies import get_db
-from merix.models.match import MatchResult
+from merix.dependencies import get_current_user, get_scoped_db
 from merix.models.resume import Resume
+from merix.models.user import User
 from merix.services import pipeline
 
 router = APIRouter()
 
 
 @router.get("/{match_id}")
-async def get_match(match_id: uuid.UUID, db: AsyncSession = Depends(get_db)) -> dict:
+async def get_match(
+    match_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_scoped_db),
+) -> dict:
     """Get a single match result with full explainability."""
-    match = await pipeline.get_match_or_404(db, match_id)
+    match = await pipeline.get_match_or_404(db, match_id, user.org_id)
     resume = await db.get(Resume, match.resume_id)
     return pipeline.to_match_response(match, resume)

@@ -8,6 +8,7 @@ fakes.
 from __future__ import annotations
 
 import logging
+import uuid
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,12 +24,19 @@ logger = logging.getLogger("merix.services.pipeline")
 
 
 async def create_job(
-    db: AsyncSession, llm: LLMClient, embedder: EmbeddingClient, title: str, raw_text: str
+    db: AsyncSession,
+    llm: LLMClient,
+    embedder: EmbeddingClient,
+    org_id: uuid.UUID,
+    title: str,
+    raw_text: str,
 ) -> JobDescription:
     """Create a job: extract requirements, embed the text, persist."""
     parsed = await matching.extract_jd(llm, raw_text)
     embedding = await embedder.embed(raw_text)
-    job = JobDescription(title=title, raw_text=raw_text, parsed=parsed, embedding=embedding)
+    job = JobDescription(
+        org_id=org_id, title=title, raw_text=raw_text, parsed=parsed, embedding=embedding
+    )
     db.add(job)
     await db.commit()
     await db.refresh(job)
@@ -51,6 +59,7 @@ async def add_resume(
     if not candidate_name:
         candidate_name = parsed.get("candidate_name")
     resume = Resume(
+        org_id=job.org_id,
         job_id=job.id,
         raw_text=raw_text,
         parsed=parsed,
@@ -86,7 +95,7 @@ async def run_match_for_resume(
         )
     )
     if existing is None:
-        existing = MatchResult(job_id=job.id, resume_id=resume.id)
+        existing = MatchResult(org_id=job.org_id, job_id=job.id, resume_id=resume.id)
         db.add(existing)
     existing.score = comp.score
     existing.matched_skills = comp.matched_skills
@@ -112,8 +121,13 @@ async def run_match_for_job(
     return results
 
 
-async def get_job_or_404(db: AsyncSession, job_id) -> JobDescription:
-    job = await db.get(JobDescription, job_id)
+async def get_job_or_404(db: AsyncSession, job_id, org_id: uuid.UUID) -> JobDescription:
+    """Fetch a job owned by the caller's org (404 otherwise — no existence leak)."""
+    job = await db.scalar(
+        select(JobDescription).where(
+            JobDescription.id == job_id, JobDescription.org_id == org_id
+        )
+    )
     if job is None:
         raise NotFoundError(f"job {job_id} not found")
     return job
@@ -129,8 +143,13 @@ async def list_matches_for_job(
     return list((await db.scalars(stmt)).all())
 
 
-async def get_match_or_404(db: AsyncSession, match_id) -> MatchResult:
-    match = await db.get(MatchResult, match_id)
+async def get_match_or_404(db: AsyncSession, match_id, org_id: uuid.UUID) -> MatchResult:
+    """Fetch a match owned by the caller's org (404 otherwise — no existence leak)."""
+    match = await db.scalar(
+        select(MatchResult).where(
+            MatchResult.id == match_id, MatchResult.org_id == org_id
+        )
+    )
     if match is None:
         raise NotFoundError(f"match {match_id} not found")
     return match

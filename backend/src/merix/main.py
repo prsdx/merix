@@ -9,6 +9,7 @@ from fastapi.responses import JSONResponse
 from merix.api.router import api_router
 from merix.config import settings
 from merix.core.exceptions import (
+    AuthenticationError,
     ConflictError,
     FileTooLargeError,
     MerixError,
@@ -41,6 +42,14 @@ def create_app() -> FastAPI:
 
 def _register_exception_handlers(app: FastAPI) -> None:
     """Map domain exceptions to clean HTTP responses."""
+
+    @app.exception_handler(AuthenticationError)
+    async def authentication_handler(request: Request, exc: AuthenticationError) -> JSONResponse:
+        return JSONResponse(
+            status_code=401,
+            content={"detail": str(exc)},
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     @app.exception_handler(NotFoundError)
     async def not_found_handler(request: Request, exc: NotFoundError) -> JSONResponse:
