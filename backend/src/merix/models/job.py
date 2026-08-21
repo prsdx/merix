@@ -14,8 +14,8 @@ if TYPE_CHECKING:
     from merix.models.match import MatchResult
     from merix.models.resume import Resume
 
-# Embedding dimension for the confirmed default model (all-MiniLM-L6-v2).
-EMBEDDING_DIM = 1536
+# Embedding dimension for the confirmed default embedding model (Gemini gemini-embedding-001 @ output_dimensionality=768).
+EMBEDDING_DIM = 768
 
 
 class JobDescription(Base, TimestampMixin):

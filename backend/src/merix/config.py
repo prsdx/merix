@@ -20,8 +20,8 @@ class Settings(BaseSettings):
     LLM_API_KEY: str = ""
     LLM_BASE_URL: str = ""
 
-    EMBEDDING_PROVIDER: str = "openai"
-    EMBEDDING_MODEL: str = "text-embedding-3-small"
+    EMBEDDING_PROVIDER: str = "google"
+    EMBEDDING_MODEL: str = "gemini-embedding-001"
     EMBEDDING_API_KEY: str = ""
     EMBEDDING_BASE_URL: str = ""
 

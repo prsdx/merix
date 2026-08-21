@@ -14,7 +14,7 @@ from merix.clients.base import LLMResult
 from merix.dependencies import get_embedder, get_llm
 from merix.main import app
 
-DIM = 1536
+DIM = 768
 
 
 class FakeLLM:

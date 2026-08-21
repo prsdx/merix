@@ -16,6 +16,4 @@ def get_llm() -> LLMClient:
 
 def get_embedder() -> EmbeddingClient:
     """Embedding client dependency (provider from settings; v1: OpenAI)."""
-    return get_embedding_client(
-        api_key=settings.EMBEDDING_API_KEY, model=settings.EMBEDDING_MODEL
-    )
+    return get_embedding_client(provider=settings.EMBEDDING_PROVIDER, api_key=settings.EMBEDDING_API_KEY, model=settings.EMBEDDING_MODEL)
