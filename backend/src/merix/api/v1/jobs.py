@@ -8,7 +8,7 @@ cross-org IDs indistinguishable from non-existent ones (404, no leak).
 
 import uuid
 
-from fastapi import APIRouter, Depends, File, UploadFile, status
+from fastapi import APIRouter, Depends, File, Form, UploadFile, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -70,13 +70,17 @@ async def get_job(
 async def upload_resume(
     job_id: uuid.UUID,
     file: UploadFile = File(...),
-    candidate_name: str | None = None,
+    candidate_name: str | None = Form(None),
+    consent_given: bool = Form(...),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_scoped_db),
     llm: LLMClient = Depends(get_llm),
     embedder: EmbeddingClient = Depends(get_embedder),
 ) -> object:
-    """Upload a resume PDF for a job: validate, extract, embed, persist."""
+    """Upload a resume PDF for a job: validate, extract, embed, persist.
+
+    consent_given must be true; the consent timestamp is recorded server-side.
+    """
     job = await pipeline.get_job_or_404(db, job_id, user.org_id)
     data = await file.read()
     text = extraction.extract_text_from_pdf(data)  # raises domain errors on reject
@@ -89,6 +93,7 @@ async def upload_resume(
         raw_text=scrubbed,
         original_filename=file.filename or "resume.pdf",
         candidate_name=candidate_name,
+        consent_given=consent_given,
     )
     return resume
 

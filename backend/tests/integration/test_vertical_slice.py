@@ -40,12 +40,15 @@ async def test_vertical_slice_end_to_end(client, org_a):
     r = client.post(
         f"/api/jobs/{job_id}/resumes",
         files={"file": ("jane.pdf", pdf, "application/pdf")},
-        params={"candidate_name": "Jane Doe"},
+        data={"candidate_name": "Jane Doe", "consent_given": "true"},
         headers=org_a,
     )
     assert r.status_code == 201, r.text
     resume = r.json()
     assert resume["candidate_name"] == "Jane Doe"
+    assert resume["consent_given"] is True
+    assert resume["consent_timestamp"] is not None
+    assert resume["retention_expires_at"] is not None
 
     # 3. run batch match
     r = client.post(f"/api/jobs/{job_id}/match", headers=org_a)
@@ -78,6 +81,7 @@ async def test_upload_rejects_non_pdf(client, org_a):
     r = client.post(
         f"/api/jobs/{job_id}/resumes",
         files={"file": ("evil.txt", b"not a pdf", "text/plain")},
+        data={"consent_given": "true"},
         headers=org_a,
     )
     assert r.status_code in (400, 415, 422), r.text

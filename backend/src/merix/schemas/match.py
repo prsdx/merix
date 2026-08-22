@@ -14,6 +14,9 @@ class ResumeResponse(BaseModel):
     candidate_name: str | None = None
     original_filename: str
     parsed: dict | None = None
+    consent_given: bool
+    consent_timestamp: datetime | None = None
+    retention_expires_at: datetime | None = None
     created_at: datetime
 
     model_config = {"from_attributes": True}

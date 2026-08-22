@@ -37,7 +37,7 @@ async def test_org_b_cannot_access_org_a_data_via_api(client, make_org_user):
     r = client.post(
         f"/api/jobs/{job_id}/resumes",
         files={"file": ("jane.pdf", pdf, "application/pdf")},
-        params={"candidate_name": "Jane Doe"},
+        data={"candidate_name": "Jane Doe", "consent_given": "true"},
         headers=a,
     )
     assert r.status_code == 201, r.text
@@ -54,9 +54,12 @@ async def test_org_b_cannot_access_org_a_data_via_api(client, make_org_user):
     r = client.get(f"/api/jobs/{job_id}", headers=b)
     assert r.status_code == 404, r.text
 
+    # consent_given supplied so the request passes form validation and the
+    # 404 comes from the org check, not a 422.
     r = client.post(
         f"/api/jobs/{job_id}/resumes",
         files={"file": ("mallory.pdf", make_pdf("Mallory"), "application/pdf")},
+        data={"consent_given": "true"},
         headers=b,
     )
     assert r.status_code == 404, r.text

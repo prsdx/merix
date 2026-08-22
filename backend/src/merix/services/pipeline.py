@@ -17,8 +17,9 @@ from merix.clients.base import EmbeddingClient, LLMClient
 from merix.core.exceptions import NotFoundError
 from merix.models.job import JobDescription
 from merix.models.match import MatchResult
+from merix.models.organisation import Organisation
 from merix.models.resume import Resume
-from merix.services import matching
+from merix.services import consent, matching
 
 logger = logging.getLogger("merix.services.pipeline")
 
@@ -52,8 +53,10 @@ async def add_resume(
     raw_text: str,
     original_filename: str,
     candidate_name: str | None = None,
+    consent_given: bool = False,
 ) -> Resume:
-    """Add a resume to a job: extract info, embed, persist."""
+    """Add a resume to a job: validate consent, extract info, embed, persist."""
+    consent.require_consent(consent_given)
     parsed = await matching.extract_resume(llm, raw_text)
     embedding = await embedder.embed(raw_text)
     if not candidate_name:
@@ -67,10 +70,13 @@ async def add_resume(
         original_filename=original_filename,
         candidate_name=candidate_name,
     )
+    # Server-side consent timestamp + retention expiry; never trust client clocks.
+    org = await db.get(Organisation, job.org_id)
+    consent.record_consent(resume, org or Organisation(retention_days=90))
     db.add(resume)
     await db.commit()
     await db.refresh(resume)
-    logger.info("resume_added id=%s job_id=%s", resume.id, job.id)
+    logger.info("resume_added id=%s job_id=%s consent=%s", resume.id, job.id, True)
     return resume
 
 
