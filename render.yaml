@@ -1,4 +1,4 @@
-﻿services:
+services:
   - type: web
     name: merix-backend
     runtime: python
@@ -7,7 +7,7 @@
     branch: main
     rootDir: backend
     buildCommand: pip install uv && uv sync --frozen
-    startCommand: uv run uvicorn merix.main:app --host 0.0.0.0 --port 
+    startCommand: uv run uvicorn merix.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
