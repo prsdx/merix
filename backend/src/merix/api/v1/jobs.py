@@ -119,6 +119,7 @@ async def match_job(
     body: BatchJobCreate = Body(default_factory=BatchJobCreate),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_scoped_db),
+    llm: LLMClient = Depends(get_llm),
 ) -> BatchJob:
     """Submit a batch match job for all resumes on a job description.
 
@@ -158,12 +159,13 @@ async def match_job(
     await db.refresh(batch_job)
 
     # Enqueue the real work. The background task creates its own session
-    # and LLM client so it is independent of this request's lifecycle.
+    # but we pass the llm client so it can be mocked in tests.
     background_tasks.add_task(
         run_batch_match_background,
         org_id=user.org_id,
         job_id=job_id,
         batch_job_id=batch_job.id,
+        llm=llm,
     )
 
     return batch_job
