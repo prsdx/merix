@@ -13,6 +13,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from merix.clients.base import EmbeddingClient, LLMClient
+from merix.core.exceptions import FileTooLargeError
 from merix.dependencies import get_current_user, get_embedder, get_llm, get_scoped_db
 from merix.models.resume import Resume
 from merix.models.user import User
@@ -70,7 +71,7 @@ async def get_job(
 async def upload_resume(
     job_id: uuid.UUID,
     file: UploadFile = File(...),
-    candidate_name: str | None = Form(None),
+    candidate_name: str | None = Form(None, max_length=255),
     consent_given: bool = Form(...),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_scoped_db),
@@ -82,7 +83,11 @@ async def upload_resume(
     consent_given must be true; the consent timestamp is recorded server-side.
     """
     job = await pipeline.get_job_or_404(db, job_id, user.org_id)
-    data = await file.read()
+    # Read at most one byte beyond the cap so an oversized/malicious upload can
+    # never be fully buffered in memory before being rejected.
+    data = await file.read(extraction.MAX_FILE_BYTES + 1)
+    if len(data) > extraction.MAX_FILE_BYTES:
+        raise FileTooLargeError(extraction.MAX_FILE_BYTES)
     text = extraction.extract_text_from_pdf(data)  # raises domain errors on reject
     scrubbed = extraction.scrub_pii(text)
     resume = await pipeline.add_resume(

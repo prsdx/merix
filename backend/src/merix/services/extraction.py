@@ -24,6 +24,8 @@ MAX_FILE_BYTES = 5 * 1024 * 1024  # 5 MB (confirmed with product owner)
 MAX_EXTRACTED_CHARS = 20_000
 # Below this many chars of text, a PDF is treated as image-only/scanned.
 MIN_TEXT_CHARS = 50
+# Resumes are 1-5 pages; reject pathological documents before burning CPU.
+MAX_PAGES = 100
 
 _PDF_MAGIC = b"%PDF-"
 
@@ -59,6 +61,10 @@ def extract_text_from_pdf(data: bytes) -> str:
     try:
         if doc.needs_pass or doc.is_encrypted:
             raise UnparseableFileError("PDF is encrypted/password-protected.")
+        if doc.page_count > MAX_PAGES:
+            raise UnparseableFileError(
+                f"PDF has too many pages ({doc.page_count}; max {MAX_PAGES})."
+            )
 
         pages = [page.get_text("text") for page in doc]
     finally:

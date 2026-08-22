@@ -14,6 +14,7 @@ from merix.core.exceptions import (
     FileTooLargeError,
     MerixError,
     NotFoundError,
+    PermissionError,
     UnparseableFileError,
     UnsupportedFileTypeError,
     ValidationError,
@@ -66,6 +67,10 @@ def _register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(UnparseableFileError)
     async def unparseable_handler(request: Request, exc: UnparseableFileError) -> JSONResponse:
         return JSONResponse(status_code=422, content={"detail": str(exc)})
+
+    @app.exception_handler(PermissionError)
+    async def permission_handler(request: Request, exc: PermissionError) -> JSONResponse:
+        return JSONResponse(status_code=403, content={"detail": str(exc)})
 
     @app.exception_handler(ConflictError)
     async def conflict_handler(request: Request, exc: ConflictError) -> JSONResponse:

@@ -101,3 +101,16 @@ def make_pdf(text: str) -> bytes:
     data = doc.tobytes()
     doc.close()
     return data
+
+
+def make_multi_page_pdf(pages: int) -> bytes:
+    """Build a valid PDF with the given number of pages (for parser-limit tests)."""
+    import pymupdf
+
+    doc = pymupdf.open()
+    for i in range(pages):
+        page = doc.new_page()
+        page.insert_text((72, 72), f"Page {i}: Python developer with SQL experience.")
+    data = doc.tobytes()
+    doc.close()
+    return data

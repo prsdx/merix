@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     SUPABASE_JWT_SECRET: str = ""
     JWT_ALGORITHM: str = "HS256"
 
+    # Shared token gating POST /api/admin/retention-sweep. Empty (dev default):
+    # any authenticated user may trigger the sweep. Set in production to
+    # restrict it to operators holding the token (X-Admin-Token header).
+    ADMIN_API_TOKEN: str = ""
+
     # Retention is per-org (organisations.retention_days, default 90) since Task 3.
 
     # Resolve .env relative to the backend/ dir (this file is at backend/src/merix/config.py),

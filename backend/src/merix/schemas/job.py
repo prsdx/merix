@@ -10,7 +10,7 @@ class JobCreate(BaseModel):
     """Request to create a job description."""
 
     title: str = Field(min_length=1, max_length=255)
-    raw_text: str = Field(min_length=1)
+    raw_text: str = Field(min_length=1, max_length=50_000)
 
 
 class JobResponse(BaseModel):
