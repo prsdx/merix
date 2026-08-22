@@ -15,6 +15,7 @@ import uuid
 
 from sqlalchemy import select
 
+from merix.clients.base import LLMClient
 from merix.clients.llm import get_llm_client
 from merix.config import settings
 from merix.db import scoped_session
@@ -30,15 +31,16 @@ async def run_batch_match_background(
     org_id: uuid.UUID,
     job_id: uuid.UUID,
     batch_job_id: uuid.UUID,
+    llm: LLMClient | None = None,
 ) -> None:
     """Run match for every resume on a job and record results on the BatchJob.
 
-    Creates a fresh scoped session (RLS-pinned to *org_id*) and a fresh
-    LLM client — neither depends on the request that enqueued this task.
+    Creates a fresh scoped session (RLS-pinned to *org_id*). Uses provided llm client or creates a new one.
     """
 
     session = scoped_session(org_id)
-    llm = get_llm_client(api_key=settings.LLM_API_KEY, model=settings.LLM_MODEL)
+    if llm is None:
+        llm = get_llm_client(api_key=settings.LLM_API_KEY, model=settings.LLM_MODEL)
 
     try:
         batch_job = await session.get(BatchJob, batch_job_id)

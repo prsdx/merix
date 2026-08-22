@@ -12,6 +12,7 @@ from slowapi.errors import RateLimitExceeded
 from sqlalchemy import update
 
 from merix.api.router import api_router
+from merix.api.v1.health import router as health_router
 from merix.config import settings
 from merix.core.exceptions import (
     AuthenticationError,
@@ -76,6 +77,7 @@ def create_app() -> FastAPI:
         lifespan=lifespan,
     )
     _configure_cors(app)
+    app.include_router(health_router, tags=["health"])
     app.include_router(api_router, prefix="/api")
     _register_exception_handlers(app)
     app.state.limiter = limiter
