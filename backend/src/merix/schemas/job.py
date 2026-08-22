@@ -23,3 +23,14 @@ class JobResponse(BaseModel):
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class JobSummaryResponse(BaseModel):
+    """Summary of a job description including candidate and match counts."""
+
+    id: uuid.UUID
+    title: str
+    created_at: datetime
+    resume_count: int = 0
+    match_count: int = 0
+    parsed: dict | None = None

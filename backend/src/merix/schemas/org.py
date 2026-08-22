@@ -1,6 +1,5 @@
-"""Pydantic schemas for organisation API."""
-
 import uuid
+from datetime import datetime
 
 from pydantic import BaseModel, Field
 
@@ -24,3 +23,17 @@ class OrgUpdate(BaseModel):
         le=3650,
         description="Number of days to retain resume data after consent is given.",
     )
+
+
+class AuditEventResponse(BaseModel):
+    """Audit log entry visible to organization members."""
+
+    id: uuid.UUID
+    event_type: str
+    actor_type: str
+    actor_user_id: uuid.UUID | None = None
+    resume_id: uuid.UUID | None = None
+    event_metadata: dict | None = None
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
