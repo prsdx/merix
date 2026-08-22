@@ -1,8 +1,8 @@
 # Merix - Product Requirements Document
 
 **Version**: 0.1 (Draft)
-**Status**: Task 0 complete, Task 1 not started
-**Last updated**: 2025-08-21
+**Status**: Tasks 0-3 complete (scaffolding, matching pipeline, auth + multi-tenancy, DPDP consent/retention); Task 4 (security hardening) next
+**Last updated**: 2026-08-22
 
 ---
 

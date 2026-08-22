@@ -33,7 +33,7 @@ Traditional ATS systems are black boxes: they reject resumes with no explanation
 
 **Frontend**: React SPA (existing, in `frontend/`)
 
-**Status**: Task 2 complete - auth + multi-tenancy live end-to-end. All matching routes require a Supabase Auth session; every job/resume/match row is org-scoped and isolated by Postgres RLS (merix_app role + app.current_org_id GUC, plus org filter returning 404 cross-org). 32 tests passing. Task 1 pipeline re-verified under auth.
+**Status**: Task 3 complete - DPDP consent/retention/erasure/audit live end-to-end. Resume upload requires explicit `consent_given=true` (400 otherwise); consent timestamp + retention expiry are stamped server-side from the org's `retention_days` (default 90). Hard-delete erasure endpoint, retention sweep service, and an RLS-protected append-only audit log are in place. 37 tests passing (14 unit + 23 integration). Tasks 1-2 (pipeline, auth, multi-tenancy) re-verified under the consent flow.
 
 ### Project Structure
 
@@ -82,17 +82,36 @@ backend/
   - **Tests**: 32 passing (14 unit + 18 integration). New: six 401 auth failure paths, signup/login via in-memory GoTrue fake, Org-B-cannot-access-Org-A via API (all five endpoints), direct RLS proof (scoped session can't SELECT/forge foreign-org rows; unscoped fails closed).
   - **Verified live**: two real GoTrue signups -> real sessions -> Org A full pipeline (score 80.0) -> Org B 404 on job/match/matches; 401 on missing/garbage token. Proof data cleaned up.
 
+- **Task 3**: DPDP consent / retention / erasure / audit
+  - **Consent gate** (`services/consent.py`): resume upload requires `consent_given=true` (Form field, 400 ValidationError otherwise). `record_consent` stamps `consent_given`, `consent_timestamp`, and `retention_expires_at` server-side (never trusts client clocks) using the org's retention policy.
+  - **Org retention policy** (`models/organisation.py`): `retention_days` per org (default 90, DB column via migration; the old global `DATA_RETENTION_DAYS` env setting was removed - retention is org-level now). GET/PATCH `/api/orgs/me` reads/updates it (PATCH validates 1-3650 days).
+  - **Audit log** (`models/audit.py`): append-only `audit_events` table (org_id, nullable resume_id with SET NULL so the trail survives deletion, event_type, actor_type user/system, actor_user_id, JSONB metadata). FORCE RLS + org_isolation policy + grants to merix_app, same pattern as the tenant tables.
+  - **Retention/erasure service** (`services/retention.py`): `delete_resume` (hard-delete + audit event), `sweep_expired_for_org` (deletes expired resumes in one org-scoped session so RLS binds), `sweep_all_orgs` (per-org sessions). DELETE `/api/candidates/{resume_id}` = data-principal erasure right (cascades match results, writes `deletion_requested` audit event). POST `/api/admin/retention-sweep` triggers the sweep as a background task.
+  - **Migration** `2072dab8609b` (applied to live DB): audit_events table + RLS, organisations.retention_days.
+  - **Tests**: 5 new integration tests (consent rejection, consent stamping + 90-day expiry, manual deletion removes resume+matches+audits, retention sweep deletes expired, org retention-policy update). Pre-existing org-isolation and vertical-slice tests updated for the consent field. 37 total passing.
+
 ### Known gaps / pending
 - **GoTrue token algorithm**: new Supabase projects sign access tokens with ES256; our verifier is HS256-only (SUPABASE_JWT_SECRET). Production fix: JWKS verification against {SUPABASE_URL}/auth/v1/.well-known/jwks.json - needed before real frontend use.
 - **Live Groq LLM call verified** (single call), but not yet exercised through the full API path with a real key.
-- No consent/retention workflow (schema fields only) - Task 3.
 - Embedding dimension is 768 (Gemini). Switching providers requires an Alembic migration.
+- Retention sweep is triggered manually via `/api/admin/retention-sweep` - no scheduler yet (Task 5 candidate).
+- Audit log has no read/query API yet (v1 requirement is the trail itself; an auditor-facing endpoint can come later).
 
 ---
 
-## What's Next (Task 3)
+## What's Next (Task 4) - Security hardening pass
 
-DPDP consent/retention workflow (PRD section 3.4): consent capture at resume upload, 90-day retention sweep (anonymise/delete), erasure endpoint, audit log - all hang off the org/user context Task 2 added.
+Hardening pass across Tasks 1-3, not new features:
+
+1. **Dependency audit**: pip-audit via uv across all deps since Task 0; report every finding with triage; fix only reachable CVEs.
+2. **Secrets review**: full-codebase grep for hardcoded keys/tokens; verify .env gitignored AND never committed historically (git log); .env.example completeness. **Named item**: pytest emits `InsecureKeyLengthWarning` (HMAC key < 32 bytes) in the test fake-signing path - determine whether it is test-only (acceptable) or reflects the real SUPABASE_JWT_SECRET length (must fix).
+3. **Input validation sweep**: re-review every Task 1-3 endpoint for missing Pydantic validation; verify upload content-type is actually checked (not client-trusted); PDF parsing defensiveness; injection risk in any raw SQL/string formatting.
+4. **Rate limiting**: on signup/login at minimum. Use an established library (e.g. slowapi) - **confirm with owner before adding any new dependency**.
+5. **CORS**: env-configurable allowed-origins list (dev/prod differ), no wildcard.
+6. **Logging review**: no PII (resume content, emails, tokens) in plaintext logs - DPDP.
+7. **RLS re-verification**: test two rapid sequential requests from different orgs for GUC bleed-through (connection pooling leak) if not already covered.
+
+Model guidance: audits/lint/RL/CORS config = delegable; allow-lists, auth/RLS vulnerability review, secrets/PII handling = strongest model, verified personally.
 
 ---
 

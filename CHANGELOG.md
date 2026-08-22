@@ -8,7 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Task 2: Auth + multi-tenancy (Supabase Auth + Postgres RLS)
+- Task 3: DPDP consent / retention / erasure / audit log
+  - Resume upload requires explicit `consent_given=true` (400 otherwise); consent timestamp and retention expiry stamped server-side from the org's retention policy (never trusts client clocks)
+  - Per-org retention policy: `organisations.retention_days` (default 90); GET/PATCH `/api/orgs/me` to read/update (validated 1-3650 days)
+  - Append-only `audit_events` table (survives resume deletion via SET NULL FK) with FORCE RLS + org_isolation policy, same pattern as tenant tables
+  - Retention service: hard-delete with audit trail, per-org sweep (`sweep_all_orgs`), DELETE `/api/candidates/{resume_id}` (data-principal erasure right), POST `/api/admin/retention-sweep` background trigger
+  - Migration `2072dab8609b` (applied to live DB): audit_events + RLS, organisations.retention_days
+  - 5 new integration tests; org-isolation and vertical-slice tests updated for the consent field - 37 tests total
+
+### Changed
+- Retention period moved from global env (`DATA_RETENTION_DAYS`, removed) to per-org DB setting `retention_days`
+- Resume upload: `candidate_name` and `consent_given` are now multipart Form fields (were query params / absent)
+
+### Fixed
+- Stale org-isolation test: resume upload now sends `consent_given` so the request reaches the org check (404) instead of failing form validation (422)
+
+### Task 2: Auth + multi-tenancy (Supabase Auth + Postgres RLS)
   - Supabase Auth (GoTrue) identity: `clients/auth.py` minimal httpx client (admin create/delete user, password grant); signup = org + auth identity + profile in one flow
   - Local HS256 verification of GoTrue access tokens (`core/security.py`); `/api/auth/signup`, `/api/auth/login`, `/api/auth/me`
   - Organisation + User models; `org_id` NOT NULL FK on job_descriptions/resumes/match_results (Task 1 NULL-org test data discarded)
