@@ -8,18 +8,30 @@ cross-org IDs indistinguishable from non-existent ones (404, no leak).
 
 import uuid
 
-from fastapi import APIRouter, Depends, File, Form, UploadFile, status
-from sqlalchemy import select
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Body,
+    Depends,
+    File,
+    Form,
+    UploadFile,
+    status,
+)
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from merix.clients.base import EmbeddingClient, LLMClient
 from merix.core.exceptions import FileTooLargeError
 from merix.dependencies import get_current_user, get_embedder, get_llm, get_scoped_db
+from merix.models.batch_job import BatchJob
 from merix.models.resume import Resume
 from merix.models.user import User
+from merix.schemas.batch_job import BatchJobCreate, BatchJobStatus
 from merix.schemas.job import JobCreate, JobResponse
 from merix.schemas.match import ResumeResponse
 from merix.services import extraction, pipeline
+from merix.services.batch import run_batch_match_background
 
 router = APIRouter()
 
@@ -103,23 +115,69 @@ async def upload_resume(
     return resume
 
 
-@router.post("/{job_id}/match", status_code=status.HTTP_200_OK)
+@router.post(
+    "/{job_id}/match",
+    response_model=BatchJobStatus,
+    status_code=status.HTTP_202_ACCEPTED,
+)
 async def match_job(
     job_id: uuid.UUID,
-    min_score: float | None = None,
+    background_tasks: BackgroundTasks,
+    body: BatchJobCreate = Body(default_factory=BatchJobCreate),
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_scoped_db),
-    llm: LLMClient = Depends(get_llm),
-) -> dict:
-    """Run the batch match for all resumes on a job; return ranked results.
+) -> BatchJob:
+    """Submit a batch match job for all resumes on a job description.
 
-    Returns everything ranked by default; pass min_score to filter server-side.
+    Returns 202 Accepted immediately with the batch job status.
+    The actual matching runs asynchronously via a background task;
+    poll ``GET /api/batch-jobs/{id}`` for progress.
     """
-    job = await pipeline.get_job_or_404(db, job_id, user.org_id)
-    results = await pipeline.run_match_for_job(db, llm, job)
-    if min_score is not None:
-        results = [r for r in results if r.score >= min_score]
-    return await _shortlist_payload(db, job, results)
+
+    # Validate job exists (org-scoped, 404 if not).
+    await pipeline.get_job_or_404(db, job_id, user.org_id)
+
+    # Idempotency: if the client supplied a key and we already have a
+    # BatchJob for it, return the existing one (no duplicate).
+    if body.idempotency_key is not None:
+        existing = await db.scalar(
+            select(BatchJob).where(
+                BatchJob.idempotency_key == body.idempotency_key,
+                BatchJob.org_id == user.org_id,
+            )
+        )
+        if existing is not None:
+            return existing
+
+    # Count resumes for this job.
+    total_resumes: int = (
+        await db.scalar(
+            select(func.count()).select_from(Resume).where(Resume.job_id == job_id)
+        )
+    ) or 0
+
+    batch_job = BatchJob(
+        org_id=user.org_id,
+        job_description_id=job_id,
+        status="queued",
+        idempotency_key=body.idempotency_key,
+        total_resumes=total_resumes,
+        completed_resumes=0,
+    )
+    db.add(batch_job)
+    await db.commit()
+    await db.refresh(batch_job)
+
+    # Enqueue the real work. The background task creates its own session
+    # and LLM client so it is independent of this request's lifecycle.
+    background_tasks.add_task(
+        run_batch_match_background,
+        org_id=user.org_id,
+        job_id=job_id,
+        batch_job_id=batch_job.id,
+    )
+
+    return batch_job
 
 
 @router.get("/{job_id}/matches")

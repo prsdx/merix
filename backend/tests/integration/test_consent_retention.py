@@ -76,6 +76,15 @@ async def test_manual_deletion_removes_resume_and_matches(client, org_user):
     resume_id = r.json()["id"]
     client.post(f"/api/jobs/{job_id}/match", headers=headers)
 
+    # BackgroundTasks don't execute in TestClient; seed a MatchResult manually.
+    async with scoped_session(org_id) as session:
+        match = MatchResult(
+            org_id=org_id, job_id=job_id, resume_id=uuid.UUID(resume_id),
+            score=0.95, matched_skills=[], missing_skills=[], rationale="test",
+        )
+        session.add(match)
+        await session.commit()
+
     async with scoped_session(org_id) as session:
         matches_before = list(
             (await session.scalars(select(MatchResult).where(MatchResult.resume_id == resume_id))).all()
@@ -113,6 +122,15 @@ async def test_retention_sweep_deletes_expired_resumes(client, org_user):
     r = await _upload_resume(client, headers, job_id, consent_given=True)
     resume_id = r.json()["id"]
     client.post(f"/api/jobs/{job_id}/match", headers=headers)
+
+    # BackgroundTasks don't execute in TestClient; seed a MatchResult manually.
+    async with scoped_session(org_id) as session:
+        match = MatchResult(
+            org_id=org_id, job_id=job_id, resume_id=uuid.UUID(resume_id),
+            score=0.95, matched_skills=[], missing_skills=[], rationale="test",
+        )
+        session.add(match)
+        await session.commit()
 
     # Force expiration
     async with scoped_session(org_id) as session:

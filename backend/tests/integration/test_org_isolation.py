@@ -19,7 +19,7 @@ from tests.helpers import auth_headers, make_pdf
 
 
 async def test_org_b_cannot_access_org_a_data_via_api(client, make_org_user):
-    a_user_id, _ = await make_org_user(org_name="Org A")
+    a_user_id, a_org_id = await make_org_user(org_name="Org A")
     b_user_id, _ = await make_org_user(org_name="Org B")
     a = auth_headers(a_user_id)
     b = auth_headers(b_user_id)
@@ -43,8 +43,22 @@ async def test_org_b_cannot_access_org_a_data_via_api(client, make_org_user):
     assert r.status_code == 201, r.text
 
     r = client.post(f"/api/jobs/{job_id}/match", headers=a)
-    assert r.status_code == 200, r.text
-    match_id = r.json()["results"][0]["id"]
+    assert r.status_code == 202, r.text
+
+    # BackgroundTasks don't execute in TestClient; create a MatchResult
+    # directly so we have a match_id for the isolation checks below.
+    from merix.models.match import MatchResult
+    from merix.models.resume import Resume
+
+    async with scoped_session(a_org_id) as session:
+        resumes = (await session.scalars(select(Resume))).all()
+        match = MatchResult(
+            org_id=a_org_id, job_id=uuid.UUID(job_id), resume_id=resumes[0].id,
+            score=0.95, matched_skills=[], missing_skills=[], rationale="test",
+        )
+        session.add(match)
+        await session.commit()
+        match_id = str(match.id)
 
     # Org A can read its own data (positive control).
     assert client.get(f"/api/jobs/{job_id}", headers=a).status_code == 200
