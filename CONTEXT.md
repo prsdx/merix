@@ -33,9 +33,9 @@ Traditional ATS systems are black boxes: they reject resumes with no explanation
 
 **Frontend**: React SPA (existing, in `frontend/`)
 
-**Status**: Task 5 complete — async batch job infrastructure with status tracking and stale detection
+**Status**: Task 6 complete — GitHub Actions CI pipeline (ruff lint + pytest) runs on every push and PR
 
-Tasks 1-5 complete. Backend + frontend dependencies audited (0 vulns). Task 5 adds async batch matching: POST /api/jobs/{id}/match now returns 202 immediately and enqueues a background task; GET /api/batch-jobs/{id} for polling with stale detection (10-min threshold). BatchJob model tracks status (queued/running/completed/failed), progress (completed_resumes/total_resumes), and per-resume results (batch_results JSONB for partial failure handling). Stale jobs marked failed on startup and on polling. Idempotency key support for deduplication. BackgroundTasks sufficient (no Celery needed). 53 tests total (14 unit + 39 integration).
+Tasks 1-6 complete. Backend + frontend dependencies audited (0 vulns). Task 6 adds GitHub Actions CI: a `Lint (ruff)` job (ruff check + format check, no secrets required) followed by a `Test (pytest)` job (full 53-test suite against real Supabase DB via secrets). Tests only run if lint passes. Ruff line-length bumped 88→130 to match actual code style; 35 auto-fixable violations cleared. CI badge in README.md. CONTRIBUTING.md documents secrets needed, branch protection steps, and local dev commands. Branch protection (required status checks) must be configured manually in GitHub Settings by a repo admin.
 
 ### Project Structure
 
@@ -116,6 +116,17 @@ backend/
   - **BackgroundTasks evaluation**: still sufficient for current requirements (jobs are short-lived, no distributed workers needed, no job scheduling needed); no Celery/Redis required
   - 14 new integration tests covering submission, status polling, completion, idempotency, partial failure, stale detection, org scoping, authentication - 53 tests total
 
+- **Task 6**: CI pipeline (GitHub Actions)
+  - **Workflow** (`.github/workflows/ci.yml`): two-job pipeline on every push and PR
+    - `Lint (ruff)`: `ruff check src/ tests/` + `ruff format --check src/ tests/` — no secrets needed
+    - `Test (pytest)`: `pytest -v --tb=short` — full 53-test suite (unit + integration) against real Supabase DB; runs only after lint passes
+  - **Ruff config**: line-length bumped 88→130 to match actual code style; 35 auto-fixable violations cleared (trailing newlines, unused import)
+  - **Status badge**: CI badge in README.md showing main branch state
+  - **CONTRIBUTING.md**: documents CI jobs, required secrets, branch protection steps, and local dev commands
+  - **Why real Supabase (not local pgvector container)**: RLS correctness tests (org isolation, scoped_session) require real Postgres row-level security; faking the DB defeats the purpose of those tests
+  - Required secrets: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_JWT_SECRET`
+  - Branch protection (required status checks) must be configured manually in GitHub repo settings by a repo admin
+
 ### Known gaps / pending
 - **GoTrue token algorithm**: new Supabase projects sign access tokens with ES256; our verifier is HS256-only (SUPABASE_JWT_SECRET). Production fix: JWKS verification against {SUPABASE_URL}/auth/v1/.well-known/jwks.json - needed before real frontend use.
 - **Live Groq LLM call verified** (single call), but not yet exercised through the full API path with a real key.
@@ -124,15 +135,16 @@ backend/
 
 ---
 
-## What's Next (Task 6) - CI/CD pipeline
+## What's Next (Task 7) - Deployment
 
-No automated testing or linting runs on PRs. Task 6 should add:
+CI is now in place (Task 6). Task 7 should be the first production deployment:
 
-1. **GitHub Actions workflow**: run pytest (unit + integration), ruff (lint + format check), mypy (type checking) on every PR
-2. **Pre-commit hooks**: auto-run ruff, mypy locally before commits
-3. **Dependency audit**: pip-audit and npm audit in CI to catch CVEs
-4. **Database migration check**: verify alembic upgrade works on clean DB
-5. **Coverage reporting**: track test coverage with coverage.py, enforce minimum threshold
+1. **Railway or Render**: deploy the FastAPI backend as a web service; pick the platform and justify
+2. **Production Supabase instance**: separate from the dev/test Supabase project (don't deploy to dev DB)
+3. **Environment config**: production `.env` / secrets management (DATABASE_URL, all API keys) wired into the deployment platform
+4. **Health check endpoint**: `/health` (or equivalent) for the deployment platform's liveness probe
+5. **Domain/TLS**: basic HTTPS setup via the deployment platform
+6. **GoTrue ES256 fix**: production Supabase tokens use ES256 — the HS256-only verifier is a known gap that must be fixed before real frontend use (tracked in Known gaps)
 
 ---
 

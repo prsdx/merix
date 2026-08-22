@@ -8,7 +8,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- Task 5: Background job robustness (async batch matching)
+- Task 6: CI pipeline (GitHub Actions)
+  - **Workflow** (`.github/workflows/ci.yml`): lint job (`ruff check` + `ruff format --check`) followed by test job (`pytest -v --tb=short`) on every push to main/feature/fix/chore/refactor/docs branches and every PR against main
+  - **Two-job design**: `Lint (ruff)` runs first with no secrets; `Test (pytest)` runs after (`needs: lint`) against the real Supabase Postgres DB (RLS correctness tests require real Postgres behavior — not a mock or local container)
+  - **Secrets**: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_JWT_SECRET` — never hardcoded, passed via GitHub Actions secrets
+  - **Ruff config**: bumped line-length 88→130 to match actual code style; cleared 35 auto-fixable violations (trailing newlines, unused import in test_rate_limit.py)
+  - **README.md**: CI status badge (main branch)
+  - **CONTRIBUTING.md**: new file documenting CI jobs, required secrets, branch protection configuration steps, and local dev commands
+  - **AGENT.md**: stack decisions updated (Migrations, ruff line-length + CI entry); CI section added before Verification Requirement
+
+### Changed
+- ruff `line-length` 88 → 130 in `pyproject.toml`; added `[tool.ruff.format]` section
+
+### Task 5: Background job robustness (async batch matching with status tracking)
   - **BatchJob model**: status lifecycle (queued→running→completed/failed), org_id, job_description_id, idempotency_key (optional UUID for deduplication), total_resumes, completed_resumes (progress tracking), batch_results (JSONB array of per-resume disposition), error_message (for failed jobs)
   - **Migration** `13aafa45b687` (applied to live DB): batch_jobs table with RLS policies, grants merix_app full access
   - **Async batch matching**: POST `/api/jobs/{job_id}/match` returns 202 Accepted immediately, creates BatchJob with status="queued", enqueues `run_batch_match_background` via BackgroundTasks
