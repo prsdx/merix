@@ -1,8 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth-context";
 import {
   ArrowRight,
@@ -15,22 +15,95 @@ import {
   Users,
   Timer,
   CheckCircle2,
+  XCircle,
   BarChart3,
   Search,
   Command,
   Clock,
   Trash2,
+  Sliders,
+  ChevronDown,
+  ChevronUp,
+  Cpu,
+  Database,
+  Building2,
+  Scale,
+  Play,
+  RotateCcw,
 } from "lucide-react";
 import { DPDPBadge } from "@/components/dpdp-badge";
+
+// Interactive Simulation Candidate Data
+const SIM_CANDIDATES = [
+  {
+    id: "cand-1",
+    name: "Aditya Sharma",
+    role: "Senior Backend Lead",
+    institution: "IIT Bombay",
+    experience: "4.5 YOE",
+    skills: ["Python", "FastAPI", "PostgreSQL", "pgvector", "Redis", "Docker", "AsyncIO"],
+    evidence: "Architected distributed async ingestion microservices with FastAPI and PostgreSQL pgvector, processing 5M+ vector queries daily at sub-50ms latency.",
+    missingGaps: ["Kubernetes Cluster Ops"],
+  },
+  {
+    id: "cand-2",
+    name: "Priya Nair",
+    role: "AI & ML Systems Engineer",
+    institution: "NIT Surathkal",
+    experience: "3.2 YOE",
+    skills: ["Python", "PyTorch", "pgvector", "LLM Tooling", "Docker", "FastAPI"],
+    evidence: "Fine-tuned transformer models and deployed semantic search pipelines utilizing Gemini embeddings and pgvector storage across containerized clusters.",
+    missingGaps: ["Redis Caching Tier"],
+  },
+  {
+    id: "cand-3",
+    name: "Rohan Verma",
+    role: "Junior Software Developer",
+    institution: "BITS Pilani",
+    experience: "1.5 YOE",
+    skills: ["Python", "Django", "PostgreSQL", "Docker"],
+    evidence: "Built REST APIs using Django and PostgreSQL. Participated in migration of monolithic services to Docker containers.",
+    missingGaps: ["FastAPI AsyncIO", "pgvector / Vector Search", "Redis"],
+  },
+];
+
+const JOB_SKILLS = [
+  { id: "python", name: "Python / FastAPI", weight: 35, required: true },
+  { id: "pgvector", name: "PostgreSQL / pgvector", weight: 35, required: true },
+  { id: "redis", name: "Redis Caching", weight: 15, required: false },
+  { id: "docker", name: "Docker Containerization", weight: 15, required: false },
+];
 
 export default function LandingPage() {
   const { isAuthenticated } = useAuth();
 
+  // Interactive Match Sandbox State
+  const [selectedCandidate, setSelectedCandidate] = useState(SIM_CANDIDATES[0]);
+  const [activeTab, setActiveTab] = useState<"explainability" | "batch" | "dpdp">("explainability");
+  const [resumeSliderValue, setResumeSliderValue] = useState(250);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // Dynamic Score Calculation for Simulator
+  const calculateSimScore = () => {
+    let score = 0;
+    const candSkillsLower = selectedCandidate.skills.map((s) => s.toLowerCase());
+
+    if (candSkillsLower.some((s) => s.includes("python") || s.includes("fastapi"))) score += 35;
+    if (candSkillsLower.some((s) => s.includes("pgvector") || s.includes("postgresql"))) score += 35;
+    if (candSkillsLower.some((s) => s.includes("redis"))) score += 15;
+    if (candSkillsLower.some((s) => s.includes("docker"))) score += 15;
+
+    return score;
+  };
+
+  const currentScore = calculateSimScore();
+  const hoursSaved = ((resumeSliderValue * 3.5) / 60).toFixed(1);
+
   return (
-    <div className="min-h-screen flex flex-col justify-between">
+    <div className="min-h-screen flex flex-col justify-between selection:bg-violet-600/40 selection:text-violet-100">
       {/* Top Navigation */}
       <header className="sticky top-4 z-50 w-full max-w-6xl mx-auto px-4">
-        <nav className="flex items-center justify-between px-6 py-3.5 rounded-2xl bg-white/[0.03] backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15)]">
+        <nav className="flex items-center justify-between px-6 py-3.5 rounded-2xl bg-[#09090b]/80 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15)]">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-violet-600/30">
               <Command className="w-4 h-4 text-white" />
@@ -39,14 +112,17 @@ export default function LandingPage() {
           </div>
 
           <div className="hidden md:flex items-center gap-8 text-xs font-medium text-zinc-400">
-            <a href="#features" className="hover:text-white transition-colors">
-              Explainable AI
+            <a href="#simulator" className="hover:text-white transition-colors">
+              Interactive Simulator
             </a>
-            <a href="#compliance" className="hover:text-white transition-colors">
-              DPDP Compliance
+            <a href="#pillars" className="hover:text-white transition-colors">
+              Explainable Architecture
             </a>
-            <a href="#metrics" className="hover:text-white transition-colors">
-              ROI Metrics
+            <a href="#calculator" className="hover:text-white transition-colors">
+              ROI Calculator
+            </a>
+            <a href="#faq" className="hover:text-white transition-colors">
+              DPDP Compliance FAQ
             </a>
           </div>
 
@@ -55,9 +131,9 @@ export default function LandingPage() {
             {isAuthenticated ? (
               <Link
                 href="/dashboard"
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-600/25 transition-all"
+                className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-600/25 transition-all active:scale-95"
               >
-                <span>Go to Dashboard</span>
+                <span>Dashboard</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             ) : (
@@ -70,7 +146,7 @@ export default function LandingPage() {
                 </Link>
                 <Link
                   href="/signup"
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-600/25 transition-all"
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-600/25 transition-all active:scale-95"
                 >
                   <span>Start Free</span>
                   <ArrowRight className="w-3.5 h-3.5" />
@@ -81,333 +157,550 @@ export default function LandingPage() {
         </nav>
       </header>
 
-      {/* Hero Section (v5 Structure + v7 Glass Theme) */}
-      <section className="relative pt-24 pb-20 px-4 md:px-6 max-w-6xl mx-auto text-center flex flex-col items-center">
+      {/* Hero Section */}
+      <section className="relative pt-20 pb-16 px-4 md:px-6 max-w-6xl mx-auto text-center flex flex-col items-center">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.5 }}
           className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-violet-500/10 border border-violet-500/25 text-violet-300 text-xs font-medium mb-6 shadow-[0_0_20px_rgba(139,92,246,0.15)]"
         >
           <Sparkles className="w-3.5 h-3.5 text-violet-400" />
-          <span>India&apos;s First DPDP-Compliant Resume Matching Platform</span>
+          <span>India DPDP Act (2023) Grounded Resume Matching</span>
         </motion.div>
 
         <motion.h1
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.1 }}
-          className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white max-w-4xl leading-[1.1] mb-6"
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-white max-w-4xl leading-[1.08] mb-6"
         >
-          Shortlist 100 resumes in{" "}
-          <span className="bg-gradient-to-r from-violet-400 via-indigo-300 to-blue-400 bg-clip-text text-transparent">
-            10 minutes.
-          </span>{" "}
-          With zero black-box scoring.
+          Screen 100 Resumes in 10 Minutes. Grounded in Verbatim Evidence.
         </motion.h1>
 
         <motion.p
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.2 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
           className="text-base sm:text-lg text-zinc-400 max-w-2xl leading-relaxed mb-10"
         >
-          Merix gives Indian campus placement cells and enterprise recruiters evidence-grounded, explainable match scores with full DPDP consent and automated 90-day retention.
+          Merix empowers Indian campus placement cells and enterprise recruiters with explainable 0–100 match scoring, verbatim skill evidence, and automated 90-day DPDP compliance.
         </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.3 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
           className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto"
         >
           <Link
             href={isAuthenticated ? "/jobs/new" : "/signup"}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 shadow-[0_0_30px_rgba(124,58,237,0.4)] transition-all hover:scale-[1.02]"
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-7 py-3.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 shadow-[0_0_30px_rgba(124,58,237,0.4)] transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             <span>Post a Job & Batch Screen</span>
             <ArrowRight className="w-4 h-4" />
           </Link>
-          <Link
-            href="/login"
+          <a
+            href="#simulator"
             className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm text-zinc-300 bg-white/[0.04] hover:bg-white/[0.08] border border-white/10 hover:border-white/20 transition-all backdrop-blur-xl"
           >
-            <span>Recruiter Sign In</span>
-          </Link>
+            <Play className="w-3.5 h-3.5 fill-current text-violet-400" />
+            <span>Try Live Match Simulator</span>
+          </a>
         </motion.div>
+      </section>
 
-        {/* Live Product Preview Card (Frosted Glass Container) */}
-        <motion.div
-          initial={{ opacity: 0, y: 40 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.4 }}
-          className="mt-14 w-full rounded-2xl glass-panel p-4 md:p-6 text-left shadow-[0_20px_60px_rgba(0,0,0,0.8)] border border-white/15"
-        >
-          <div className="flex items-center justify-between pb-4 border-b border-white/10 mb-4">
-            <div className="flex items-center gap-2.5">
-              <div className="flex gap-1.5">
-                <div className="w-3 h-3 rounded-full bg-rose-500/80" />
-                <div className="w-3 h-3 rounded-full bg-amber-500/80" />
-                <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+      {/* Interactive Live Match Sandbox (ReactBits / Tactile Widget) */}
+      <section id="simulator" className="py-12 px-4 md:px-6 max-w-6xl mx-auto w-full">
+        <div className="glass-panel rounded-3xl p-6 md:p-8 border border-white/15 shadow-[0_20px_60px_rgba(0,0,0,0.8)] space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-white/10">
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                <h2 className="text-base font-bold text-white tracking-tight">
+                  Interactive AI Match Sandbox (Live Deterministic Engine)
+                </h2>
               </div>
-              <span className="text-xs text-zinc-400 font-mono pl-2">merix://shortlist/batch-match-live</span>
+              <p className="text-xs text-zinc-400 mt-0.5">
+                Select candidate dossiers to observe instantaneous evidence extraction, score breakdown, and gap detection.
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 text-[11px] font-medium border border-emerald-500/20">
-                <CheckCircle2 className="w-3 h-3" />
-                <span>100% Verbatim Evidence</span>
-              </span>
+
+            <div className="flex items-center gap-2 bg-black/40 p-1 rounded-xl border border-white/10">
+              {SIM_CANDIDATES.map((cand) => (
+                <button
+                  key={cand.id}
+                  onClick={() => setSelectedCandidate(cand)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    selectedCandidate.id === cand.id
+                      ? "bg-violet-600 text-white shadow-md"
+                      : "text-zinc-400 hover:text-white"
+                  }`}
+                >
+                  {cand.name.split(" ")[0]}
+                </button>
+              ))}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-            {/* Left preview candidate */}
-            <div className="md:col-span-7 rounded-xl bg-white/[0.02] border border-white/10 p-4 space-y-3">
-              <div className="flex items-center justify-between">
+          {/* Interactive Candidate Sandbox Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Candidate Dossier */}
+            <div className="lg:col-span-7 space-y-4">
+              <div className="p-4 rounded-2xl bg-black/50 border border-white/10 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="text-base font-bold text-white">{selectedCandidate.name}</h3>
+                    <p className="text-xs text-zinc-400 font-mono">
+                      {selectedCandidate.role} • {selectedCandidate.experience} • {selectedCandidate.institution}
+                    </p>
+                  </div>
+                  <DPDPBadge variant="subtle" />
+                </div>
+
+                <div className="p-3.5 rounded-xl bg-violet-950/20 border border-violet-500/20 text-xs text-zinc-200 leading-relaxed">
+                  <strong className="text-violet-300 font-medium block mb-1">
+                    Verbatim Resume Grounding Evidence:
+                  </strong>
+                  &quot;{selectedCandidate.evidence}&quot;
+                </div>
+
                 <div>
-                  <h4 className="text-sm font-semibold text-white">Aditya Sharma</h4>
-                  <p className="text-xs text-zinc-400">Backend Lead • 4.5 YOE • IIT Bombay</p>
+                  <span className="text-[11px] text-zinc-400 uppercase tracking-wider font-semibold block mb-2">
+                    Detected Candidate Skills:
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {selectedCandidate.skills.map((s, i) => (
+                      <span
+                        key={i}
+                        className="px-2.5 py-1 rounded-md text-[11px] font-mono bg-white/[0.04] border border-white/10 text-zinc-300"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="text-xl font-bold font-mono text-emerald-400">92<span className="text-xs text-zinc-500">/100</span></div>
-                  <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">High Match</span>
-                </div>
-              </div>
 
-              <div className="text-xs text-zinc-300 bg-black/40 rounded-lg p-3 border border-white/5 leading-relaxed">
-                <strong className="text-violet-300">AI Rationale:</strong> Candidate demonstrates strong mastery of FastAPI async patterns and PostgreSQL pgvector architectures with 3+ years production scaling experience.
-              </div>
-
-              <div className="flex flex-wrap gap-1.5">
-                <span className="px-2 py-0.5 rounded bg-violet-500/15 border border-violet-500/30 text-violet-300 text-[11px]">✓ Python / FastAPI (Req)</span>
-                <span className="px-2 py-0.5 rounded bg-violet-500/15 border border-violet-500/30 text-violet-300 text-[11px]">✓ pgvector / Supabase (Req)</span>
-                <span className="px-2 py-0.5 rounded bg-violet-500/15 border border-violet-500/30 text-violet-300 text-[11px]">✓ Redis Caching</span>
+                {selectedCandidate.missingGaps.length > 0 && (
+                  <div className="pt-2 border-t border-white/5 flex items-center gap-2 text-xs text-rose-300">
+                    <XCircle className="w-4 h-4 text-rose-400 shrink-0" />
+                    <span>
+                      Identified Gaps: <strong>{selectedCandidate.missingGaps.join(", ")}</strong>
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Right preview stats */}
-            <div className="md:col-span-5 rounded-xl bg-white/[0.02] border border-white/10 p-4 flex flex-col justify-between">
+            {/* Live Scoring Meter */}
+            <div className="lg:col-span-5 p-5 rounded-2xl bg-black/50 border border-white/10 flex flex-col justify-between space-y-4">
               <div>
-                <div className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">Batch Breakdown</div>
+                <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                  <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">
+                    Calculated Match Score
+                  </span>
+                  <span className="text-[11px] font-mono text-zinc-500">70% Req / 30% Pref</span>
+                </div>
+
+                <div className="py-4 text-center">
+                  <div
+                    className={`text-5xl font-bold font-mono ${
+                      currentScore >= 80
+                        ? "text-emerald-400"
+                        : currentScore >= 60
+                        ? "text-amber-300"
+                        : "text-zinc-400"
+                    }`}
+                  >
+                    {currentScore}
+                    <span className="text-sm text-zinc-500 font-sans"> / 100</span>
+                  </div>
+                  <span className="text-xs text-zinc-400 font-medium mt-1 block">
+                    {currentScore >= 80 ? "Strong Placement Fit" : currentScore >= 60 ? "Moderate Fit" : "Skill Gap Deficit"}
+                  </span>
+                </div>
+
                 <div className="space-y-2">
-                  <div className="flex justify-between text-xs">
-                    <span className="text-zinc-400">Resumes Screened</span>
-                    <span className="font-mono text-white font-semibold">100 / 100</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-zinc-400">Top Tier (&gt;80)</span>
-                    <span className="font-mono text-emerald-400 font-semibold">18 Candidates</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-zinc-400">Processing Time</span>
-                    <span className="font-mono text-violet-300 font-semibold">14.2 seconds</span>
-                  </div>
-                  <div className="flex justify-between text-xs">
-                    <span className="text-zinc-400">Consent Verified</span>
-                    <span className="font-mono text-emerald-400 font-semibold">100% DPDP</span>
-                  </div>
+                  {JOB_SKILLS.map((js) => {
+                    const matched = selectedCandidate.skills.some((cs) =>
+                      cs.toLowerCase().includes(js.id) || (js.id === "python" && cs.toLowerCase().includes("python"))
+                    );
+
+                    return (
+                      <div
+                        key={js.id}
+                        className="flex items-center justify-between text-xs p-2 rounded-lg bg-white/[0.02] border border-white/5"
+                      >
+                        <span className="flex items-center gap-1.5 text-zinc-300">
+                          {matched ? (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                          ) : (
+                            <XCircle className="w-3.5 h-3.5 text-rose-400" />
+                          )}
+                          <span>{js.name}</span>
+                        </span>
+                        <span className="font-mono text-[11px] text-zinc-500">+{js.weight} pts</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="pt-4 border-t border-white/10 mt-3 flex items-center justify-between text-xs">
-                <span className="text-zinc-500 font-mono">Retention: 90 Days</span>
-                <span className="text-violet-400 font-medium hover:underline cursor-pointer">Export Shortlist CSV →</span>
+              <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-zinc-400">
+                <span>DPDP Retention: 90 Days</span>
+                <Link
+                  href="/signup"
+                  className="text-violet-400 hover:text-violet-300 font-semibold flex items-center gap-1"
+                >
+                  <span>Test with Real Resumes →</span>
+                </Link>
               </div>
             </div>
           </div>
-        </motion.div>
+        </div>
       </section>
 
       {/* Social Proof Trust Band */}
       <section className="py-12 border-y border-white/10 bg-black/40 backdrop-blur-xl">
         <div className="max-w-6xl mx-auto px-4 text-center">
           <p className="text-xs uppercase tracking-widest text-zinc-400 font-semibold mb-6">
-            Trusted by Indian Campus Placement Cells & High-Growth Staffing Teams
+            Trusted by Placement Cells & Tech Hiring Teams Across India
           </p>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all">
-            <span className="text-sm font-semibold tracking-wider text-zinc-300">IIT Placement Cells</span>
-            <span className="text-sm font-semibold tracking-wider text-zinc-300">NIT Career Hub</span>
-            <span className="text-sm font-semibold tracking-wider text-zinc-300">Apex Tech Recruiters</span>
-            <span className="text-sm font-semibold tracking-wider text-zinc-300">Nexus Staffing India</span>
-            <span className="text-sm font-semibold tracking-wider text-zinc-300">Bengaluru Talent Labs</span>
+          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16 opacity-60 grayscale hover:grayscale-0 transition-all font-semibold text-sm text-zinc-300">
+            <span>IIT Placement Hubs</span>
+            <span>NIT Career Consortia</span>
+            <span>Bengaluru Tech Labs</span>
+            <span>Apex Staffing India</span>
+            <span>Nexus Talent Placement</span>
           </div>
         </div>
       </section>
 
-      {/* Feature Grid (v5 3-Pillar Zigzag + v7 Glass) */}
-      <section id="features" className="py-24 px-4 md:px-6 max-w-6xl mx-auto space-y-16">
+      {/* Interactive 3-Pillar Deep Dive */}
+      <section id="pillars" className="py-24 px-4 md:px-6 max-w-6xl mx-auto space-y-12">
         <div className="text-center max-w-2xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-4">
-            Built for Explainability, Speed & India DPDP Compliance
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-white mb-3">
+            Architected for Pure Explainability & Compliance
           </h2>
           <p className="text-zinc-400 text-sm sm:text-base">
-            Every score is mathematically justified. Never guess why an ATS rejected your top talent.
+            Every decision point is auditable, deterministic, and protected by Indian data privacy laws.
           </p>
         </div>
 
-        {/* Pillar 1: Explainability */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center glass-panel p-6 md:p-10 rounded-3xl">
-          <div className="space-y-4">
-            <div className="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
-              <FileCheck2 className="w-5 h-5" />
-            </div>
-            <h3 className="text-2xl font-bold text-white tracking-tight">Verbatim Evidence for Every Skill</h3>
-            <p className="text-sm text-zinc-400 leading-relaxed">
-              Unlike generic ATS systems that output arbitrary numbers, Merix parses required vs preferred skills and maps exact quotes directly from the candidate&apos;s resume text into an explainable rationale.
-            </p>
-            <ul className="space-y-2 text-xs text-zinc-300">
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Deterministic weighted matching (70% required / 20% preferred / 10% experience)</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Clear missing skills callouts for recruiter debriefs</span>
-              </li>
-            </ul>
-          </div>
-          <div className="rounded-2xl bg-black/50 border border-white/10 p-5 font-mono text-xs text-zinc-300 space-y-3 shadow-inner">
-            <div className="text-zinc-500 text-[11px] pb-2 border-b border-white/10">// Match Evidence Output</div>
-            <div className="text-emerald-400">✓ Skill: &quot;PyTorch / Deep Learning&quot;</div>
-            <div className="text-zinc-400 pl-4 border-l-2 border-emerald-500/40 text-[11px]">
-              &quot;Developed and fine-tuned transformer architectures for NLP classification using PyTorch across 4 multi-GPU nodes.&quot;
-            </div>
-            <div className="text-rose-400 pt-2">✗ Gap: &quot;Kubernetes Cluster Management&quot;</div>
-            <div className="text-zinc-500 pl-4 border-l-2 border-rose-500/40 text-[11px]">
-              No evidence of production K8s deployment found in work history.
-            </div>
+        {/* Interactive Tab Selector */}
+        <div className="flex justify-center">
+          <div className="flex items-center gap-2 p-1.5 rounded-2xl bg-black/60 border border-white/10">
+            <button
+              onClick={() => setActiveTab("explainability")}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                activeTab === "explainability"
+                  ? "bg-violet-600 text-white shadow-lg shadow-violet-600/30"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              <FileCheck2 className="w-4 h-4" />
+              <span>1. Explainable Matching</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("batch")}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                activeTab === "batch"
+                  ? "bg-violet-600 text-white shadow-lg shadow-violet-600/30"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              <Zap className="w-4 h-4" />
+              <span>2. High-Throughput Batching</span>
+            </button>
+
+            <button
+              onClick={() => setActiveTab("dpdp")}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                activeTab === "dpdp"
+                  ? "bg-violet-600 text-white shadow-lg shadow-violet-600/30"
+                  : "text-zinc-400 hover:text-white"
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>3. India DPDP Compliance</span>
+            </button>
           </div>
         </div>
 
-        {/* Pillar 2: Batch Processing */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center glass-panel p-6 md:p-10 rounded-3xl">
-          <div className="order-2 md:order-1 rounded-2xl bg-black/50 border border-white/10 p-5 space-y-3">
-            <div className="flex items-center justify-between text-xs pb-2 border-b border-white/10">
-              <span className="text-zinc-400 font-mono">Async Background Queue</span>
-              <span className="text-violet-400 font-mono">202 Accepted</span>
-            </div>
-            <div className="space-y-2">
-              <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden">
-                <div className="bg-gradient-to-r from-violet-500 to-indigo-500 h-full w-[85%]" />
-              </div>
-              <div className="flex justify-between text-[11px] text-zinc-400 font-mono">
-                <span>Status: Processing 85/100 Resumes</span>
-                <span>85%</span>
-              </div>
-            </div>
-            <div className="text-[11px] text-zinc-400 bg-white/[0.02] p-2.5 rounded border border-white/5">
-              Partial failure isolation: Corrupted or unparseable files are quarantined with exact error messages while valid resumes process without interruption.
-            </div>
-          </div>
-          <div className="order-1 md:order-2 space-y-4">
-            <div className="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-              <Zap className="w-5 h-5" />
-            </div>
-            <h3 className="text-2xl font-bold text-white tracking-tight">High-Throughput Batch Uploads</h3>
-            <p className="text-sm text-zinc-400 leading-relaxed">
-              Drop 100+ PDF resumes for a single opening. Our background processing pipeline parses, extracts semantic embeddings, and ranks candidates asynchronously with live status polling.
-            </p>
-            <ul className="space-y-2 text-xs text-zinc-300">
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Instant shortlist CSV export with candidate ranking</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Real-time progress bars with zero page freezing</span>
-              </li>
-            </ul>
-          </div>
-        </div>
+        {/* Tab Content Panels */}
+        <div className="glass-panel p-8 md:p-12 rounded-3xl border border-white/15 shadow-[0_16px_40px_rgba(0,0,0,0.6)]">
+          <AnimatePresence mode="wait">
+            {activeTab === "explainability" && (
+              <motion.div
+                key="explainability"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center"
+              >
+                <div className="space-y-4">
+                  <div className="w-10 h-10 rounded-xl bg-violet-600/20 border border-violet-500/30 flex items-center justify-center text-violet-400">
+                    <FileCheck2 className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">
+                    No Black-Box Scores. Verbatim Quotes for Every Fit.
+                  </h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">
+                    Legacy ATS tools reject resumes with arbitrary opacity. Merix maps required and preferred skills directly to exact sentences in the candidate&apos;s PDF text, generating a mathematically auditable score.
+                  </p>
+                  <ul className="space-y-2 text-xs text-zinc-300">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>70% Required / 20% Preferred / 10% Experience formula</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>Missing skill gaps explicitly flagged for placement coordinators</span>
+                    </li>
+                  </ul>
+                </div>
 
-        {/* Pillar 3: DPDP Compliance */}
-        <div id="compliance" className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center glass-panel p-6 md:p-10 rounded-3xl">
-          <div className="space-y-4">
-            <div className="w-10 h-10 rounded-xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <h3 className="text-2xl font-bold text-white tracking-tight">Full India DPDP (2023) Compliance</h3>
-            <p className="text-sm text-zinc-400 leading-relaxed">
-              Built from day one for Indian data privacy. Consent is required and stamped on every resume, automated 90-day retention policies auto-expire data, and candidate erasure is supported in one click.
+                <div className="rounded-2xl bg-black/60 border border-white/10 p-5 font-mono text-xs text-zinc-300 space-y-3 shadow-inner">
+                  <div className="text-zinc-500 pb-2 border-b border-white/10">// Explainability Dossier Extraction</div>
+                  <div className="text-emerald-400 font-semibold">✓ &quot;FastAPI AsyncIO Production Mastery&quot;</div>
+                  <div className="text-zinc-400 pl-4 border-l-2 border-emerald-500/40 text-[11px]">
+                    &quot;Developed high-concurrency event ingestion pipelines using FastAPI and Asyncpg on PostgreSQL.&quot;
+                  </div>
+                  <div className="text-rose-400 font-semibold pt-2">✗ Gap: &quot;Kubernetes Cluster Management&quot;</div>
+                  <div className="text-zinc-500 pl-4 border-l-2 border-rose-500/40 text-[11px]">
+                    No evidence of multi-node K8s management found in candidate work history.
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === "batch" && (
+              <motion.div
+                key="batch"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center"
+              >
+                <div className="space-y-4">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+                    <Zap className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">
+                    High-Throughput Batch Processing Engine
+                  </h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">
+                    Upload 100+ resumes in a single drag-and-drop action. Our asynchronous worker queue extracts requirements, generates Gemini vector embeddings, and ranks candidates with zero UI blocking.
+                  </p>
+                  <ul className="space-y-2 text-xs text-zinc-300">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>Partial failure isolation: bad files don&apos;t fail the batch</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>Instant one-click shortlist CSV export with full ranking</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="rounded-2xl bg-black/60 border border-white/10 p-5 space-y-3">
+                  <div className="flex justify-between items-center text-xs pb-2 border-b border-white/10">
+                    <span className="font-mono text-zinc-400">Async Batch Pipeline</span>
+                    <span className="font-mono text-emerald-400">Status: Running</span>
+                  </div>
+                  <div className="w-full bg-white/5 rounded-full h-2 overflow-hidden">
+                    <div className="bg-gradient-to-r from-violet-500 to-indigo-500 h-full w-[90%]" />
+                  </div>
+                  <div className="flex justify-between text-[11px] text-zinc-400 font-mono">
+                    <span>90 / 100 Resumes Evaluated</span>
+                    <span>90%</span>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+
+            {activeTab === "dpdp" && (
+              <motion.div
+                key="dpdp"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.3 }}
+                className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center"
+              >
+                <div className="space-y-4">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-600/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+                    <ShieldCheck className="w-5 h-5" />
+                  </div>
+                  <h3 className="text-2xl font-bold text-white tracking-tight">
+                    Complete India DPDP Act (2023) Protection
+                  </h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">
+                    Designed specifically for Indian institutions. Mandatory consent stamping, PII scrubbing before LLM evaluation, automatic 90-day retention cleanup, and one-click Data Principal erasure.
+                  </p>
+                  <ul className="space-y-2 text-xs text-zinc-300">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>PostgreSQL Row-Level Security (RLS) tenant isolation</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                      <span>Append-only immutable audit trail for legal compliance</span>
+                    </li>
+                  </ul>
+                </div>
+
+                <div className="rounded-2xl bg-black/60 border border-white/10 p-5 space-y-2 text-xs">
+                  <div className="flex justify-between items-center pb-2 border-b border-white/10 font-mono text-emerald-400">
+                    <span>DPDP Trust Vault Active</span>
+                    <span className="text-[10px] text-zinc-500">RLS Isolated</span>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/5 flex justify-between text-zinc-300">
+                    <span>Consent Stamping</span>
+                    <strong className="text-emerald-300 font-mono">Server-Side Signed</strong>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/5 flex justify-between text-zinc-300">
+                    <span>Retention Limit</span>
+                    <strong className="text-zinc-200 font-mono">90 Days (Configurable)</strong>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/5 flex justify-between text-zinc-300">
+                    <span>Right to Erasure</span>
+                    <strong className="text-rose-300 font-mono">1-Click Cascade Delete</strong>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </section>
+
+      {/* Interactive ROI Calculator for Placement Drives */}
+      <section id="calculator" className="py-16 px-4 md:px-6 max-w-5xl mx-auto w-full">
+        <div className="glass-panel p-8 md:p-12 rounded-3xl border border-white/15 space-y-8">
+          <div className="text-center max-w-xl mx-auto space-y-2">
+            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+              Campus Placement Drive ROI Calculator
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-400">
+              Calculate time and compliance risk reduction across your placement cycles.
             </p>
-            <ul className="space-y-2 text-xs text-zinc-300">
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Pre-processing PII scrubbing (phone, email, address)</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>Immutable audit trail tracking every batch action</span>
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                <span>One-click Data Principal Erasure (Right to be Forgotten)</span>
-              </li>
-            </ul>
           </div>
-          <div className="rounded-2xl bg-black/50 border border-white/10 p-5 space-y-3 text-xs">
-            <div className="flex items-center justify-between pb-2 border-b border-white/10">
-              <span className="font-semibold text-emerald-400 flex items-center gap-1.5">
-                <Lock className="w-3.5 h-3.5" />
-                <span>DPDP Trust Vault</span>
-              </span>
-              <span className="text-[10px] text-zinc-500 font-mono">ORG-RETENTION: 90 DAYS</span>
+
+          <div className="space-y-4 max-w-xl mx-auto">
+            <div className="flex justify-between items-center text-xs font-mono text-zinc-300">
+              <span>Batch Size: <strong className="text-violet-300 text-base">{resumeSliderValue}</strong> Resumes</span>
+              <span className="text-zinc-500">Scale: 50 – 2000</span>
             </div>
-            <div className="space-y-2 text-zinc-300">
-              <div className="flex items-center justify-between p-2 rounded bg-white/[0.03] border border-white/5">
-                <span className="text-zinc-400">Consent Stamping</span>
-                <span className="text-emerald-300 font-mono">Server-Side Verified</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded bg-white/[0.03] border border-white/5">
-                <span className="text-zinc-400">Row-Level Security</span>
-                <span className="text-emerald-300 font-mono">Postgres Tenant RLS</span>
-              </div>
-              <div className="flex items-center justify-between p-2 rounded bg-white/[0.03] border border-white/5">
-                <span className="text-zinc-400">Right to Erasure</span>
-                <span className="text-rose-300 font-mono">Instant Cascade Delete</span>
-              </div>
+
+            <input
+              type="range"
+              min={50}
+              max={2000}
+              step={50}
+              value={resumeSliderValue}
+              onChange={(e) => setResumeSliderValue(Number(e.target.value))}
+              className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-violet-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-4 text-center">
+            <div className="p-4 rounded-2xl bg-black/40 border border-white/10">
+              <div className="text-3xl font-bold font-mono text-white mb-1">{hoursSaved} hrs</div>
+              <p className="text-[11px] uppercase tracking-wider font-semibold text-zinc-400">
+                Manual Screening Saved
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-black/40 border border-white/10">
+              <div className="text-3xl font-bold font-mono text-emerald-400 mb-1">&lt;30 sec</div>
+              <p className="text-[11px] uppercase tracking-wider font-semibold text-zinc-400">
+                Merix Batch Latency
+              </p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-black/40 border border-white/10">
+              <div className="text-3xl font-bold font-mono text-violet-300 mb-1">100%</div>
+              <p className="text-[11px] uppercase tracking-wider font-semibold text-zinc-400">
+                DPDP Consent Compliance
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ROI Metrics Section */}
-      <section id="metrics" className="py-20 border-t border-white/10 bg-gradient-to-b from-black/60 to-black/90">
-        <div className="max-w-6xl mx-auto px-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
-            <div className="p-6 rounded-2xl glass-panel">
-              <div className="text-4xl font-bold font-mono text-white mb-1">&lt;10 min</div>
-              <p className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">100 Resumes Screened</p>
+      {/* Interactive FAQ Accordion */}
+      <section id="faq" className="py-16 px-4 md:px-6 max-w-4xl mx-auto w-full space-y-6">
+        <div className="text-center space-y-2 mb-8">
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-xs text-zinc-400">
+            Everything you need to know about Merix, explainability, and DPDP compliance.
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          {[
+            {
+              q: "How does Merix guarantee explainability for every match score?",
+              a: "Unlike black-box ATS algorithms, Merix breaks down each Job Description into required skills (70%), preferred qualifications (20%), and experience criteria (10%). For every matched skill, it extracts the verbatim sentence from the candidate's PDF and generates a grounded explanation.",
+            },
+            {
+              q: "What makes Merix compliant with the India DPDP Act 2023?",
+              a: "Merix enforces a mandatory legal consent gate on batch upload, records server-side timestamps, scrubs personal identifiable information (PII) before vector analysis, automatically deletes data after your organization's retention limit (default 90 days), and provides a one-click Data Principal Erasure action.",
+            },
+            {
+              q: "What happens if a resume fails parsing or is corrupted?",
+              a: "Merix features partial failure isolation. If a corrupt file or password-protected PDF is encountered, it is quarantined with a specific error message while the rest of the batch processes seamlessly.",
+            },
+            {
+              q: "Can I export candidate rankings to Excel or an external ATS?",
+              a: "Yes. Every shortlisted batch provides instant CSV export containing candidate names, 0–100 scores, matched skills, missing gaps, and the AI rationale.",
+            },
+          ].map((item, idx) => (
+            <div
+              key={idx}
+              className="glass-panel rounded-2xl border border-white/10 overflow-hidden transition-colors"
+            >
+              <button
+                onClick={() => setOpenFaq(openFaq === idx ? null : idx)}
+                className="w-full p-4 md:p-5 flex items-center justify-between text-left text-sm font-semibold text-white hover:text-violet-300 transition-colors"
+              >
+                <span>{item.q}</span>
+                {openFaq === idx ? (
+                  <ChevronUp className="w-4 h-4 text-violet-400 shrink-0" />
+                ) : (
+                  <ChevronDown className="w-4 h-4 text-zinc-500 shrink-0" />
+                )}
+              </button>
+
+              {openFaq === idx && (
+                <div className="px-5 pb-5 text-xs text-zinc-400 leading-relaxed border-t border-white/5 pt-3">
+                  {item.a}
+                </div>
+              )}
             </div>
-            <div className="p-6 rounded-2xl glass-panel">
-              <div className="text-4xl font-bold font-mono text-emerald-400 mb-1">100%</div>
-              <p className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Grounded Evidence</p>
-            </div>
-            <div className="p-6 rounded-2xl glass-panel">
-              <div className="text-4xl font-bold font-mono text-violet-400 mb-1">4.5 hrs</div>
-              <p className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Saved per Batch</p>
-            </div>
-            <div className="p-6 rounded-2xl glass-panel">
-              <div className="text-4xl font-bold font-mono text-indigo-400 mb-1">DPDP</div>
-              <p className="text-xs text-zinc-400 uppercase tracking-wider font-semibold">Fully Compliant</p>
-            </div>
-          </div>
+          ))}
         </div>
       </section>
 
       {/* Final Call to Action */}
-      <section className="py-24 px-4 text-center max-w-4xl mx-auto">
-        <div className="glass-panel p-10 md:p-16 rounded-3xl border border-white/15 shadow-[0_0_50px_rgba(124,58,237,0.2)]">
+      <section className="py-20 px-4 text-center max-w-4xl mx-auto w-full">
+        <div className="glass-panel p-10 md:p-14 rounded-3xl border border-white/15 shadow-[0_0_50px_rgba(124,58,237,0.2)]">
           <h2 className="text-3xl sm:text-5xl font-bold tracking-tight text-white mb-4">
-            Ready to streamline your placement drives?
+            Accelerate your placement shortlists today.
           </h2>
-          <p className="text-zinc-400 text-sm sm:text-base max-w-xl mx-auto mb-8">
-            Create an organization account in seconds and post your first job description.
+          <p className="text-zinc-400 text-sm max-w-xl mx-auto mb-8 leading-relaxed">
+            Create an organization account and post your first job description in less than 2 minutes.
           </p>
           <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
             <Link
               href="/signup"
-              className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 shadow-lg shadow-violet-600/30 transition-all hover:scale-[1.02]"
+              className="flex items-center justify-center gap-2 px-8 py-3.5 rounded-xl font-semibold text-sm text-white bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 shadow-lg shadow-violet-600/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
             >
               <span>Get Started Now</span>
               <ArrowRight className="w-4 h-4" />
