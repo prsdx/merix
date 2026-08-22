@@ -47,6 +47,6 @@ services:
       - key: JWT_ALGORITHM
         value: HS256
       - key: ALLOWED_ORIGINS
-        value: *
+        value: "*"
       - key: ADMIN_API_TOKEN
         sync: false
