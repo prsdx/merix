@@ -31,7 +31,7 @@ Traditional ATS systems are black boxes: they reject resumes with no explanation
 
 **Backend**: FastAPI (async) + PostgreSQL/pgvector (Supabase) + SQLAlchemy 2.0 (async, NullPool) + Alembic (migrations applied)
 
-**Frontend**: Next.js 15 (App Router) + TypeScript + Tailwind CSS + Framer Motion (in `frontend-demo/`)
+**Frontend**: Next.js 15 (App Router) + TypeScript + Tailwind CSS + Framer Motion (in `frontend/`)
 
 **Status**: Tasks 1–9 complete — Full production frontend wired to real FastAPI backend. Unified design direction combining v5 (high-converting B2B SaaS conversion structure) with v7 (Apple Liquid Glass deep `#050505` palette & frosted glass cards). All 9 core screens built and verified live with 64 passing backend tests and end-to-end integration.
 
