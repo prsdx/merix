@@ -4,6 +4,7 @@ from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from merix.api.router import api_router
@@ -39,11 +40,27 @@ def create_app() -> FastAPI:
         debug=settings.DEBUG,
         lifespan=lifespan,
     )
+    _configure_cors(app)
     app.include_router(api_router, prefix="/api")
     _register_exception_handlers(app)
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     return app
+
+
+def _configure_cors(app: FastAPI) -> None:
+    """Configure CORS with env-configurable allowed origins."""
+    origins = settings.ALLOWED_ORIGINS
+    allow_origins = (
+        ["*"] if origins == "*" else [o.strip() for o in origins.split(",") if o.strip()]
+    )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=allow_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
 
 def _register_exception_handlers(app: FastAPI) -> None:

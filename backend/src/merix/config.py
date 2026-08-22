@@ -42,6 +42,11 @@ class Settings(BaseSettings):
 
     # Retention is per-org (organisations.retention_days, default 90) since Task 3.
 
+    # Comma-separated list of allowed CORS origins. Default: "*" in
+    # development (convenient), but must be set explicitly in production.
+    # Example: "https://app.merix.dev,https://admin.merix.dev"
+    ALLOWED_ORIGINS: str = "*"
+
     # Resolve .env relative to the backend/ dir (this file is at backend/src/merix/config.py),
     # so settings load correctly regardless of the process working directory.
     model_config = SettingsConfigDict(
