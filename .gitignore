@@ -1,4 +1,4 @@
-﻿# Secrets and environment
+# Secrets and environment
 .env
 .env.local
 .env.*.local
@@ -38,7 +38,7 @@ frontend/dist/
 Thumbs.db
 
 # Project-specific (do not commit)
-resume/
+data/resume/
 preparation/
-interview.md
+docs/interview.md
 .env.example.local
