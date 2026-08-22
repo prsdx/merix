@@ -33,9 +33,9 @@ Traditional ATS systems are black boxes: they reject resumes with no explanation
 
 **Frontend**: React SPA (existing, in `frontend/`)
 
-**Status**: Task 4 complete — security hardening pass across Tasks
+**Status**: Task 5 complete — async batch job infrastructure with status tracking and stale detection
 
-Tasks 1-3. Backend + frontend dependencies audited (0 vulns). All 7 scope items addressed: pip-audit clean, secrets review (no hardcoded keys in git history; .env.example lists every var including ADMIN_API_TOKEN and ALLOWED_ORIGINS; InsecureKeyLengthWarning fixed — test-only, real JWT_SECRET is user-supplied), input validation hardened (capped upload reads, field length limits, PDF page cap, admin-token sweep gate, all schemas have Pydantic constraints, no SQL injection surfaces), rate limiting on signup/login (slowapi), env-configurable CORS allowed origins, logging reviewed (no PII leaks), RLS GUC bleed-through tested (rapid sequential + SESSION-leak tests pass under NullPool). Migration 26f49b7b8456 grants merix_app RLS access to organisations/users tables. 39 tests passing (14 unit + 25 integration).
+Tasks 1-5 complete. Backend + frontend dependencies audited (0 vulns). Task 5 adds async batch matching: POST /api/jobs/{id}/match now returns 202 immediately and enqueues a background task; GET /api/batch-jobs/{id} for polling with stale detection (10-min threshold). BatchJob model tracks status (queued/running/completed/failed), progress (completed_resumes/total_resumes), and per-resume results (batch_results JSONB for partial failure handling). Stale jobs marked failed on startup and on polling. Idempotency key support for deduplication. BackgroundTasks sufficient (no Celery needed). 53 tests total (14 unit + 39 integration).
 
 ### Project Structure
 
@@ -103,6 +103,19 @@ backend/
   - **RLS policy fix**: Migration `26f49b7b8456` grants merix_app full access to organisations/users tables (RLS was enabled but no app policy existed, breaking signup under the app role).
   - 39 tests total (14 unit + 25 integration): +2 rate-limit tests, +2 RLS bleed-through tests.
 
+- **Task 5**: Background job robustness (async batch matching with status tracking)
+  - **BatchJob model** (`models/batch_job.py`): status lifecycle (queued→running→completed/failed), org_id, job_description_id, idempotency_key (optional UUID for deduplication), total_resumes, completed_resumes (progress tracking), batch_results (JSONB array of per-resume disposition), error_message (for failed jobs)
+  - **Migration** `13aafa45b687` (applied to live DB): batch_jobs table with RLS policies, grants merix_app full access
+  - **Async batch matching**: POST `/api/jobs/{job_id}/match` returns 202 Accepted immediately, creates BatchJob with status="queued", enqueues `run_batch_match_background` via BackgroundTasks
+  - **Status endpoint**: GET `/api/batch-jobs/{batch_job_id}` returns current status and progress; stale detection marks jobs failed if running > 10 minutes without update
+  - **Background task** (`services/batch.py`): creates own DB session (independent of request), updates status queued→running→completed/failed, processes each resume independently with try/except, tracks progress after each resume, records per-resume results in batch_results JSONB
+  - **Partial failure handling**: one bad resume doesn't fail the whole batch; failures recorded in batch_results with specific error; job status is "completed" even if some resumes failed
+  - **Stale job detection**: on startup (marks any "running" jobs as failed for server crash recovery); on polling (marks failed if updated_at > 10 minutes ago)
+  - **Idempotency**: optional idempotency_key prevents duplicate jobs for the same submission
+  - **Retry strategy**: "surface-and-let-client-resubmit" (no auto-retry); client must resubmit failed jobs; `run_match_for_resume` is idempotent (upserts), so re-running is safe
+  - **BackgroundTasks evaluation**: still sufficient for current requirements (jobs are short-lived, no distributed workers needed, no job scheduling needed); no Celery/Redis required
+  - 14 new integration tests covering submission, status polling, completion, idempotency, partial failure, stale detection, org scoping, authentication - 53 tests total
+
 ### Known gaps / pending
 - **GoTrue token algorithm**: new Supabase projects sign access tokens with ES256; our verifier is HS256-only (SUPABASE_JWT_SECRET). Production fix: JWKS verification against {SUPABASE_URL}/auth/v1/.well-known/jwks.json - needed before real frontend use.
 - **Live Groq LLM call verified** (single call), but not yet exercised through the full API path with a real key.
@@ -111,14 +124,15 @@ backend/
 
 ---
 
-## What's Next (Task 5) - Background job robustness
+## What's Next (Task 6) - CI/CD pipeline
 
-Batch matching is synchronous today (request blocks until all matches compute). The retention sweep runs as a FastAPI background task with no retry, idempotency, or status visibility. Task 5 should add:
+No automated testing or linting runs on PRs. Task 6 should add:
 
-1. **Job infrastructure**: a `jobs` table with status tracking (queued/running/done/failed), progress metadata, and idempotency keys.
-2. **Async batch matching**: POST /api/jobs/{id}/match enqueues a background job instead of blocking; polling or webhook for completion.
-3. **Retention sweep scheduling**: replace the manual POST /api/admin/retention-sweep with a proper scheduler (APScheduler or Celery beat) that runs daily per-org.
-4. **Job API**: GET /api/jobs/{id}/status for polling; optional webhook callback on completion.
+1. **GitHub Actions workflow**: run pytest (unit + integration), ruff (lint + format check), mypy (type checking) on every PR
+2. **Pre-commit hooks**: auto-run ruff, mypy locally before commits
+3. **Dependency audit**: pip-audit and npm audit in CI to catch CVEs
+4. **Database migration check**: verify alembic upgrade works on clean DB
+5. **Coverage reporting**: track test coverage with coverage.py, enforce minimum threshold
 
 ---
 
