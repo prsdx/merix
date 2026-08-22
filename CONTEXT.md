@@ -33,7 +33,9 @@ Traditional ATS systems are black boxes: they reject resumes with no explanation
 
 **Frontend**: React SPA (existing, in `frontend/`)
 
-**Status**: Task 3 complete - DPDP consent/retention/erasure/audit live end-to-end. Resume upload requires explicit `consent_given=true` (400 otherwise); consent timestamp + retention expiry are stamped server-side from the org's `retention_days` (default 90). Hard-delete erasure endpoint, retention sweep service, and an RLS-protected append-only audit log are in place. 37 tests passing (14 unit + 23 integration). Tasks 1-2 (pipeline, auth, multi-tenancy) re-verified under the consent flow.
+**Status**: Task 4 complete — security hardening pass across Tasks
+
+Tasks 1-3. Backend + frontend dependencies audited (0 vulns). All 7 scope items addressed: pip-audit clean, secrets review (no hardcoded keys in git history; .env.example lists every var including ADMIN_API_TOKEN and ALLOWED_ORIGINS; InsecureKeyLengthWarning fixed — test-only, real JWT_SECRET is user-supplied), input validation hardened (capped upload reads, field length limits, PDF page cap, admin-token sweep gate, all schemas have Pydantic constraints, no SQL injection surfaces), rate limiting on signup/login (slowapi), env-configurable CORS allowed origins, logging reviewed (no PII leaks), RLS GUC bleed-through tested (rapid sequential + SESSION-leak tests pass under NullPool). Migration 26f49b7b8456 grants merix_app RLS access to organisations/users tables. 39 tests passing (14 unit + 25 integration).
 
 ### Project Structure
 
@@ -90,28 +92,33 @@ backend/
   - **Migration** `2072dab8609b` (applied to live DB): audit_events table + RLS, organisations.retention_days.
   - **Tests**: 5 new integration tests (consent rejection, consent stamping + 90-day expiry, manual deletion removes resume+matches+audits, retention sweep deletes expired, org retention-policy update). Pre-existing org-isolation and vertical-slice tests updated for the consent field. 37 total passing.
 
+- **Task 4**: Security hardening pass
+  - **Dependency audit**: pip-audit across all backend deps — 0 known vulnerabilities. Frontend npm audit — 0 vulnerabilities (Vite CVEs already fixed in chore a4002cf).
+  - **Secrets review**: no hardcoded keys/tokens/credentials in git history or current codebase. `.env` is gitignored (confirmed). `.env.example` lists every config var with placeholders only (including ADMIN_API_TOKEN, ALLOWED_ORIGINS). InsecureKeyLengthWarning resolved (test HMAC key ≥ 32 bytes; real JWT_SECRET length is user decision).
+  - **Input validation hardening**: capped upload reads (MAX_FILE_BYTES+1 cap), Field max_length on all schemas (title, org_name, password, candidate_name, raw_text, email), PDF page cap (100 pages), admin-token sweep gate. 6 validation tests. No SQL injection surfaces found — all queries use SQLAlchemy parameterized API.
+  - **Rate limiting**: slowapi on signup (5/hour) and login (10/minute) per client IP. 2 tests with in-memory GoTrue fake.
+  - **CORS**: ALLOWED_ORIGINS env var (comma-separated, defaults to "*" in dev). CORSMiddleware with allow_credentials=True.
+  - **Logging review**: all 8 logger calls audited across auth, pipeline, retention, llm, and embeddings modules. No PII (emails, tokens, resume content) logged. Only UUIDs, token counts, and model names.
+  - **RLS re-verification**: rapid sequential alternation test (Org A/B sessions interleaved 2× — no cross-org leak); SESSION-scoped GUC variant test documents where a real connection-pool regression would surface. Both pass under NullPool.
+  - **RLS policy fix**: Migration `26f49b7b8456` grants merix_app full access to organisations/users tables (RLS was enabled but no app policy existed, breaking signup under the app role).
+  - 39 tests total (14 unit + 25 integration): +2 rate-limit tests, +2 RLS bleed-through tests.
+
 ### Known gaps / pending
 - **GoTrue token algorithm**: new Supabase projects sign access tokens with ES256; our verifier is HS256-only (SUPABASE_JWT_SECRET). Production fix: JWKS verification against {SUPABASE_URL}/auth/v1/.well-known/jwks.json - needed before real frontend use.
 - **Live Groq LLM call verified** (single call), but not yet exercised through the full API path with a real key.
 - Embedding dimension is 768 (Gemini). Switching providers requires an Alembic migration.
-- Retention sweep is triggered manually via `/api/admin/retention-sweep` - no scheduler yet (Task 5 candidate).
 - Audit log has no read/query API yet (v1 requirement is the trail itself; an auditor-facing endpoint can come later).
 
 ---
 
-## What's Next (Task 4) - Security hardening pass
+## What's Next (Task 5) - Background job robustness
 
-Hardening pass across Tasks 1-3, not new features:
+Batch matching is synchronous today (request blocks until all matches compute). The retention sweep runs as a FastAPI background task with no retry, idempotency, or status visibility. Task 5 should add:
 
-1. **Dependency audit**: pip-audit via uv across all deps since Task 0; report every finding with triage; fix only reachable CVEs.
-2. **Secrets review**: full-codebase grep for hardcoded keys/tokens; verify .env gitignored AND never committed historically (git log); .env.example completeness. **Named item**: pytest emits `InsecureKeyLengthWarning` (HMAC key < 32 bytes) in the test fake-signing path - determine whether it is test-only (acceptable) or reflects the real SUPABASE_JWT_SECRET length (must fix).
-3. **Input validation sweep**: re-review every Task 1-3 endpoint for missing Pydantic validation; verify upload content-type is actually checked (not client-trusted); PDF parsing defensiveness; injection risk in any raw SQL/string formatting.
-4. **Rate limiting**: on signup/login at minimum. Use an established library (e.g. slowapi) - **confirm with owner before adding any new dependency**.
-5. **CORS**: env-configurable allowed-origins list (dev/prod differ), no wildcard.
-6. **Logging review**: no PII (resume content, emails, tokens) in plaintext logs - DPDP.
-7. **RLS re-verification**: test two rapid sequential requests from different orgs for GUC bleed-through (connection pooling leak) if not already covered.
-
-Model guidance: audits/lint/RL/CORS config = delegable; allow-lists, auth/RLS vulnerability review, secrets/PII handling = strongest model, verified personally.
+1. **Job infrastructure**: a `jobs` table with status tracking (queued/running/done/failed), progress metadata, and idempotency keys.
+2. **Async batch matching**: POST /api/jobs/{id}/match enqueues a background job instead of blocking; polling or webhook for completion.
+3. **Retention sweep scheduling**: replace the manual POST /api/admin/retention-sweep with a proper scheduler (APScheduler or Celery beat) that runs daily per-org.
+4. **Job API**: GET /api/jobs/{id}/status for polling; optional webhook callback on completion.
 
 ---
 
