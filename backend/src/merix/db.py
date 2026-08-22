@@ -29,6 +29,7 @@ def _drop_superuser_role(dbapi_connection, _connection_record) -> None:
     cursor.execute("SET ROLE merix_app")
     cursor.close()
 
+
 AsyncSessionLocal = async_sessionmaker(
     engine,
     class_=AsyncSession,

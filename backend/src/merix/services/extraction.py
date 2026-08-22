@@ -62,9 +62,7 @@ def extract_text_from_pdf(data: bytes) -> str:
         if doc.needs_pass or doc.is_encrypted:
             raise UnparseableFileError("PDF is encrypted/password-protected.")
         if doc.page_count > MAX_PAGES:
-            raise UnparseableFileError(
-                f"PDF has too many pages ({doc.page_count}; max {MAX_PAGES})."
-            )
+            raise UnparseableFileError(f"PDF has too many pages ({doc.page_count}; max {MAX_PAGES}).")
 
         pages = [page.get_text("text") for page in doc]
     finally:
@@ -76,10 +74,7 @@ def extract_text_from_pdf(data: bytes) -> str:
     text = re.sub(r"\n{3,}", "\n\n", text).strip()
 
     if len(text) < MIN_TEXT_CHARS:
-        raise UnparseableFileError(
-            "PDF has little or no extractable text (likely a scanned image). "
-            "OCR is not supported in v1."
-        )
+        raise UnparseableFileError("PDF has little or no extractable text (likely a scanned image). OCR is not supported in v1.")
 
     return _truncate_head_tail(text)
 
@@ -99,4 +94,3 @@ def scrub_pii(text: str) -> str:
     text = _URL_RE.sub("[url]", text)
     text = _PHONE_RE.sub("[phone]", text)
     return text
-

@@ -45,9 +45,7 @@ async def get_batch_job_status(
         age = datetime.now(UTC) - batch_job.updated_at
         if age.total_seconds() > STALE_THRESHOLD_MINUTES * 60:
             batch_job.status = "failed"
-            batch_job.error_message = (
-                "Job timed out — server may have restarted during processing"
-            )
+            batch_job.error_message = "Job timed out — server may have restarted during processing"
             await db.commit()
             await db.refresh(batch_job)
 

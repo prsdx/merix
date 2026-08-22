@@ -19,9 +19,7 @@ from merix.services import auth as auth_service
 router = APIRouter()
 
 
-@router.post(
-    "/signup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED
-)
+@router.post("/signup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 @limiter.limit(SIGNUP_RATE_LIMIT)
 async def signup(
     request: Request,
@@ -58,4 +56,3 @@ async def me(
         org_id=user.org_id,
         org_name=org.name if org else "",
     )
-

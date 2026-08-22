@@ -90,9 +90,7 @@ async def test_malformed_token_returns_401(client):
 async def test_expired_token_returns_401(client, make_org_user):
     user_id, _ = await make_org_user()
     token = make_token(user_id, expires_in=-60)  # expired a minute ago
-    r = client.get(
-        f"/api/jobs/{uuid.uuid4()}", headers={"Authorization": f"Bearer {token}"}
-    )
+    r = client.get(f"/api/jobs/{uuid.uuid4()}", headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 401, r.text
     assert "expired" in r.json()["detail"]
 
@@ -100,18 +98,14 @@ async def test_expired_token_returns_401(client, make_org_user):
 async def test_wrong_signature_returns_401(client, make_org_user):
     user_id, _ = await make_org_user()
     token = make_token(user_id, secret="a-different-but-still-32-bytes-long-secret!")
-    r = client.get(
-        f"/api/jobs/{uuid.uuid4()}", headers={"Authorization": f"Bearer {token}"}
-    )
+    r = client.get(f"/api/jobs/{uuid.uuid4()}", headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 401, r.text
 
 
 async def test_wrong_audience_returns_401(client, make_org_user):
     user_id, _ = await make_org_user()
     token = make_token(user_id, audience="service_role")
-    r = client.get(
-        f"/api/jobs/{uuid.uuid4()}", headers={"Authorization": f"Bearer {token}"}
-    )
+    r = client.get(f"/api/jobs/{uuid.uuid4()}", headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 401, r.text
 
 
@@ -137,7 +131,6 @@ async def test_me_returns_profile_and_org(client, make_org_user):
     assert body["org_name"] == "Acme Recruiting"
 
 
-
 # --- Signup / login (fake GoTrue) -------------------------------------------
 
 
@@ -154,9 +147,7 @@ async def test_signup_creates_org_user_and_session(client, fake_auth):
         assert body["token_type"] == "bearer"
 
         # The returned session token works against the real verify path.
-        r = client.get(
-            "/api/auth/me", headers={"Authorization": f"Bearer {body['access_token']}"}
-        )
+        r = client.get("/api/auth/me", headers={"Authorization": f"Bearer {body['access_token']}"})
         assert r.status_code == 200, r.text
         assert r.json()["email"] == email
         assert r.json()["org_name"] == "New Org"
@@ -182,9 +173,7 @@ async def test_login_success_returns_session(client, fake_auth):
             "/api/auth/signup",
             json={"org_name": "Org", "email": email, "password": "password123"},
         )
-        r = client.post(
-            "/api/auth/login", json={"email": email, "password": "password123"}
-        )
+        r = client.post("/api/auth/login", json={"email": email, "password": "password123"})
         assert r.status_code == 200, r.text
         assert r.json()["access_token"]
     finally:

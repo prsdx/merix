@@ -54,16 +54,11 @@ class MatchResult(Base, TimestampMixin):
     # Explainability payloads (JSONB lists):
     #   matched_skills: [{skill, strength, evidence}]
     #   missing_skills: [{skill, required}]
-    matched_skills: Mapped[list[dict[str, Any]]] = mapped_column(
-        JSONB, nullable=False, default=list
-    )
-    missing_skills: Mapped[list[dict[str, Any]]] = mapped_column(
-        JSONB, nullable=False, default=list
-    )
+    matched_skills: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False, default=list)
+    missing_skills: Mapped[list[dict[str, Any]]] = mapped_column(JSONB, nullable=False, default=list)
 
     # Short human-readable explanation of the score.
     rationale: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     job: Mapped["JobDescription"] = relationship(back_populates="matches")
     resume: Mapped["Resume"] = relationship(back_populates="matches")
-

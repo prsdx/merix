@@ -53,9 +53,7 @@ async def run_batch_match_background(
         if job is None:
             raise ValueError(f"Job {job_id} not found")
 
-        resumes = (
-            await session.scalars(select(Resume).where(Resume.job_id == job_id))
-        ).all()
+        resumes = (await session.scalars(select(Resume).where(Resume.job_id == job_id))).all()
 
         batch_results: list[dict] = []
         completed = 0
@@ -91,9 +89,7 @@ async def run_batch_match_background(
         batch_job.status = "completed"
         await session.commit()
 
-        logger.info(
-            "batch_match_completed job_id=%s resumes=%d", job_id, completed
-        )
+        logger.info("batch_match_completed job_id=%s resumes=%d", job_id, completed)
 
     except Exception as exc:
         logger.exception("batch_match_failed job_id=%s", job_id)

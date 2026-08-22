@@ -33,4 +33,3 @@ def verify_access_token(token: str) -> uuid.UUID:
         return uuid.UUID(payload["sub"])
     except (KeyError, ValueError) as exc:
         raise AuthenticationError("access token has no valid subject") from exc
-

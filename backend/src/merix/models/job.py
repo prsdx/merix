@@ -39,13 +39,7 @@ class JobDescription(Base, TimestampMixin):
     parsed: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
     # Semantic embedding of the JD text (pgvector).
-    embedding: Mapped[list[float] | None] = mapped_column(
-        Vector(EMBEDDING_DIM), nullable=True
-    )
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM), nullable=True)
 
-    resumes: Mapped[list["Resume"]] = relationship(
-        back_populates="job", cascade="all, delete-orphan"
-    )
-    matches: Mapped[list["MatchResult"]] = relationship(
-        back_populates="job", cascade="all, delete-orphan"
-    )
+    resumes: Mapped[list["Resume"]] = relationship(back_populates="job", cascade="all, delete-orphan")
+    matches: Mapped[list["MatchResult"]] = relationship(back_populates="job", cascade="all, delete-orphan")

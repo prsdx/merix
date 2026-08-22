@@ -38,16 +38,11 @@ router = APIRouter()
 
 async def _shortlist_payload(db: AsyncSession, job, results) -> dict:
     """Serialise ranked match results with their resumes' candidate names."""
-    resumes = {
-        r.id: r
-        for r in (await db.scalars(select(Resume).where(Resume.job_id == job.id))).all()
-    }
+    resumes = {r.id: r for r in (await db.scalars(select(Resume).where(Resume.job_id == job.id))).all()}
     return {
         "job_id": str(job.id),
         "count": len(results),
-        "results": [
-            pipeline.to_match_response(r, resumes.get(r.resume_id)) for r in results
-        ],
+        "results": [pipeline.to_match_response(r, resumes.get(r.resume_id)) for r in results],
     }
 
 
@@ -60,9 +55,7 @@ async def create_job(
     embedder: EmbeddingClient = Depends(get_embedder),
 ) -> object:
     """Create a job description: extract requirements, embed, persist."""
-    return await pipeline.create_job(
-        db, llm, embedder, user.org_id, body.title, body.raw_text
-    )
+    return await pipeline.create_job(db, llm, embedder, user.org_id, body.title, body.raw_text)
 
 
 @router.get("/{job_id}", response_model=JobResponse)
@@ -150,11 +143,7 @@ async def match_job(
             return existing
 
     # Count resumes for this job.
-    total_resumes: int = (
-        await db.scalar(
-            select(func.count()).select_from(Resume).where(Resume.job_id == job_id)
-        )
-    ) or 0
+    total_resumes: int = (await db.scalar(select(func.count()).select_from(Resume).where(Resume.job_id == job_id))) or 0
 
     batch_job = BatchJob(
         org_id=user.org_id,

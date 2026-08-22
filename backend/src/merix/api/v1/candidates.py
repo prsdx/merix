@@ -24,9 +24,7 @@ async def delete_candidate(
     db: AsyncSession = Depends(get_scoped_db),
 ) -> None:
     """Hard-delete a resume and its match results (data-principal erasure right)."""
-    resume = await db.scalar(
-        select(Resume).where(Resume.id == resume_id, Resume.org_id == user.org_id)
-    )
+    resume = await db.scalar(select(Resume).where(Resume.id == resume_id, Resume.org_id == user.org_id))
     if resume is None:
         from merix.core.exceptions import NotFoundError
 

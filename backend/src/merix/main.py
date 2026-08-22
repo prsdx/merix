@@ -57,9 +57,7 @@ async def _cleanup_stale_batch_jobs() -> None:
                     result.rowcount,
                 )
     except Exception:
-        logger.warning(
-            "startup_cleanup: could not reach database, skipping", exc_info=True
-        )
+        logger.warning("startup_cleanup: could not reach database, skipping", exc_info=True)
 
 
 @asynccontextmanager
@@ -88,9 +86,7 @@ def create_app() -> FastAPI:
 def _configure_cors(app: FastAPI) -> None:
     """Configure CORS with env-configurable allowed origins."""
     origins = settings.ALLOWED_ORIGINS
-    allow_origins = (
-        ["*"] if origins == "*" else [o.strip() for o in origins.split(",") if o.strip()]
-    )
+    allow_origins = ["*"] if origins == "*" else [o.strip() for o in origins.split(",") if o.strip()]
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allow_origins,

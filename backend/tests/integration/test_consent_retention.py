@@ -32,9 +32,7 @@ async def org_user(make_org_user):
 
 
 async def _upload_resume(client, headers, job_id, consent_given: bool = True):
-    pdf = make_pdf(
-        "Candidate Name. Built Python services and optimised SQL queries for 3 years at ACME Corp."
-    )
+    pdf = make_pdf("Candidate Name. Built Python services and optimised SQL queries for 3 years at ACME Corp.")
     r = client.post(
         f"/api/jobs/{job_id}/resumes",
         files={"file": ("candidate.pdf", pdf, "application/pdf")},
@@ -78,16 +76,19 @@ async def test_manual_deletion_removes_resume_and_matches(client, org_user):
     # BackgroundTasks don't execute in TestClient; seed a MatchResult manually.
     async with scoped_session(org_id) as session:
         match = MatchResult(
-            org_id=org_id, job_id=job_id, resume_id=uuid.UUID(resume_id),
-            score=0.95, matched_skills=[], missing_skills=[], rationale="test",
+            org_id=org_id,
+            job_id=job_id,
+            resume_id=uuid.UUID(resume_id),
+            score=0.95,
+            matched_skills=[],
+            missing_skills=[],
+            rationale="test",
         )
         session.add(match)
         await session.commit()
 
     async with scoped_session(org_id) as session:
-        matches_before = list(
-            (await session.scalars(select(MatchResult).where(MatchResult.resume_id == resume_id))).all()
-        )
+        matches_before = list((await session.scalars(select(MatchResult).where(MatchResult.resume_id == resume_id))).all())
         assert len(matches_before) == 1
 
     # Delete
@@ -97,18 +98,18 @@ async def test_manual_deletion_removes_resume_and_matches(client, org_user):
     async with scoped_session(org_id) as session:
         resume = await session.get(Resume, uuid.UUID(resume_id))
         assert resume is None
-        matches_after = list(
-            (await session.scalars(select(MatchResult).where(MatchResult.resume_id == resume_id))).all()
-        )
+        matches_after = list((await session.scalars(select(MatchResult).where(MatchResult.resume_id == resume_id))).all())
         assert len(matches_after) == 0
 
         audit = list(
-            (await session.scalars(
-                select(AuditEvent).where(
-                    AuditEvent.org_id == org_id,
-                    AuditEvent.event_type == "deletion_requested",
+            (
+                await session.scalars(
+                    select(AuditEvent).where(
+                        AuditEvent.org_id == org_id,
+                        AuditEvent.event_type == "deletion_requested",
+                    )
                 )
-            )).all()
+            ).all()
         )
         assert len(audit) == 1
         assert audit[0].actor_type == "user"
@@ -125,8 +126,13 @@ async def test_retention_sweep_deletes_expired_resumes(client, org_user):
     # BackgroundTasks don't execute in TestClient; seed a MatchResult manually.
     async with scoped_session(org_id) as session:
         match = MatchResult(
-            org_id=org_id, job_id=job_id, resume_id=uuid.UUID(resume_id),
-            score=0.95, matched_skills=[], missing_skills=[], rationale="test",
+            org_id=org_id,
+            job_id=job_id,
+            resume_id=uuid.UUID(resume_id),
+            score=0.95,
+            matched_skills=[],
+            missing_skills=[],
+            rationale="test",
         )
         session.add(match)
         await session.commit()
@@ -143,18 +149,18 @@ async def test_retention_sweep_deletes_expired_resumes(client, org_user):
     async with scoped_session(org_id) as session:
         resume = await session.get(Resume, uuid.UUID(resume_id))
         assert resume is None
-        matches = list(
-            (await session.scalars(select(MatchResult).where(MatchResult.resume_id == resume_id))).all()
-        )
+        matches = list((await session.scalars(select(MatchResult).where(MatchResult.resume_id == resume_id))).all())
         assert len(matches) == 0
 
         audit = list(
-            (await session.scalars(
-                select(AuditEvent).where(
-                    AuditEvent.org_id == org_id,
-                    AuditEvent.event_type == "deletion_scheduled",
+            (
+                await session.scalars(
+                    select(AuditEvent).where(
+                        AuditEvent.org_id == org_id,
+                        AuditEvent.event_type == "deletion_scheduled",
+                    )
                 )
-            )).all()
+            ).all()
         )
         assert len(audit) == 1
         assert audit[0].actor_type == "system"

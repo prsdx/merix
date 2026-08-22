@@ -53,8 +53,13 @@ async def test_org_b_cannot_access_org_a_data_via_api(client, make_org_user):
     async with scoped_session(a_org_id) as session:
         resumes = (await session.scalars(select(Resume))).all()
         match = MatchResult(
-            org_id=a_org_id, job_id=uuid.UUID(job_id), resume_id=resumes[0].id,
-            score=0.95, matched_skills=[], missing_skills=[], rationale="test",
+            org_id=a_org_id,
+            job_id=uuid.UUID(job_id),
+            resume_id=resumes[0].id,
+            score=0.95,
+            matched_skills=[],
+            missing_skills=[],
+            rationale="test",
         )
         session.add(match)
         await session.commit()
@@ -117,9 +122,7 @@ async def test_rls_enforces_isolation_at_db_layer(make_org_user):
     # Seed a job owned by Org A via an A-scoped session.
     a_job_id = uuid.uuid4()
     async with scoped_session(a_org_id) as session:
-        session.add(
-            JobDescription(id=a_job_id, org_id=a_org_id, title="A Job", raw_text="t")
-        )
+        session.add(JobDescription(id=a_job_id, org_id=a_org_id, title="A Job", raw_text="t"))
         await session.commit()
 
     # An A-scoped session can read it (positive control).
@@ -136,9 +139,7 @@ async def test_rls_enforces_isolation_at_db_layer(make_org_user):
 
     # A B-scoped session cannot write a row stamped with Org A's org_id.
     async with scoped_session(b_org_id) as session:
-        session.add(
-            JobDescription(org_id=a_org_id, title="Forged", raw_text="t")
-        )
+        session.add(JobDescription(org_id=a_org_id, title="Forged", raw_text="t"))
         with pytest.raises(Exception, match="row.level security"):
             await session.commit()
 
@@ -154,6 +155,8 @@ async def test_rls_enforces_isolation_at_db_layer(make_org_user):
         job = await session.get(JobDescription, a_job_id)
         await session.delete(job)
         await session.commit()
+
+
 async def test_rls_no_guc_bleed_through_rapid_sequential(make_org_user):
     """Rapid sequential operations on two org-scoped sessions must not leak data.
 
@@ -168,30 +171,22 @@ async def test_rls_no_guc_bleed_through_rapid_sequential(make_org_user):
     # Seed data in each org.
     a_job_id = uuid.uuid4()
     async with scoped_session(a_org_id) as session:
-        session.add(
-            JobDescription(id=a_job_id, org_id=a_org_id, title="A Secret", raw_text="a")
-        )
+        session.add(JobDescription(id=a_job_id, org_id=a_org_id, title="A Secret", raw_text="a"))
         await session.commit()
 
     b_job_id = uuid.uuid4()
     async with scoped_session(b_org_id) as session:
-        session.add(
-            JobDescription(id=b_job_id, org_id=b_org_id, title="B Secret", raw_text="b")
-        )
+        session.add(JobDescription(id=b_job_id, org_id=b_org_id, title="B Secret", raw_text="b"))
         await session.commit()
 
     # Rapidly alternate: Org A session reads, Org B session reads, repeat.
     for _ in range(2):
         async with scoped_session(a_org_id) as session:
             rows = (await session.scalars(select(JobDescription))).all()
-            assert {r.id for r in rows} == {a_job_id}, (
-                f"Org A saw unexpected rows: {[r.id for r in rows]}"
-            )
+            assert {r.id for r in rows} == {a_job_id}, f"Org A saw unexpected rows: {[r.id for r in rows]}"
         async with scoped_session(b_org_id) as session:
             rows = (await session.scalars(select(JobDescription))).all()
-            assert {r.id for r in rows} == {b_job_id}, (
-                f"Org B saw unexpected rows: {[r.id for r in rows]}"
-            )
+            assert {r.id for r in rows} == {b_job_id}, f"Org B saw unexpected rows: {[r.id for r in rows]}"
         # Also verify cross-isolation: Org A session reading Org B data.
         async with scoped_session(a_org_id) as session:
             assert await session.get(JobDescription, b_job_id) is None
@@ -205,6 +200,7 @@ async def test_rls_no_guc_bleed_through_rapid_sequential(make_org_user):
         job = await session.get(JobDescription, b_job_id)
         await session.delete(job)
         await session.commit()
+
 
 async def test_rls_guc_bleed_would_be_caught_if_local_is_broken(make_org_user):
     """Prove the test catches a leak: build a session with SESSION-scoped GUC.
@@ -224,9 +220,7 @@ async def test_rls_guc_bleed_would_be_caught_if_local_is_broken(make_org_user):
 
     a_job_id = uuid.uuid4()
     async with scoped_session(a_org_id) as session:
-        session.add(
-            JobDescription(id=a_job_id, org_id=a_org_id, title="Leaky A", raw_text="a")
-        )
+        session.add(JobDescription(id=a_job_id, org_id=a_org_id, title="Leaky A", raw_text="a"))
         await session.commit()
 
     # Build a B-scoped session that uses SESSION-scoped GUC (not LOCAL).
@@ -251,9 +245,7 @@ async def test_rls_guc_bleed_would_be_caught_if_local_is_broken(make_org_user):
     # A fresh scoped session for Org A must NOT see Org B's leaked data.
     async with scoped_session(a_org_id) as session:
         rows = (await session.scalars(select(JobDescription))).all()
-        assert {r.id for r in rows} == {a_job_id}, (
-            f"GUC bleed detected! Org A saw: {[r.id for r in rows]}"
-        )
+        assert {r.id for r in rows} == {a_job_id}, f"GUC bleed detected! Org A saw: {[r.id for r in rows]}"
 
     # Clean up.
     async with scoped_session(a_org_id) as session:

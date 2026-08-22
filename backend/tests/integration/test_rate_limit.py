@@ -28,10 +28,7 @@ def _signup_payload() -> dict:
 
 async def test_signup_rate_limited_after_5_per_hour(client, fake_auth):
     """Requests 1-5 pass validation; the 6th from the same IP is 429."""
-    codes = [
-        client.post("/api/auth/signup", json=_signup_payload()).status_code
-        for _ in range(6)
-    ]
+    codes = [client.post("/api/auth/signup", json=_signup_payload()).status_code for _ in range(6)]
     assert codes[:5] == [201] * 5 or all(c in (201, 409) for c in codes[:5]), codes
     assert codes[5] == 429, codes
 
@@ -44,7 +41,8 @@ async def test_login_rate_limited_after_10_per_minute(client, fake_auth):
     }
     codes = [
         client.post(
-            "/api/auth/login", json=payload,
+            "/api/auth/login",
+            json=payload,
         ).status_code
         for _ in range(11)
     ]

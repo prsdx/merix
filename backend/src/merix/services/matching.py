@@ -27,8 +27,7 @@ W_PREFERRED = 0.20
 W_EXPERIENCE = 0.10
 
 _JD_EXTRACT_SYSTEM = (
-    "You extract structured requirements from job descriptions. "
-    "Return ONLY valid JSON, no prose, no markdown fences."
+    "You extract structured requirements from job descriptions. Return ONLY valid JSON, no prose, no markdown fences."
 )
 
 _JD_EXTRACT_PROMPT = """Extract the hiring requirements from this job description.
@@ -67,8 +66,7 @@ Resume:
 JSON:"""
 
 _RATIONALE_SYSTEM = (
-    "You write concise, factual match explanations for recruiters. "
-    "Base your statement ONLY on the facts given. 2-3 sentences."
+    "You write concise, factual match explanations for recruiters. Base your statement ONLY on the facts given. 2-3 sentences."
 )
 
 _RATIONALE_PROMPT = """A candidate matched a job as follows.
@@ -167,17 +165,11 @@ def compute_match(jd_parsed: dict, resume_parsed: dict) -> MatchComputation:
             )
 
     required_coverage = (matched_required / len(required)) if required else 1.0
-    matched_preferred = sum(
-        1 for skill in preferred if skill in resume_by_norm
-    )
+    matched_preferred = sum(1 for skill in preferred if skill in resume_by_norm)
     preferred_coverage = (matched_preferred / len(preferred)) if preferred else 1.0
     experience_score = min(exp_years / min_exp, 1.0) if min_exp > 0 else 1.0
 
-    score = 100.0 * (
-        W_REQUIRED * required_coverage
-        + W_PREFERRED * preferred_coverage
-        + W_EXPERIENCE * experience_score
-    )
+    score = 100.0 * (W_REQUIRED * required_coverage + W_PREFERRED * preferred_coverage + W_EXPERIENCE * experience_score)
 
     return MatchComputation(
         score=round(score, 1),
@@ -186,9 +178,7 @@ def compute_match(jd_parsed: dict, resume_parsed: dict) -> MatchComputation:
     )
 
 
-async def generate_rationale(
-    llm: LLMClient, jd_parsed: dict, resume_parsed: dict, match: MatchComputation
-) -> str:
+async def generate_rationale(llm: LLMClient, jd_parsed: dict, resume_parsed: dict, match: MatchComputation) -> str:
     """Generate a short human-readable rationale from the deterministic facts."""
     matched_required = [m["skill"] for m in match.matched_skills if m.get("required")]
     matched_preferred = [m["skill"] for m in match.matched_skills if not m.get("required")]

@@ -69,15 +69,8 @@ async def _run_pipeline_and_update_batch_job(org_id, job_id, batch_job_id):
         if batch_job is not None:
             batch_job.status = "completed"
             batch_job.completed_resumes = batch_job.total_resumes
-            resumes = (
-                await session.scalars(
-                    select(Resume).where(Resume.job_id == uuid.UUID(job_id))
-                )
-            ).all()
-            batch_job.batch_results = [
-                {"resume_id": str(r.id), "status": "completed", "error": None}
-                for r in resumes
-            ]
+            resumes = (await session.scalars(select(Resume).where(Resume.job_id == uuid.UUID(job_id)))).all()
+            batch_job.batch_results = [{"resume_id": str(r.id), "status": "completed", "error": None} for r in resumes]
             await session.commit()
     finally:
         await session.close()
@@ -91,6 +84,8 @@ async def org_a(make_org_user):
     """An authenticated Org A user."""
     user_id, org_id = await make_org_user(org_name="Batch Org A")
     return auth_headers(user_id), org_id, user_id
+
+
 # ── Test Classes ───────────────────────────────────────────────────────
 
 
@@ -198,6 +193,8 @@ class TestMatchResults:
         assert shortlist["count"] == 1
         assert shortlist["results"][0]["score"] > 0
         assert shortlist["results"][0]["candidate_name"] == "Jane Doe"
+
+
 class TestIdempotency:
     """Scope item: idempotency_key returns same BatchJob."""
 
@@ -226,9 +223,7 @@ class TestIdempotency:
 
         assert batch_job_id_1 == batch_job_id_2
 
-    async def test_batch_job_no_idempotency_key_creates_separate_jobs(
-        self, client, org_a
-    ):
+    async def test_batch_job_no_idempotency_key_creates_separate_jobs(self, client, org_a):
         """Without an idempotency_key, each submission creates a new
         BatchJob."""
         headers, org_id, _user_id = org_a
@@ -290,16 +285,14 @@ class TestPartialFailure:
         assert body["batch_results"] is not None
         assert len(body["batch_results"]) == 2
 
-        completed_entry = [
-            e for e in body["batch_results"] if e["status"] == "completed"
-        ][0]
+        completed_entry = [e for e in body["batch_results"] if e["status"] == "completed"][0]
         assert completed_entry["error"] is None
 
-        failed_entry = [
-            e for e in body["batch_results"] if e["status"] == "failed"
-        ][0]
+        failed_entry = [e for e in body["batch_results"] if e["status"] == "failed"][0]
         assert failed_entry["error"] is not None
         assert "empty PDF" in failed_entry["error"]
+
+
 class TestStaleJobDetection:
     """Scope item: stale running jobs detected and marked failed."""
 
@@ -324,11 +317,7 @@ class TestStaleJobDetection:
 
             # Manually backdate updated_at to 15 minutes ago
             await session.execute(
-                sa_text(
-                    "UPDATE batch_jobs "
-                    "SET updated_at = :ts, created_at = :ts "
-                    "WHERE id = :id"
-                ),
+                sa_text("UPDATE batch_jobs SET updated_at = :ts, created_at = :ts WHERE id = :id"),
                 {
                     "ts": datetime.now(UTC) - timedelta(minutes=15),
                     "id": stale_job.id,
@@ -343,9 +332,7 @@ class TestStaleJobDetection:
         r = client.get(f"/api/batch-jobs/{batch_job_id}", headers=headers)
         assert r.status_code == 200, r.text
         body = r.json()
-        assert body["status"] == "failed", (
-            f"Expected 'failed' for stale job, got '{body['status']}'"
-        )
+        assert body["status"] == "failed", f"Expected 'failed' for stale job, got '{body['status']}'"
         assert body["error_message"] is not None
         assert "timed out" in body["error_message"].lower()
 
@@ -369,9 +356,7 @@ class TestStaleJobDetection:
         r = client.get(f"/api/batch-jobs/{batch_job_id}", headers=headers)
         assert r.status_code == 200, r.text
         body = r.json()
-        assert body["status"] == "running", (
-            f"Expected 'running' for recent job, got '{body['status']}'"
-        )
+        assert body["status"] == "running", f"Expected 'running' for recent job, got '{body['status']}'"
 
 
 class TestOrgScoping:
@@ -384,9 +369,7 @@ class TestOrgScoping:
         a_headers = auth_headers(a_user_id)
         b_headers = auth_headers(b_user_id)
 
-        job_id, _resume_id = await _create_job_and_resume(
-            client, a_headers, a_org_id
-        )
+        job_id, _resume_id = await _create_job_and_resume(client, a_headers, a_org_id)
         r = client.post(f"/api/jobs/{job_id}/match", headers=a_headers)
         assert r.status_code == 202, r.text
         batch_job_id = r.json()["id"]

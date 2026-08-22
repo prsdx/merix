@@ -21,9 +21,7 @@ async def org_a(make_org_user):
 
 
 def _create_job(client: TestClient, headers: dict) -> str:
-    r = client.post(
-        "/api/jobs", json={"title": "T", "raw_text": "Python and SQL"}, headers=headers
-    )
+    r = client.post("/api/jobs", json={"title": "T", "raw_text": "Python and SQL"}, headers=headers)
     assert r.status_code == 201, r.text
     return r.json()["id"]
 
@@ -87,9 +85,7 @@ async def test_many_page_pdf_is_rejected(client, org_a):
     assert r.status_code == 422, r.text
 
 
-async def test_retention_sweep_requires_admin_token_when_configured(
-    client, org_a, monkeypatch
-):
+async def test_retention_sweep_requires_admin_token_when_configured(client, org_a, monkeypatch):
     monkeypatch.setattr(settings, "ADMIN_API_TOKEN", "secret-admin-token")
     r = client.post("/api/admin/retention-sweep", headers=org_a)
     assert r.status_code == 403, r.text

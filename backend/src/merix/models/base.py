@@ -15,9 +15,7 @@ class Base(DeclarativeBase):
 class TimestampMixin:
     """Adds created_at / updated_at columns."""
 
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now(), nullable=False
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
@@ -28,6 +26,4 @@ class TimestampMixin:
 
 def uuid_pk() -> Mapped[uuid.UUID]:
     """Standard UUID primary key column."""
-    return mapped_column(
-        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
-    )
+    return mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)

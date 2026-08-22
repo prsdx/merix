@@ -24,6 +24,7 @@ class FakeLLM:
 
 # --- compute_match (deterministic) ---
 
+
 def test_compute_match_full_match():
     jd = {"required_skills": ["Python", "SQL"], "preferred_skills": ["AWS"], "min_experience_years": 3}
     res = {
@@ -66,11 +67,13 @@ def test_compute_match_no_required_skills_is_full_coverage():
 
 # --- JSON parsing tolerance ---
 
+
 def test_parse_json_strips_markdown_fences():
     assert matching._parse_json('```json\n{"a": 1}\n```') == {"a": 1}
 
 
 # --- LLM extraction (fake) ---
+
 
 @pytest.mark.asyncio
 async def test_extract_jd_uses_fake_llm():

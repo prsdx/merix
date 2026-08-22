@@ -46,21 +46,12 @@ class Resume(Base, TimestampMixin):
     parsed: Mapped[dict[str, Any] | None] = mapped_column(JSONB, nullable=True)
 
     # Semantic embedding of the resume text (pgvector).
-    embedding: Mapped[list[float] | None] = mapped_column(
-        Vector(EMBEDDING_DIM), nullable=True
-    )
+    embedding: Mapped[list[float] | None] = mapped_column(Vector(EMBEDDING_DIM), nullable=True)
 
     # --- DPDP-relevant fields (schema now; workflow built in a later task) ---
     consent_given: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    consent_timestamp: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
-    retention_expires_at: Mapped[datetime | None] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    consent_timestamp: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    retention_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     job: Mapped["JobDescription"] = relationship(back_populates="resumes")
-    matches: Mapped[list["MatchResult"]] = relationship(
-        back_populates="resume", cascade="all, delete-orphan"
-    )
-
+    matches: Mapped[list["MatchResult"]] = relationship(back_populates="resume", cascade="all, delete-orphan")

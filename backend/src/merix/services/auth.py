@@ -15,9 +15,7 @@ from merix.models.user import User
 logger = logging.getLogger("merix.services.auth")
 
 
-async def signup(
-    db: AsyncSession, auth: SupabaseAuthClient, org_name: str, email: str, password: str
-) -> dict[str, Any]:
+async def signup(db: AsyncSession, auth: SupabaseAuthClient, org_name: str, email: str, password: str) -> dict[str, Any]:
     """Register a new organisation with its first user; return a session."""
     try:
         auth_user_id = await auth.create_user(email, password)
@@ -42,9 +40,7 @@ async def signup(
     return await login(db, auth, email, password)
 
 
-async def login(
-    db: AsyncSession, auth: SupabaseAuthClient, email: str, password: str
-) -> dict[str, Any]:
+async def login(db: AsyncSession, auth: SupabaseAuthClient, email: str, password: str) -> dict[str, Any]:
     """Verify credentials against GoTrue and return the token payload."""
     user = await db.scalar(select(User).where(User.email == email))
     if user is None:

@@ -19,9 +19,7 @@ DIM = 768
 # Tokens are verified against settings.SUPABASE_JWT_SECRET; fall back to a
 # test-only secret when the real one isn't configured (tests never call
 # Supabase, so the value only needs to be consistent within the process).
-TEST_JWT_SECRET = (
-    settings.SUPABASE_JWT_SECRET or "test-only-jwt-secret-with-at-least-32-bytes"
-)
+TEST_JWT_SECRET = settings.SUPABASE_JWT_SECRET or "test-only-jwt-secret-with-at-least-32-bytes"
 settings.SUPABASE_JWT_SECRET = TEST_JWT_SECRET
 
 
@@ -56,9 +54,7 @@ class FakeLLM:
                 prompt_tokens=10,
                 completion_tokens=5,
             )
-        return LLMResult(
-            text="Strong match on Python and SQL.", prompt_tokens=5, completion_tokens=5
-        )
+        return LLMResult(text="Strong match on Python and SQL.", prompt_tokens=5, completion_tokens=5)
 
 
 class FakeEmbedder:

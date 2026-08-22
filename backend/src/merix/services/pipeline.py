@@ -35,9 +35,7 @@ async def create_job(
     """Create a job: extract requirements, embed the text, persist."""
     parsed = await matching.extract_jd(llm, raw_text)
     embedding = await embedder.embed(raw_text)
-    job = JobDescription(
-        org_id=org_id, title=title, raw_text=raw_text, parsed=parsed, embedding=embedding
-    )
+    job = JobDescription(org_id=org_id, title=title, raw_text=raw_text, parsed=parsed, embedding=embedding)
     db.add(job)
     await db.commit()
     await db.refresh(job)
@@ -80,9 +78,7 @@ async def add_resume(
     return resume
 
 
-async def run_match_for_resume(
-    db: AsyncSession, llm: LLMClient, job: JobDescription, resume: Resume
-) -> MatchResult:
+async def run_match_for_resume(db: AsyncSession, llm: LLMClient, job: JobDescription, resume: Resume) -> MatchResult:
     """Compute and persist an explainable match for one (job, resume) pair.
 
     Idempotent: updates the existing MatchResult for the pair if present.
@@ -95,11 +91,7 @@ async def run_match_for_resume(
     comp = matching.compute_match(job.parsed, resume.parsed)
     rationale = await matching.generate_rationale(llm, job.parsed, resume.parsed, comp)
 
-    existing = await db.scalar(
-        select(MatchResult).where(
-            MatchResult.job_id == job.id, MatchResult.resume_id == resume.id
-        )
-    )
+    existing = await db.scalar(select(MatchResult).where(MatchResult.job_id == job.id, MatchResult.resume_id == resume.id))
     if existing is None:
         existing = MatchResult(org_id=job.org_id, job_id=job.id, resume_id=resume.id)
         db.add(existing)
@@ -112,13 +104,9 @@ async def run_match_for_resume(
     return existing
 
 
-async def run_match_for_job(
-    db: AsyncSession, llm: LLMClient, job: JobDescription
-) -> list[MatchResult]:
+async def run_match_for_job(db: AsyncSession, llm: LLMClient, job: JobDescription) -> list[MatchResult]:
     """Run the batch match: every resume for the job, ranked by score desc."""
-    resumes = (
-        await db.scalars(select(Resume).where(Resume.job_id == job.id))
-    ).all()
+    resumes = (await db.scalars(select(Resume).where(Resume.job_id == job.id))).all()
     results: list[MatchResult] = []
     for resume in resumes:
         results.append(await run_match_for_resume(db, llm, job, resume))
@@ -129,18 +117,13 @@ async def run_match_for_job(
 
 async def get_job_or_404(db: AsyncSession, job_id, org_id: uuid.UUID) -> JobDescription:
     """Fetch a job owned by the caller's org (404 otherwise — no existence leak)."""
-    job = await db.scalar(
-        select(JobDescription).where(
-            JobDescription.id == job_id, JobDescription.org_id == org_id
-        )
-    )
+    job = await db.scalar(select(JobDescription).where(JobDescription.id == job_id, JobDescription.org_id == org_id))
     if job is None:
         raise NotFoundError(f"job {job_id} not found")
     return job
 
-async def list_matches_for_job(
-    db: AsyncSession, job: JobDescription, min_score: float | None = None
-) -> list[MatchResult]:
+
+async def list_matches_for_job(db: AsyncSession, job: JobDescription, min_score: float | None = None) -> list[MatchResult]:
     """List persisted match results for a job, ranked by score desc."""
     stmt = select(MatchResult).where(MatchResult.job_id == job.id)
     if min_score is not None:
@@ -151,11 +134,7 @@ async def list_matches_for_job(
 
 async def get_match_or_404(db: AsyncSession, match_id, org_id: uuid.UUID) -> MatchResult:
     """Fetch a match owned by the caller's org (404 otherwise — no existence leak)."""
-    match = await db.scalar(
-        select(MatchResult).where(
-            MatchResult.id == match_id, MatchResult.org_id == org_id
-        )
-    )
+    match = await db.scalar(select(MatchResult).where(MatchResult.id == match_id, MatchResult.org_id == org_id))
     if match is None:
         raise NotFoundError(f"match {match_id} not found")
     return match

@@ -19,4 +19,3 @@ class Organisation(Base, TimestampMixin):
     # default (matches PRD and campus-placement cycles; short enough to limit
     # erasure-request exposure under the India DPDP Act).
     retention_days: Mapped[int] = mapped_column(Integer, nullable=False, default=90)
-

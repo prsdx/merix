@@ -28,9 +28,7 @@ def client():
 
 
 @pytest.fixture
-async def make_org_user() -> AsyncGenerator[
-    Callable[[str, str | None], Awaitable[tuple[uuid.UUID, uuid.UUID]]], None
-]:
+async def make_org_user() -> AsyncGenerator[Callable[[str, str | None], Awaitable[tuple[uuid.UUID, uuid.UUID]]], None]:
     """Factory: create (org, user) rows directly; cascade-clean up after.
 
     Bypasses the signup endpoint so tests can focus on their own subject;
@@ -38,9 +36,7 @@ async def make_org_user() -> AsyncGenerator[
     """
     created_org_ids: list[uuid.UUID] = []
 
-    async def _make(
-        org_name: str = "Test Org", email: str | None = None
-    ) -> tuple[uuid.UUID, uuid.UUID]:
+    async def _make(org_name: str = "Test Org", email: str | None = None) -> tuple[uuid.UUID, uuid.UUID]:
         async with AsyncSessionLocal() as session:
             org = Organisation(name=org_name)
             session.add(org)

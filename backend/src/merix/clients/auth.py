@@ -43,9 +43,7 @@ class SupabaseAuthClient:
     async def delete_user(self, user_id: str) -> None:
         """Best-effort cleanup (e.g. after a rolled-back signup)."""
         async with httpx.AsyncClient(timeout=10) as http:
-            await http.delete(
-                f"{self._base_url}/admin/users/{user_id}", headers=self._headers
-            )
+            await http.delete(f"{self._base_url}/admin/users/{user_id}", headers=self._headers)
 
     async def login(self, email: str, password: str) -> dict[str, Any]:
         """Password grant; returns GoTrue's token payload (access + refresh)."""
@@ -63,11 +61,6 @@ class SupabaseAuthClient:
 def _error_message(resp: httpx.Response) -> str:
     try:
         body = resp.json()
-        return (
-            body.get("msg")
-            or body.get("error_description")
-            or body.get("error")
-            or resp.text
-        )
+        return body.get("msg") or body.get("error_description") or body.get("error") or resp.text
     except ValueError:
         return resp.text

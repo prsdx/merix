@@ -28,4 +28,3 @@ class User(Base, TimestampMixin):
         index=True,
     )
     email: Mapped[str] = mapped_column(String(320), nullable=False, unique=True)
-
