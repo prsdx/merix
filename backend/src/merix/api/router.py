@@ -2,7 +2,16 @@
 
 from fastapi import APIRouter
 
-from merix.api.v1 import admin, auth, batch_jobs, candidates, health, jobs, matches, orgs
+from merix.api.v1 import (
+    admin,
+    auth,
+    batch_jobs,
+    candidates,
+    health,
+    jobs,
+    matches,
+    orgs,
+)
 
 api_router = APIRouter()
 api_router.include_router(health.router, tags=["health"])

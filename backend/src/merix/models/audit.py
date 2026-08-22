@@ -10,9 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column
 from merix.models.base import Base, TimestampMixin, uuid_pk
 
 if TYPE_CHECKING:
-    from merix.models.organisation import Organisation
-    from merix.models.resume import Resume
-    from merix.models.user import User
+    pass
 
 
 class AuditEvent(Base, TimestampMixin):

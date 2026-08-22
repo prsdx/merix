@@ -24,13 +24,14 @@ This document is the persistent house-style guide for all AI-assisted developmen
 - **Backend**: Python 3.11+ with FastAPI (async), Uvicorn
 - **Database**: PostgreSQL with pgvector extension (via Supabase)
 - **ORM**: SQLAlchemy 2.0 (async) with asyncpg driver
-- **Migrations**: Alembic (to be set up in a later task)
+- **Migrations**: Alembic (applied manually to Supabase via `alembic upgrade head`)
 - **Validation**: Pydantic v2 + pydantic-settings
 - **Logging**: structlog (JSON in production, console in development)
 - **LLM/Embeddings**: Provider-agnostic client abstraction (see `src/merix/clients/`)
 - **Package manager**: uv
 - **Testing**: pytest + pytest-asyncio
-- **Linting/Formatting**: ruff
+- **Linting/Formatting**: ruff (line-length = 130; `ruff check` + `ruff format`)
+- **CI**: GitHub Actions (`.github/workflows/ci.yml`) — ruff + pytest on every push/PR
 
 ---
 
@@ -179,6 +180,18 @@ Examples:
 - Semantic Versioning (MAJOR.MINOR.PATCH)
 - Update CHANGELOG.md with every task
 - Tag releases in git
+
+---
+
+## CI / Automated Checks
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full CI reference. Summary:
+
+- **Lint job**: `ruff check src/ tests/` + `ruff format --check` — runs first on every push/PR.
+- **Test job**: `pytest -v --tb=short` — full test suite (unit + integration); runs after lint passes.
+- Integration tests hit the **real Supabase Postgres** instance (not a mock) — RLS correctness requires it.
+- Required secrets: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_JWT_SECRET`.
+- Branch protection (requiring status checks) must be configured manually in GitHub repo settings.
 
 ---
 

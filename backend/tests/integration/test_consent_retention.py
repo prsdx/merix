@@ -8,14 +8,13 @@ from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from merix.db import AsyncSessionLocal, scoped_session
+from merix.db import scoped_session
 from merix.models.audit import AuditEvent
 from merix.models.job import JobDescription
 from merix.models.match import MatchResult
 from merix.models.resume import Resume
-from merix.services import pipeline, retention
+from merix.services import retention
 from tests.helpers import auth_headers, make_pdf
 
 

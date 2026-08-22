@@ -15,17 +15,17 @@ simulated manually via scoped_session where needed.
 """
 
 import uuid
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
-from sqlalchemy import select, text as sa_text
+from sqlalchemy import select
+from sqlalchemy import text as sa_text
 
 from merix.db import scoped_session
 from merix.models.batch_job import BatchJob
 from merix.models.resume import Resume
 from merix.services import pipeline
 from tests.helpers import FakeLLM, auth_headers, make_pdf
-
 
 # ── helpers ────────────────────────────────────────────────────────────
 
@@ -330,7 +330,7 @@ class TestStaleJobDetection:
                     "WHERE id = :id"
                 ),
                 {
-                    "ts": datetime.now(timezone.utc) - timedelta(minutes=15),
+                    "ts": datetime.now(UTC) - timedelta(minutes=15),
                     "id": stale_job.id,
                 },
             )

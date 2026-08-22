@@ -4,7 +4,7 @@ Requires authentication and organisation scoping (RLS).
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -42,7 +42,7 @@ async def get_batch_job_status(
     # dead (server restart / crash). Mark it failed so the client
     # sees the outcome on the next poll instead of waiting forever.
     if batch_job.status == "running":
-        age = datetime.now(timezone.utc) - batch_job.updated_at
+        age = datetime.now(UTC) - batch_job.updated_at
         if age.total_seconds() > STALE_THRESHOLD_MINUTES * 60:
             batch_job.status = "failed"
             batch_job.error_message = (

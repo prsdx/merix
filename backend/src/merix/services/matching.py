@@ -17,7 +17,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 
-from merix.clients.base import EmbeddingClient, LLMClient
+from merix.clients.base import LLMClient
 
 logger = logging.getLogger("merix.services.matching")
 

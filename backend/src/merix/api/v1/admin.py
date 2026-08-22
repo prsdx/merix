@@ -2,7 +2,6 @@
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from merix.config import settings
 from merix.core.exceptions import PermissionError

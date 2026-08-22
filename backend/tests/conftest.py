@@ -6,8 +6,8 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 import pytest
 from fastapi.testclient import TestClient
 
-from merix.db import AsyncSessionLocal
 from merix.core.rate_limit import limiter
+from merix.db import AsyncSessionLocal
 from merix.dependencies import get_embedder, get_llm
 from merix.main import app
 from merix.models.organisation import Organisation

@@ -6,7 +6,6 @@ import pytest
 
 from merix.dependencies import get_auth
 from merix.main import app
-from tests.helpers import auth_headers
 from tests.integration.test_auth import FakeAuthClient
 
 

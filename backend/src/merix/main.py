@@ -1,12 +1,14 @@
 """FastAPI application factory."""
 
+import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-import logging
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy import update
 
 from merix.api.router import api_router
@@ -26,8 +28,6 @@ from merix.core.logging import configure_logging
 from merix.core.rate_limit import limiter
 from merix.db import AsyncSessionLocal
 from merix.models.batch_job import BatchJob
-from slowapi import _rate_limit_exceeded_handler
-from slowapi.errors import RateLimitExceeded
 
 logger = logging.getLogger("merix.main")
 
