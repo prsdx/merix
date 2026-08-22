@@ -8,6 +8,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Task 9: Full production frontend implementation (Next.js App Router + TypeScript + Tailwind + Framer Motion)
+  - **Design System & Palette**: Unified across all 9 core user journey screens using the v5 high-converting B2B SaaS conversion structure and v7 Apple Liquid Glass deep dark `#050505` aesthetic with frosted glass panels (`bg-white/[0.03] backdrop-blur-2xl border border-white/10`) and violet/blue data accents.
+  - **Screen 1 (Landing Page, `/`)**: Centered hero with dual CTAs, live product preview card, social proof trust band, 3-pillar feature zigzag (Explainability, Async Batch Processing, India DPDP 2023 Compliance), ROI metrics strip, and responsive navigation.
+  - **Screen 2 (Auth, `/login`, `/signup`)**: Infrastructure-minimal, org-based signup and login with Supabase GoTrue JWT session management, error handling, and Auth Context.
+  - **Screen 3 (Dashboard, `/dashboard`)**: Active jobs list with resume counts, match status, search filter, metric cards, and a guided empty state.
+  - **Screen 4 (Post a Job, `/jobs/new`)**: Semantic JD parser form with live sample technical JD generator calling `POST /api/jobs`.
+  - **Screen 5 (Batch Upload, `/jobs/[jobId]/upload`)**: Drag-and-drop batch PDF ingestion with prominent **DPDP Consent Gate UI** (explicit legal consent affirmation required before upload) calling `POST /api/jobs/{id}/resumes`.
+  - **Screen 6 (Job Processing Status, `/jobs/[jobId]/status/[batchJobId]`)**: Real-time progress bar polling `GET /api/batch-jobs/{id}` (every 1.5s) with partial failure breakdown.
+  - **Screen 7 (Ranked Shortlist, `/jobs/[jobId]/results`)**: Ranked candidates with match score (0-100), matched & missing skills at a glance, score threshold filters (All, 80+, 70+, 60+), search, and direct CSV download via `GET /api/jobs/{id}/matches/export`.
+  - **Screen 8 (Candidate Detail Drill-down, `/jobs/[jobId]/candidates/[matchId]`)**: 70/20/10 weighted score breakdown, verbatim AI rationale, skill matrix with resume quotes, and DPDP Right to Erasure (`DELETE /api/candidates/{id}`).
+  - **Screen 9 (Settings & Compliance, `/settings`)**: Org profile, DPDP Retention Policy editor (GET/PATCH `/api/orgs/me`), live immutable audit log view (`GET /api/orgs/audit-logs`), and ATS Integration placeholders.
+  - **Backend API Additions**: Added `GET /api/jobs` (list all org jobs with resume/match counts) and `GET /api/orgs/audit-logs` (list audit events).
+  - **Verification**: End-to-end live testing across all 11 backend and frontend endpoints passing cleanly.
+
 - Task 7: Production deployment configuration & health check
   - **Render Blueprint** (`render.yaml`): Web Service specification for FastAPI backend on Python 3.11 with `uv` package manager (`uv sync --frozen`, `uv run uvicorn merix.main:app --host 0.0.0.0 --port $PORT`).
   - **Health check** (`/health`, `/ready`, `/api/health`): Root and `/api` health endpoints verifying application liveness and Postgres database connectivity (`SELECT 1`).
