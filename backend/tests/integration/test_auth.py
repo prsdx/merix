@@ -99,7 +99,7 @@ async def test_expired_token_returns_401(client, make_org_user):
 
 async def test_wrong_signature_returns_401(client, make_org_user):
     user_id, _ = await make_org_user()
-    token = make_token(user_id, secret="a-different-secret")
+    token = make_token(user_id, secret="a-different-but-still-32-bytes-long-secret!")
     r = client.get(
         f"/api/jobs/{uuid.uuid4()}", headers={"Authorization": f"Bearer {token}"}
     )
