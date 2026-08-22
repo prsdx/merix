@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Task 7: Production deployment configuration & health check
+  - **Render Blueprint** (`render.yaml`): Web Service specification for FastAPI backend on Python 3.11 with `uv` package manager (`uv sync --frozen`, `uv run uvicorn merix.main:app --host 0.0.0.0 --port $PORT`).
+  - **Health check** (`/health`, `/ready`, `/api/health`): Root and `/api` health endpoints verifying application liveness and Postgres database connectivity (`SELECT 1`).
+  - **Cold-start guidance**: Documented ~30-60s cold-start behavior for Render free tier (spin down on 15m inactivity) and recommended `/health` pre-warming for live demos.
+  - **Demo data isolation convention**: Pre-launch shared Supabase environment uses dedicated tagged demo organisation with PostgreSQL RLS isolation to preserve pitch demo data.
+  - **Tests**: 3 new integration tests covering `/health`, `/api/health`, and `/ready` endpoints (56 integration + unit tests total).
+
 - Task 6: CI pipeline (GitHub Actions)
   - **Workflow** (`.github/workflows/ci.yml`): lint job (`ruff check` + `ruff format --check`) followed by test job (`pytest -v --tb=short`) on every push to main/feature/fix/chore/refactor/docs branches and every PR against main
   - **Two-job design**: `Lint (ruff)` runs first with no secrets; `Test (pytest)` runs after (`needs: lint`) against the real Supabase Postgres DB (RLS correctness tests require real Postgres behavior — not a mock or local container)

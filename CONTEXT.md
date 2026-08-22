@@ -33,9 +33,9 @@ Traditional ATS systems are black boxes: they reject resumes with no explanation
 
 **Frontend**: React SPA (existing, in `frontend/`)
 
-**Status**: Task 6 complete — GitHub Actions CI pipeline (ruff lint + pytest) runs on every push and PR
+**Status**: Task 7 complete — Render deployment configuration (`render.yaml`), health check with DB connectivity probe, and demo isolation convention in place.
 
-Tasks 1-6 complete. Backend + frontend dependencies audited (0 vulns). Task 6 adds GitHub Actions CI: a `Lint (ruff)` job (ruff check + format check, no secrets required) followed by a `Test (pytest)` job (full 53-test suite against real Supabase DB via secrets). Tests only run if lint passes. Ruff line-length bumped 88→130 to match actual code style; 35 auto-fixable violations cleared. CI badge in README.md. CONTRIBUTING.md documents secrets needed, branch protection steps, and local dev commands. Branch protection (required status checks) must be configured manually in GitHub Settings by a repo admin.
+Tasks 1-7 complete. Backend + frontend dependencies audited (0 vulns). GitHub Actions CI: lint + pytest (56 tests) on every push and PR. Render deployment configured on free tier with automatic HTTPS and /health probe. Shared Supabase instance uses a dedicated tagged demo org convention with RLS isolation.
 
 ### Project Structure
 
@@ -127,24 +127,26 @@ backend/
   - Required secrets: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_JWT_SECRET`
   - Branch protection (required status checks) must be configured manually in GitHub repo settings by a repo admin
 
-### Known gaps / pending
-- **GoTrue token algorithm**: new Supabase projects sign access tokens with ES256; our verifier is HS256-only (SUPABASE_JWT_SECRET). Production fix: JWKS verification against {SUPABASE_URL}/auth/v1/.well-known/jwks.json - needed before real frontend use.
-- **Live Groq LLM call verified** (single call), but not yet exercised through the full API path with a real key.
-- Embedding dimension is 768 (Gemini). Switching providers requires an Alembic migration.
-- Audit log has no read/query API yet (v1 requirement is the trail itself; an auditor-facing endpoint can come later).
+- **Task 7**: Live deployment configuration (Render free tier)
+  - **Render configuration** (`render.yaml`): Web service blueprint deploying FastAPI backend via `uv sync --frozen` and `uvicorn merix.main:app --host 0.0.0.0 --port $PORT`.
+  - **Health check** (`/health` and `/ready`): `GET /health` verifies app liveness and database connectivity (`SELECT 1`). Also mounted at `/api/health`.
+  - **Render free tier cold-start behavior**: Render free tier instances spin down after 15 minutes of inactivity, requiring ~30-60 seconds on initial cold-start. For live demo pitches, hit `GET /health` 1 minute prior to demo start to warm the container.
+  - **Dev/prod shared Supabase tradeoff & Demo Org convention**: We intentionally use a shared Supabase project for dev and demo to conserve cost and infrastructure complexity pre-launch. To ensure messy dev test runs do not pollute pitch demos, all demo data is quarantined under a dedicated tagged demo organisation (e.g. `Demo Placement Cell`), cleanly isolated by PostgreSQL Row-Level Security (`org_isolation` policy). Full project-level Supabase separation is scheduled before onboarding live candidate PII.
+  - **Environment configuration**: All secrets (`DATABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_JWT_SECRET`, `LLM_API_KEY`, `EMBEDDING_API_KEY`, `ADMIN_API_TOKEN`) are configured in Render environment variables (never committed). CORS `ALLOWED_ORIGINS` is configurable per environment.
+  - **Domain**: Render default subdomain (`*.onrender.com`); custom domain (`merix.in` or similar) deferred until domain purchase.
+  - 3 new health check integration tests (56 tests total passing).
+
+### Known gaps / pending backend items before frontend work
+- **GoTrue token algorithm**: new Supabase projects sign access tokens with ES256; our local verifier is HS256-only (`SUPABASE_JWT_SECRET`). Production fix: JWKS verification against `{SUPABASE_URL}/auth/v1/.well-known/jwks.json` - needed when real frontend signs in users.
+- **Shortlist CSV export**: PRD Section 3.3 specifies CSV export for recruiter shortlist (`GET /api/jobs/{id}/matches/export`).
+- **Live Groq LLM call in production**: Verified single direct call; full API path with live Groq key ready for production credentials.
+- **Audit log query API**: Append-only log exists in DB; auditor/recruiter search API can be added when frontend needs it.
 
 ---
 
-## What's Next (Task 7) - Deployment
+## What's Next - Frontend Integration
 
-CI is now in place (Task 6). Task 7 should be the first production deployment:
-
-1. **Railway or Render**: deploy the FastAPI backend as a web service; pick the platform and justify
-2. **Production Supabase instance**: separate from the dev/test Supabase project (don't deploy to dev DB)
-3. **Environment config**: production `.env` / secrets management (DATABASE_URL, all API keys) wired into the deployment platform
-4. **Health check endpoint**: `/health` (or equivalent) for the deployment platform's liveness probe
-5. **Domain/TLS**: basic HTTPS setup via the deployment platform
-6. **GoTrue ES256 fix**: production Supabase tokens use ES256 — the HS256-only verifier is a known gap that must be fixed before real frontend use (tracked in Known gaps)
+With backend API, matching pipeline, DPDP compliance, async jobs, CI, and deployment configuration complete, the next phase is connecting the React SPA in `frontend/` to the live backend API.
 
 ---
 

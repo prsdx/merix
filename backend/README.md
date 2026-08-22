@@ -1,4 +1,4 @@
-﻿# Merix Backend
+# Merix Backend
 
 FastAPI backend for Merix - AI-powered resume-to-job-description matching platform.
 
@@ -60,7 +60,22 @@ uv run ruff format .
 
 ### Database migrations
 
-Migrations will be set up with Alembic in a later task.
+Apply migrations to Supabase Postgres:
+```bash
+uv run alembic upgrade head
+```
+
+## Deployment (Render)
+
+The backend is configured for deployment on [Render](https://render.com) using `render.yaml` Blueprint or as a Web Service:
+
+- **Runtime**: Python 3.11
+- **Root Directory**: `backend`
+- **Build Command**: `pip install uv && uv sync --frozen`
+- **Start Command**: `uv run uvicorn merix.main:app --host 0.0.0.0 --port $PORT`
+- **Health Check Path**: `/health`
+
+> **Note on Free Tier**: Render's free instances spin down after 15 minutes of inactivity (~30-60s cold-start). For live demos, send a `GET /health` request 1 minute prior to demo start to warm up the instance.
 
 ## Environment Variables
 
@@ -68,4 +83,4 @@ See `.env.example` for all required environment variables.
 
 ## API Documentation
 
-Once the server is running, visit http://localhost:8000/docs for interactive API documentation (Swagger UI).
+Once the server is running, visit `http://localhost:8000/docs` (or your deployed Render URL `/docs`) for interactive API documentation (Swagger UI).
