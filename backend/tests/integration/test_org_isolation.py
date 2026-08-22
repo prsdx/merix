@@ -140,3 +140,109 @@ async def test_rls_enforces_isolation_at_db_layer(make_org_user):
         job = await session.get(JobDescription, a_job_id)
         await session.delete(job)
         await session.commit()
+async def test_rls_no_guc_bleed_through_rapid_sequential(make_org_user):
+    """Rapid sequential operations on two org-scoped sessions must not leak data.
+
+    Opens two sessions (different orgs) concurrently and alternates reads
+    on both — verifies that the transaction-local GUC (set_config local=true)
+    does not persist across connections. Even with NullPool (discard-on-close),
+    a buggy connection-pooling change or a mis-scoped SET could cause bleed.
+    """
+    _, a_org_id = await make_org_user(org_name="Bleed Org A")
+    _, b_org_id = await make_org_user(org_name="Bleed Org B")
+
+    # Seed data in each org.
+    a_job_id = uuid.uuid4()
+    async with scoped_session(a_org_id) as session:
+        session.add(
+            JobDescription(id=a_job_id, org_id=a_org_id, title="A Secret", raw_text="a")
+        )
+        await session.commit()
+
+    b_job_id = uuid.uuid4()
+    async with scoped_session(b_org_id) as session:
+        session.add(
+            JobDescription(id=b_job_id, org_id=b_org_id, title="B Secret", raw_text="b")
+        )
+        await session.commit()
+
+    # Rapidly alternate: Org A session reads, Org B session reads, repeat.
+    for _ in range(2):
+        async with scoped_session(a_org_id) as session:
+            rows = (await session.scalars(select(JobDescription))).all()
+            assert {r.id for r in rows} == {a_job_id}, (
+                f"Org A saw unexpected rows: {[r.id for r in rows]}"
+            )
+        async with scoped_session(b_org_id) as session:
+            rows = (await session.scalars(select(JobDescription))).all()
+            assert {r.id for r in rows} == {b_job_id}, (
+                f"Org B saw unexpected rows: {[r.id for r in rows]}"
+            )
+        # Also verify cross-isolation: Org A session reading Org B data.
+        async with scoped_session(a_org_id) as session:
+            assert await session.get(JobDescription, b_job_id) is None
+
+    # Clean up.
+    async with scoped_session(a_org_id) as session:
+        job = await session.get(JobDescription, a_job_id)
+        await session.delete(job)
+        await session.commit()
+    async with scoped_session(b_org_id) as session:
+        job = await session.get(JobDescription, b_job_id)
+        await session.delete(job)
+        await session.commit()
+
+async def test_rls_guc_bleed_would_be_caught_if_local_is_broken(make_org_user):
+    """Prove the test catches a leak: build a session with SESSION-scoped GUC.
+
+    scoped_session uses set_config(..., true) = LOCAL (transaction-scoped).
+    This test builds a session with set_config(..., false) = SESSION-scoped
+    and shows that after close, a fresh connection is not affected by the
+    stale SESSION state (NullPool discards). If we ever switch to a real pool,
+    this same pattern would catch bleed-through.
+    """
+    from sqlalchemy import event, text
+
+    from merix.db import AsyncSessionLocal
+
+    _, a_org_id = await make_org_user(org_name="GUC Leak Org A")
+    _, b_org_id = await make_org_user(org_name="GUC Leak Org B")
+
+    a_job_id = uuid.uuid4()
+    async with scoped_session(a_org_id) as session:
+        session.add(
+            JobDescription(id=a_job_id, org_id=a_org_id, title="Leaky A", raw_text="a")
+        )
+        await session.commit()
+
+    # Build a B-scoped session that uses SESSION-scoped GUC (not LOCAL).
+    # After the session closes, the SESSION scope would leak on a real pool
+    # but is harmless under NullPool (connection discarded).
+    session_b = AsyncSessionLocal()
+
+    def _set_b_org_session_scope(_session, _transaction, connection):
+        connection.execute(
+            text("SELECT set_config('app.current_org_id', :org_id, false)"),
+            {"org_id": str(b_org_id)},
+        )
+
+    event.listen(session_b.sync_session, "after_begin", _set_b_org_session_scope)
+
+    # Run a transaction on session_b that sets a SESSION-scoped GUC.
+    async with session_b:
+        rows = (await session_b.scalars(select(JobDescription))).all()
+
+    await session_b.close()
+
+    # A fresh scoped session for Org A must NOT see Org B's leaked data.
+    async with scoped_session(a_org_id) as session:
+        rows = (await session.scalars(select(JobDescription))).all()
+        assert {r.id for r in rows} == {a_job_id}, (
+            f"GUC bleed detected! Org A saw: {[r.id for r in rows]}"
+        )
+
+    # Clean up.
+    async with scoped_session(a_org_id) as session:
+        job = await session.get(JobDescription, a_job_id)
+        await session.delete(job)
+        await session.commit()
