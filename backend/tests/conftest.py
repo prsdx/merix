@@ -5,7 +5,6 @@ from collections.abc import AsyncGenerator, Awaitable, Callable
 
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import text
 
 from merix.db import AsyncSessionLocal
 from merix.core.rate_limit import limiter
@@ -43,12 +42,6 @@ async def make_org_user() -> AsyncGenerator[
         org_name: str = "Test Org", email: str | None = None
     ) -> tuple[uuid.UUID, uuid.UUID]:
         async with AsyncSessionLocal() as session:
-            # Test-setup INSERTs run outside the RLS context — temporarily
-            # elevate to postgres (NullPool discards the connection on close,
-            # so the role change never leaks between tests).
-            await session.execute(
-                text("SET LOCAL role postgres")
-            )
             org = Organisation(name=org_name)
             session.add(org)
             await session.flush()
@@ -66,9 +59,6 @@ async def make_org_user() -> AsyncGenerator[
 
     # ON DELETE CASCADE removes the user and all tenant data for the org.
     async with AsyncSessionLocal() as session:
-        await session.execute(
-            text("SET LOCAL role postgres")
-        )
         for org_id in created_org_ids:
             org = await session.get(Organisation, org_id)
             if org is not None:
