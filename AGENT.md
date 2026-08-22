@@ -1,4 +1,4 @@
-﻿# Merix Agent Guidelines
+# Merix Agent Guidelines
 
 This document is the persistent house-style guide for all AI-assisted development on Merix. Read it before making any changes.
 
@@ -24,13 +24,14 @@ This document is the persistent house-style guide for all AI-assisted developmen
 - **Backend**: Python 3.11+ with FastAPI (async), Uvicorn
 - **Database**: PostgreSQL with pgvector extension (via Supabase)
 - **ORM**: SQLAlchemy 2.0 (async) with asyncpg driver
-- **Migrations**: Alembic (to be set up in a later task)
+- **Migrations**: Alembic (applied manually to Supabase via `alembic upgrade head`)
 - **Validation**: Pydantic v2 + pydantic-settings
 - **Logging**: structlog (JSON in production, console in development)
 - **LLM/Embeddings**: Provider-agnostic client abstraction (see `src/merix/clients/`)
 - **Package manager**: uv
 - **Testing**: pytest + pytest-asyncio
-- **Linting/Formatting**: ruff
+- **Linting/Formatting**: ruff (line-length = 130; `ruff check` + `ruff format`)
+- **CI**: GitHub Actions (`.github/workflows/ci.yml`) — ruff + pytest on every push/PR
 
 ---
 
@@ -179,6 +180,40 @@ Examples:
 - Semantic Versioning (MAJOR.MINOR.PATCH)
 - Update CHANGELOG.md with every task
 - Tag releases in git
+
+---
+
+## CI / Automated Checks
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the full CI reference. Summary:
+
+- **Lint job**: `ruff check src/ tests/` + `ruff format --check` — runs first on every push/PR.
+- **Test job**: `pytest -v --tb=short` — full test suite (unit + integration); runs after lint passes.
+- Integration tests hit the **real Supabase Postgres** instance (not a mock) — RLS correctness requires it.
+- Required secrets: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `SUPABASE_JWT_SECRET`.
+- Branch protection (requiring status checks) must be configured manually in GitHub repo settings.
+
+---
+
+## Verification Requirement (standing rule — applies to every step, not just the end)
+
+Do not mark any step as done just because the code was written or the file compiles. For each step, before moving to the next:
+
+- Actually run it (start the server, hit the endpoint, run the test) and show real output — not a description of expected behavior.
+- If a step touches something built in a previous step (e.g. matching logic calling the embedding client), re-verify the previous step still works after the change — don't assume it's untouched.
+- If something fails, fix it before moving on. Do not proceed to the next step with a known-broken or unverified previous step, and do not say something works if it hasn't actually been executed.
+- At each status update, include what was run and what it returned, not just what was built.
+
+---
+
+## Commit Discipline (standing rule)
+
+- Commit at each meaningful, working checkpoint — not just at the end of a task. A "meaningful checkpoint" means: a step from the task's scope is built AND verified working (per the verification requirement above). Do not batch multiple unrelated changes into one giant commit.
+- Follow the Conventional Commits convention (feat:, fix:, chore:, test:, docs:, refactor:) — one logical change per commit, not one commit per task.
+- Every commit must correspond to a working state — never commit code that doesn't run or that hasn't been verified, per the verification rule above. Broken intermediate states belong in the working tree, not in a commit.
+- Use the branch naming convention for each task's work (e.g. feature/<short-description>) — do not commit directly to main.
+- At each status update, state what was committed, not just what was built.
+- Retroactively: if there are uncommitted changes sitting from work already done, stop, review them, and commit them properly in logical chunks before continuing — don't fold old uncommitted work into the next new commit.
 
 ---
 

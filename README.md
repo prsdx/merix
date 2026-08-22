@@ -1,4 +1,6 @@
-﻿# Merix
+# Merix
+
+[![CI](https://github.com/prsdx/merix/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/prsdx/merix/actions/workflows/ci.yml)
 
 AI-powered resume-to-job-description matching platform for Indian recruiters and campus placement teams.
 

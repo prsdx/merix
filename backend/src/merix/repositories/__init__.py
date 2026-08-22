@@ -1,1 +1,1 @@
-﻿"""Data access repositories."""
+"""Data access repositories."""

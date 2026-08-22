@@ -1,0 +1,100 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "feature/**", "fix/**", "chore/**", "refactor/**", "docs/**"]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install dependencies (dev group)
+        run: uv sync --group dev
+
+      - name: Run ruff lint check
+        run: uv run ruff check src/ tests/
+
+      - name: Run ruff format check
+        run: uv run ruff format --check src/ tests/
+
+  test:
+    name: Test (pytest)
+    runs-on: ubuntu-latest
+    needs: lint
+    defaults:
+      run:
+        working-directory: backend
+
+    env:
+      # Application settings
+      APP_NAME: Merix
+      ENVIRONMENT: ci
+      DEBUG: "false"
+      LOG_LEVEL: WARNING
+
+      # Database — real Supabase instance (pgvector + merix_app role + migrations already applied).
+      # RLS correctness tests (org isolation, scoped_session) require real Postgres behaviour;
+      # a local container would need migrations, the merix_app role, and pgvector installed —
+      # more complexity for no additional correctness. We test against the real dev DB.
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+      # LLM/embedding keys — tests use FakeLLM/FakeEmbedder; only empty strings are needed.
+      LLM_PROVIDER: groq
+      LLM_MODEL: openai/gpt-oss-120b
+      LLM_API_KEY: ""
+      EMBEDDING_PROVIDER: google
+      EMBEDDING_MODEL: gemini-embedding-001
+      EMBEDDING_API_KEY: ""
+
+      # Storage — not exercised by tests; kept non-empty to satisfy pydantic-settings.
+      STORAGE_PROVIDER: supabase
+      STORAGE_BUCKET: resumes
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+
+      # Auth — tests mint HS256 tokens locally with this secret.
+      # Must match the secret used to sign tokens the app verifies.
+      SUPABASE_JWT_SECRET: ${{ secrets.SUPABASE_JWT_SECRET }}
+      JWT_ALGORITHM: HS256
+
+      # DPDP / admin
+      ADMIN_API_TOKEN: ""
+      ALLOWED_ORIGINS: "*"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install all dependencies
+        run: uv sync --group dev
+
+      - name: Run pytest
+        run: uv run pytest -v --tb=short 2>&1

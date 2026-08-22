@@ -1,1 +1,1 @@
-﻿"""Candidate model (TODO: Task 2)."""
+"""Candidate model (TODO: Task 2)."""

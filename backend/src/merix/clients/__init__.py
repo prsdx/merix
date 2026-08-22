@@ -1,1 +1,1 @@
-﻿"""External provider clients."""
+"""External provider clients."""
