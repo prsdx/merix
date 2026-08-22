@@ -35,7 +35,7 @@ class Settings(BaseSettings):
     SUPABASE_JWT_SECRET: str = ""
     JWT_ALGORITHM: str = "HS256"
 
-    DATA_RETENTION_DAYS: int = 90
+    # Retention is per-org (organisations.retention_days, default 90) since Task 3.
 
     # Resolve .env relative to the backend/ dir (this file is at backend/src/merix/config.py),
     # so settings load correctly regardless of the process working directory.

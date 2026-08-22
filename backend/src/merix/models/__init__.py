@@ -1,5 +1,6 @@
 """SQLAlchemy models."""
 
+from merix.models.audit import AuditEvent
 from merix.models.base import Base, TimestampMixin
 from merix.models.job import EMBEDDING_DIM, JobDescription
 from merix.models.match import MatchResult
@@ -16,5 +17,6 @@ __all__ = [
     "MatchResult",
     "Organisation",
     "User",
+    "AuditEvent",
 ]
 
