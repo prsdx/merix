@@ -20,6 +20,9 @@ from merix.core.exceptions import (
     ValidationError,
 )
 from merix.core.logging import configure_logging
+from merix.core.rate_limit import limiter
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 
 
 @asynccontextmanager
@@ -38,6 +41,8 @@ def create_app() -> FastAPI:
     )
     app.include_router(api_router, prefix="/api")
     _register_exception_handlers(app)
+    app.state.limiter = limiter
+    app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
     return app
 
 

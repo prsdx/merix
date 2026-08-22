@@ -39,8 +39,14 @@ AsyncSessionLocal = async_sessionmaker(
 
 
 async def get_db() -> AsyncGenerator[AsyncSession, None]:
-    """Database session dependency (no tenant context; for auth lookups)."""
+    """Database session dependency (no tenant context; for auth lookups).
+
+    Auth endpoints (signup, login) run before there is an org to scope
+    against, so this session briefly elevates to postgres to skip RLS.
+    After signup creates the org, every other endpoint uses scoped_session.
+    """
     async with AsyncSessionLocal() as session:
+        await session.execute(text("SET LOCAL role postgres"))
         yield session
 
 

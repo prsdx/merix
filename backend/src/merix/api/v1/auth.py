@@ -1,9 +1,10 @@
 """Authentication endpoints (backed by Supabase Auth / GoTrue)."""
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Request, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from merix.clients.auth import SupabaseAuthClient
+from merix.core.rate_limit import LOGIN_RATE_LIMIT, SIGNUP_RATE_LIMIT, limiter
 from merix.dependencies import get_auth, get_current_user, get_db
 from merix.models.organisation import Organisation
 from merix.models.user import User
@@ -21,7 +22,9 @@ router = APIRouter()
 @router.post(
     "/signup", response_model=TokenResponse, status_code=status.HTTP_201_CREATED
 )
+@limiter.limit(SIGNUP_RATE_LIMIT)
 async def signup(
+    request: Request,
     body: SignupRequest,
     db: AsyncSession = Depends(get_db),
     auth: SupabaseAuthClient = Depends(get_auth),
@@ -31,7 +34,9 @@ async def signup(
 
 
 @router.post("/login", response_model=TokenResponse)
+@limiter.limit(LOGIN_RATE_LIMIT)
 async def login(
+    request: Request,
     body: LoginRequest,
     db: AsyncSession = Depends(get_db),
     auth: SupabaseAuthClient = Depends(get_auth),
