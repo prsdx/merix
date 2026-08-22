@@ -3,6 +3,11 @@
 Creates its own DB session and LLM client so it is fully independent
 of the request lifecycle. Updates the BatchJob row with progress and
 per-resume disposition entries as it works.
+
+Retry policy: failed jobs surface their failure to the client. No
+auto-retry. The client must resubmit (POST the match again).
+run_match_for_resume is idempotent (upserts), so re-running a
+completed job is safe.
 """
 
 import logging

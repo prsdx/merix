@@ -2,10 +2,12 @@
 
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import update
 
 from merix.api.router import api_router
 from merix.config import settings
@@ -22,14 +24,49 @@ from merix.core.exceptions import (
 )
 from merix.core.logging import configure_logging
 from merix.core.rate_limit import limiter
+from merix.db import AsyncSessionLocal
+from merix.models.batch_job import BatchJob
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+
+logger = logging.getLogger("merix.main")
+
+
+async def _cleanup_stale_batch_jobs() -> None:
+    """Mark any running BatchJobs as failed on startup.
+
+    If the server restarted or crashed, in-flight background tasks are
+    dead and their BatchJobs are stuck as 'running'.  This startup hook
+    finds those rows and marks them as failed so clients discover the
+    outcome on the next poll.
+    """
+    try:
+        async with AsyncSessionLocal() as session:
+            result = await session.execute(
+                update(BatchJob)
+                .where(BatchJob.status == "running")
+                .values(
+                    status="failed",
+                    error_message="Server restarted — job was interrupted",
+                )
+            )
+            await session.commit()
+            if result.rowcount:
+                logger.warning(
+                    "startup_cleanup: marked %d stale batch job(s) as failed",
+                    result.rowcount,
+                )
+    except Exception:
+        logger.warning(
+            "startup_cleanup: could not reach database, skipping", exc_info=True
+        )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Startup and shutdown logic."""
     configure_logging()
+    await _cleanup_stale_batch_jobs()
     yield
 
 
