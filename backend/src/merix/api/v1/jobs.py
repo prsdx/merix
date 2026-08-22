@@ -182,3 +182,36 @@ async def list_matches(
     job = await pipeline.get_job_or_404(db, job_id, user.org_id)
     results = await pipeline.list_matches_for_job(db, job, min_score=min_score)
     return await _shortlist_payload(db, job, results)
+
+
+@router.get("/{job_id}/matches/export")
+async def export_matches(
+    job_id: uuid.UUID,
+    min_score: float | None = None,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_scoped_db),
+):
+    """Export the ranked shortlist as a CSV."""
+    import csv
+    import io
+
+    from fastapi.responses import Response
+
+    job = await pipeline.get_job_or_404(db, job_id, user.org_id)
+    results = await pipeline.list_matches_for_job(db, job, min_score=min_score)
+    resumes = {r.id: r for r in (await db.scalars(select(Resume).where(Resume.job_id == job.id))).all()}
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow(["Candidate Name", "Score", "Matched Skills", "Missing Skills", "Rationale"])
+
+    for match in results:
+        resume = resumes.get(match.resume_id)
+        name = resume.candidate_name if resume else "Unknown"
+        writer.writerow([name, match.score, ", ".join(match.matched_skills), ", ".join(match.missing_skills), match.rationale])
+
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv",
+        headers={"Content-Disposition": f'attachment; filename="shortlist_{job_id}.csv"'},
+    )
