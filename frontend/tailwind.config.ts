@@ -1,6 +1,7 @@
-﻿import type { Config } from "tailwindcss";
+import type { Config } from "tailwindcss";
 
 const config: Config = {
+  darkMode: ["class"],
   content: [
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",
     "./src/components/**/*.{js,ts,jsx,tsx,mdx}",
@@ -14,42 +15,60 @@ const config: Config = {
         mono: ['"JetBrains Mono"', '"Fira Code"', "monospace"],
       },
       colors: {
-        /* Primary background */
-        ink: {
-          DEFAULT: "#070709",
-          50: "#0E0E12",
-          100: "#12121A",
-          200: "#1A1A24",
-          300: "#222230",
+        /* Theme-aware primary background & text */
+        background: "var(--background)",
+        foreground: {
+          DEFAULT: "var(--foreground)",
+          muted: "var(--foreground-muted)",
         },
-        /* Text */
+        /* Surface cards */
+        surface: {
+          DEFAULT: "var(--color-surface)",
+          hover: "var(--color-surface-hover)",
+          solid: "var(--color-surface-solid)",
+          border: "var(--color-border)",
+          "border-strong": "var(--color-border-strong)",
+        },
+        /* Ink palette (slate scale) */
+        ink: {
+          DEFAULT: "#0F172A",
+          50: "#F8FAFC",
+          100: "#F1F5F9",
+          200: "#E2E8F0",
+          300: "#CBD5E1",
+          700: "#334155",
+          800: "#1E293B",
+          900: "#0F172A",
+          950: "#0B0F17",
+        },
+        /* Parchment text tokens */
         parchment: {
-          DEFAULT: "#E8E6E1",
-          dim: "#A8A5A0",
-          muted: "#6B6965",
+          DEFAULT: "var(--foreground)",
+          dim: "var(--foreground-muted)",
+          muted: "var(--foreground-muted)",
         },
         /* Data / teal-cyan */
         data: {
-          DEFAULT: "#00D4AA",
-          dim: "rgba(0,212,170,0.12)",
-          faint: "rgba(0,212,170,0.05)",
+          DEFAULT: "var(--color-data)",
+          dim: "var(--color-data-dim)",
+          faint: "var(--color-data-faint)",
         },
         /* Compliance / emerald */
         compliance: {
-          DEFAULT: "#22C55E",
-          dim: "rgba(34,197,94,0.12)",
-          faint: "rgba(34,197,94,0.05)",
+          DEFAULT: "var(--color-compliance)",
+          dim: "var(--color-compliance-dim)",
+          faint: "var(--color-compliance-faint)",
         },
         /* Score spectrum */
         score: {
-          high: "#22C55E",
-          mid: "#F59E0B",
-          low: "#F97316",
+          high: "var(--color-score-high)",
+          mid: "var(--color-score-mid)",
+          low: "var(--color-score-low)",
         },
         /* Interactive accent */
         iris: {
-          DEFAULT: "#818CF8",
-          dim: "rgba(129,140,248,0.15)",
+          DEFAULT: "var(--color-interactive)",
+          dim: "var(--color-interactive-dim)",
         },
       },
       animation: {
@@ -67,16 +86,11 @@ const config: Config = {
           to: { opacity: "1", transform: "translateY(0)" },
         },
       },
-      backgroundImage: {
-        "ink-gradient": "linear-gradient(135deg, #070709 0%, #0D0D14 50%, #070709 100%)",
-        "data-gradient": "linear-gradient(135deg, #00D4AA 0%, #00B4D8 100%)",
-        "score-gradient": "linear-gradient(90deg, #F59E0B 0%, #22C55E 100%)",
-      },
       boxShadow: {
         "glow-teal": "0 0 20px rgba(0,212,170,0.2), 0 0 60px rgba(0,212,170,0.08)",
         "glow-emerald": "0 0 20px rgba(34,197,94,0.2), 0 0 60px rgba(34,197,94,0.08)",
-        "glass": "0 8px 32px 0 rgba(0,0,0,0.55), inset 0 1px 0 0 rgba(255,255,255,0.10)",
-        "glass-hover": "0 16px 48px 0 rgba(0,0,0,0.65), inset 0 1px 0 0 rgba(255,255,255,0.18)",
+        "glass": "var(--panel-shadow)",
+        "glass-hover": "var(--panel-shadow-hover)",
       },
     },
   },

@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 import Link from "next/link";
@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { Briefcase, PlusCircle, Settings, LogOut, Building2 } from "lucide-react";
 import { DPDPBadge } from "./dpdp-badge";
+import { ThemeToggle } from "./theme-toggle";
 
 export function AppNavbar() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -25,46 +26,31 @@ export function AppNavbar() {
 
   return (
     <header className="sticky top-4 z-50 w-full max-w-7xl mx-auto px-4 mb-8">
-      <div
-        className="flex items-center justify-between px-5 py-3 rounded-2xl backdrop-blur-2xl"
-        style={{
-          background: "rgba(7,7,9,0.82)",
-          border: "1px solid rgba(255,255,255,0.09)",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12)",
-        }}
-      >
+      <div className="flex items-center justify-between px-5 py-3 rounded-2xl glass-panel backdrop-blur-2xl transition-all">
         {/* Brand */}
         <div className="flex items-center gap-5">
           <Link
             href={isAuthenticated ? "/dashboard" : "/"}
             className="flex items-center gap-2.5 group"
           >
-            {/* Merix logomark: M letterform in teal-cyan */}
+            {/* Merix logomark: M letterform with gradient */}
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#070709] font-display font-bold text-sm shadow-lg group-hover:scale-105 transition-transform"
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-white dark:text-[#0B0F17] font-display font-bold text-sm shadow-md group-hover:scale-105 transition-transform"
               style={{
-                background: "linear-gradient(135deg, #00D4AA 0%, #00B4D8 100%)",
-                boxShadow: "0 4px 16px rgba(0,212,170,0.3)",
+                background: "linear-gradient(135deg, #0D9488 0%, #0284C7 100%)",
               }}
             >
               M
             </div>
-            <span className="font-display text-base tracking-tight text-[#E8E6E1]">
+            <span className="font-display text-lg tracking-tight font-semibold text-slate-900 dark:text-slate-100">
               Merix
             </span>
           </Link>
 
           {user && (
-            <div
-              className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md text-xs"
-              style={{
-                background: "rgba(255,255,255,0.04)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                color: "#A8A5A0",
-              }}
-            >
-              <Building2 className="w-3.5 h-3.5 text-[#00D4AA]" />
-              <span className="font-medium text-[#E8E6E1]">{user.org_name || "Organisation"}</span>
+            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md text-xs bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300">
+              <Building2 className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+              <span className="font-medium">{user.org_name || "Organisation"}</span>
             </div>
           )}
         </div>
@@ -80,14 +66,9 @@ export function AppNavbar() {
                   href={href}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                     active
-                      ? "text-[#E8E6E1]"
-                      : "text-[#6B6965] hover:text-[#E8E6E1]"
+                      ? "bg-slate-200/70 dark:bg-white/10 text-slate-900 dark:text-white font-semibold shadow-xs"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5"
                   }`}
-                  style={
-                    active
-                      ? { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.08)" }
-                      : { border: "1px solid transparent" }
-                  }
                 >
                   <Icon className="w-3.5 h-3.5" />
                   <span>{label}</span>
@@ -98,31 +79,18 @@ export function AppNavbar() {
         )}
 
         {/* Right Actions */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3">
           <DPDPBadge variant="pill" className="hidden lg:inline-flex" />
+          <ThemeToggle />
 
           {isAuthenticated ? (
-            <div className="flex items-center gap-3">
-              <span className="hidden sm:inline-block text-xs text-[#6B6965] max-w-[150px] truncate font-mono">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <span className="hidden sm:inline-block text-xs text-slate-500 dark:text-slate-400 max-w-[140px] truncate font-mono">
                 {user?.email}
               </span>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-                style={{
-                  color: "#6B6965",
-                  border: "1px solid transparent",
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.color = "#F87171";
-                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(248,113,113,0.08)";
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(248,113,113,0.2)";
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLButtonElement).style.color = "#6B6965";
-                  (e.currentTarget as HTMLButtonElement).style.background = "transparent";
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent";
-                }}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20"
                 title="Sign out"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -133,17 +101,15 @@ export function AppNavbar() {
             <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors"
-                style={{ color: "#A8A5A0" }}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
               >
                 Sign In
               </Link>
               <Link
                 href="/signup"
-                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[#070709] transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white transition-all hover:opacity-95 hover:shadow-md active:scale-[0.98]"
                 style={{
-                  background: "linear-gradient(135deg, #00D4AA 0%, #00B4D8 100%)",
-                  boxShadow: "0 4px 16px rgba(0,212,170,0.25)",
+                  background: "linear-gradient(135deg, #0D9488 0%, #0284C7 100%)",
                 }}
               >
                 Get Started

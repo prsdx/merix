@@ -1,29 +1,72 @@
-﻿@tailwind base;
+@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 /* ============================================================
-   MERIX DESIGN TOKENS — v10 (Editorial Authority direction)
-   Palette: blue-black bg / warm off-white text / teal-cyan data
+   MERIX DESIGN TOKENS — Editorial Authority (Light & Refined Dark)
    Typography: Inter (UI) + DM Serif Display (headlines) + JetBrains Mono (data)
    ============================================================ */
 
 :root {
-  --background: #070709;
-  --foreground: #E8E6E1;
+  /* LIGHT MODE (Default presentation: clean, high-contrast, airy) */
+  --background: #F8FAFC;
+  --foreground: #0F172A;
+  --foreground-muted: #64748B;
 
-  /* Brand palette */
-  --color-data: #00D4AA;          /* teal-cyan: data accents, score numbers */
-  --color-data-dim: #00D4AA33;    /* teal-cyan 20%: subtle backgrounds */
-  --color-compliance: #22C55E;    /* emerald: DPDP / compliance signals */
-  --color-compliance-dim: #22C55E1A; /* emerald 10% */
-  --color-score-high: #22C55E;    /* 80+ scores */
-  --color-score-mid: #F59E0B;     /* 60-79 scores */
-  --color-score-low: #F97316;     /* <60 scores / gaps */
-  --color-interactive: #818CF8;   /* indigo-400: interactive / focus accent */
-  --color-surface: rgba(255,255,255,0.03);
-  --color-border: rgba(255,255,255,0.09);
-  --color-border-strong: rgba(255,255,255,0.15);
+  --color-surface: rgba(255, 255, 255, 0.92);
+  --color-surface-hover: #FFFFFF;
+  --color-surface-solid: #FFFFFF;
+  --color-border: rgba(15, 23, 42, 0.08);
+  --color-border-strong: rgba(15, 23, 42, 0.16);
+
+  /* Brand Accents (Light Mode) */
+  --color-data: #0D9488;          /* Teal-600 */
+  --color-data-dim: rgba(13, 148, 136, 0.08);
+  --color-data-faint: rgba(13, 148, 136, 0.04);
+  --color-compliance: #16A34A;    /* Emerald-600 */
+  --color-compliance-dim: rgba(22, 163, 74, 0.08);
+  --color-compliance-faint: rgba(22, 163, 74, 0.04);
+  --color-score-high: #16A34A;
+  --color-score-mid: #D97706;     /* Amber-600 */
+  --color-score-low: #EA580C;     /* Orange-600 */
+  --color-interactive: #6366F1;   /* Indigo-500 */
+  --color-interactive-dim: rgba(99, 102, 241, 0.08);
+
+  --ring-bg-stroke: rgba(15, 23, 42, 0.08);
+  --panel-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+  --panel-shadow-hover: 0 12px 32px -4px rgba(15, 23, 42, 0.10), 0 4px 12px -2px rgba(15, 23, 42, 0.05);
+  --panel-border-inset: inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+}
+
+.dark {
+  /* DARK MODE: Soft Obsidian / Slate-950 (Not harsh pitch black) */
+  --background: #0B0F17;
+  --foreground: #F1F5F9;
+  --foreground-muted: #94A3B8;
+
+  --color-surface: rgba(255, 255, 255, 0.035);
+  --color-surface-hover: rgba(255, 255, 255, 0.065);
+  --color-surface-solid: #111827;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+
+  /* Brand Accents (Dark Mode) */
+  --color-data: #00D4AA;          /* Luminous Teal-Cyan */
+  --color-data-dim: rgba(0, 212, 170, 0.12);
+  --color-data-faint: rgba(0, 212, 170, 0.05);
+  --color-compliance: #22C55E;    /* Luminous Emerald */
+  --color-compliance-dim: rgba(34, 197, 94, 0.12);
+  --color-compliance-faint: rgba(34, 197, 94, 0.05);
+  --color-score-high: #22C55E;
+  --color-score-mid: #F59E0B;
+  --color-score-low: #F97316;
+  --color-interactive: #818CF8;
+  --color-interactive-dim: rgba(129, 140, 248, 0.15);
+
+  --ring-bg-stroke: rgba(255, 255, 255, 0.08);
+  --panel-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.10);
+  --panel-shadow-hover: 0 16px 48px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.18);
+  --panel-border-inset: inset 0 1px 0 0 rgba(255, 255, 255, 0.10);
 }
 
 html {
@@ -32,11 +75,12 @@ html {
 
 body {
   color: var(--foreground);
-  background: var(--background);
+  background-color: var(--background);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
 }
 
 /* ---- Typography helpers ---- */
@@ -50,6 +94,11 @@ body {
 
 /* ---- Selection ---- */
 ::selection {
+  background: rgba(13, 148, 136, 0.25);
+  color: inherit;
+}
+
+.dark ::selection {
   background: rgba(0, 212, 170, 0.25);
   color: #ffffff;
 }
@@ -57,10 +106,10 @@ body {
 /* ---- Glassmorphic panels ---- */
 .glass-panel {
   background: var(--color-surface);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   border: 1px solid var(--color-border);
-  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.55), inset 0 1px 0 0 rgba(255,255,255,0.10);
+  box-shadow: var(--panel-shadow);
 }
 
 .glass-panel-hover {
@@ -68,26 +117,34 @@ body {
 }
 
 .glass-panel-hover:hover {
-  background: rgba(255,255,255,0.05);
-  border-color: rgba(255,255,255,0.18);
-  box-shadow: 0 16px 48px 0 rgba(0,0,0,0.65), inset 0 1px 0 0 rgba(255,255,255,0.18);
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--panel-shadow-hover);
   transform: translateY(-2px);
 }
 
 /* Data surface — teal tinted */
 .data-panel {
-  background: rgba(0,212,170,0.04);
-  border: 1px solid rgba(0,212,170,0.15);
+  background: var(--color-data-dim);
+  border: 1px solid rgba(13, 148, 136, 0.2);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 
+.dark .data-panel {
+  border-color: rgba(0, 212, 170, 0.2);
+}
+
 /* Compliance surface — emerald tinted */
 .compliance-panel {
-  background: rgba(34,197,94,0.05);
-  border: 1px solid rgba(34,197,94,0.2);
+  background: var(--color-compliance-dim);
+  border: 1px solid rgba(22, 163, 74, 0.25);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+}
+
+.dark .compliance-panel {
+  border-color: rgba(34, 197, 94, 0.25);
 }
 
 /* ---- Score fill animation ---- */
@@ -118,13 +175,17 @@ body {
 }
 
 /* ---- Custom scrollbar ---- */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: var(--background); }
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.12);
+  background: rgba(100, 116, 139, 0.2);
   border-radius: 9999px;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.35); }
+.dark ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
 
 /* ---- Focus ring ---- */
 :focus-visible {
@@ -134,16 +195,22 @@ body {
 
 /* ---- Glow utilities ---- */
 .glow-teal {
-  box-shadow: 0 0 20px rgba(0,212,170,0.2), 0 0 60px rgba(0,212,170,0.08);
+  box-shadow: 0 0 20px rgba(13, 148, 136, 0.15), 0 0 60px rgba(13, 148, 136, 0.05);
+}
+.dark .glow-teal {
+  box-shadow: 0 0 20px rgba(0, 212, 170, 0.2), 0 0 60px rgba(0, 212, 170, 0.08);
 }
 
 .glow-emerald {
-  box-shadow: 0 0 20px rgba(34,197,94,0.2), 0 0 60px rgba(34,197,94,0.08);
+  box-shadow: 0 0 20px rgba(22, 163, 74, 0.15), 0 0 60px rgba(22, 163, 74, 0.05);
+}
+.dark .glow-emerald {
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.2), 0 0 60px rgba(34, 197, 94, 0.08);
 }
 
 /* ---- Audit trail row ---- */
 .audit-row {
-  border-left: 2px solid rgba(0,212,170,0.3);
+  border-left: 2px solid var(--color-data);
   padding-left: 1rem;
   position: relative;
 }
@@ -163,11 +230,11 @@ body {
 /* ---- Evidence quote ---- */
 .evidence-quote {
   font-family: "JetBrains Mono", monospace;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   line-height: 1.6;
-  color: rgba(232,230,225,0.65);
-  background: rgba(0,212,170,0.04);
-  border-left: 2px solid rgba(0,212,170,0.35);
-  padding: 0.5rem 0.75rem;
-  border-radius: 0 4px 4px 0;
+  color: var(--foreground-muted);
+  background: var(--color-data-dim);
+  border-left: 2px solid var(--color-data);
+  padding: 0.6rem 0.85rem;
+  border-radius: 0 6px 6px 0;
 }

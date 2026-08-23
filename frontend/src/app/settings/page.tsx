@@ -1,325 +1,317 @@
-﻿"use client";
-
-import React, { useEffect, useState } from "react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/lib/auth-context";
-import { api } from "@/lib/api";
-import { Organisation, AuditEvent } from "@/lib/types";
-import { AppNavbar } from "@/components/app-navbar";
-import { DPDPBadge } from "@/components/dpdp-badge";
-import {
-  Settings,
-  Building2,
-  ShieldCheck,
-  Clock,
-  Save,
-  CheckCircle2,
-  AlertCircle,
-  Loader2,
-  FileSpreadsheet,
-  Activity,
-  Calendar,
-  Lock,
-  Layers,
-  Sparkles,
-  Link as LinkIcon,
-} from "lucide-react";
-
-export default function SettingsPage() {
-  const router = useRouter();
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
-
-  const [org, setOrg] = useState<Organisation | null>(null);
-  const [auditLogs, setAuditLogs] = useState<AuditEvent[]>([]);
-  const [retentionDays, setRetentionDays] = useState<number>(90);
-  const [loading, setLoading] = useState(true);
-  const [savingRetention, setSavingRetention] = useState(false);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/login");
-      return;
-    }
-
-    if (isAuthenticated) {
-      loadSettings();
-    }
-  }, [authLoading, isAuthenticated, router]);
-
-  const loadSettings = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const [orgData, logsData] = await Promise.all([
-        api.getMyOrg(),
-        api.listAuditLogs(50),
-      ]);
-      setOrg(orgData);
-      setRetentionDays(orgData.retention_days || 90);
-      setAuditLogs(logsData);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to load settings";
-      setError(msg);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSaveRetention = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSavingRetention(true);
-    setError(null);
-    setSuccessMessage(null);
-
-    try {
-      const updated = await api.updateMyOrg(retentionDays);
-      setOrg(updated);
-      setSuccessMessage(`Retention policy updated to ${updated.retention_days} days.`);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to update retention policy.";
-      setError(msg);
-    } finally {
-      setSavingRetention(false);
-    }
-  };
-
-  if (authLoading || (loading && !org)) {
-    return (
-      <div className="min-h-screen flex flex-col justify-center items-center">
-        <Loader2 className="w-8 h-8 animate-spin text-[#00D4AA] mb-3" />
-        <span className="text-xs text-[#A8A5A0] font-mono">Loading Compliance Settings...</span>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen pb-16">
-      <AppNavbar />
-
-      <main className="max-w-6xl mx-auto px-4 space-y-8">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-white/10">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-[#00D4AA] uppercase tracking-wider">
-                COMPLIANCE &amp; GOVERNANCE
-              </span>
-              <DPDPBadge variant="row" />
-            </div>
-            <h1 className="font-display text-3xl font-bold text-[#E8E6E1]">
-              Organisation &amp; DPDP Settings
-            </h1>
-            <p className="text-xs text-[#A8A5A0]">
-              Manage retention policies, tenant configuration, and immutable compliance audit trails.
-            </p>
-          </div>
-        </div>
-
-        {error && (
-          <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs flex items-center gap-2.5">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
-            <span>{error}</span>
-          </div>
-        )}
-
-        {successMessage && (
-          <div className="p-4 rounded-xl bg-emerald-950/40 border border-emerald-500/30 text-emerald-200 text-xs flex items-center gap-2.5">
-            <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-            <span>{successMessage}</span>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Org Profile & Retention Policy */}
-          <div className="lg:col-span-6 space-y-6">
-            {/* Organisation Profile Card */}
-            <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-white/10 space-y-4">
-              <div className="flex items-center gap-2 pb-3 border-b border-white/10">
-                <Building2 className="w-4 h-4 text-[#00D4AA]" />
-                <h2 className="font-display text-lg font-bold text-[#E8E6E1]">
-                  Organisation Profile
-                </h2>
-              </div>
-
-              <div className="space-y-3 text-xs">
-                <div>
-                  <div className="text-[10px] font-mono text-[#A8A5A0] uppercase tracking-wider">
-                    ORGANISATION NAME
-                  </div>
-                  <div className="font-semibold text-sm text-[#E8E6E1] mt-0.5">
-                    {org?.name || user?.org_name}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] font-mono text-[#A8A5A0] uppercase tracking-wider">
-                    ORGANISATION ID
-                  </div>
-                  <div className="font-mono text-[11px] text-[#A8A5A0] mt-0.5 select-all">
-                    {org?.id}
-                  </div>
-                </div>
-
-                <div>
-                  <div className="text-[10px] font-mono text-[#A8A5A0] uppercase tracking-wider">
-                    ADMINISTRATOR ACCOUNT
-                  </div>
-                  <div className="font-mono text-[11px] text-[#E8E6E1] mt-0.5">
-                    {user?.email}
-                  </div>
-                </div>
-
-                <div className="pt-2 border-t border-white/5 flex items-center gap-2 text-[11px] text-[#22C55E] font-mono">
-                  <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>PostgreSQL Row-Level Security Enabled</span>
-                </div>
-              </div>
-            </div>
-
-            {/* DPDP Retention Policy Card */}
-            <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-[#22C55E]/30 space-y-5 bg-[#22C55E]/[0.02]">
-              <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <ShieldCheck className="w-5 h-5 text-[#22C55E]" />
-                  <h2 className="font-display text-lg font-bold text-[#E8E6E1]">
-                    DPDP Retention Policy
-                  </h2>
-                </div>
-                <span className="text-[10px] font-mono text-[#22C55E]">INDIA DPDP ACT 2023</span>
-              </div>
-
-              <p className="text-xs text-[#A8A5A0] leading-relaxed">
-                Configure the automated data lifecycle for your organization. Candidate resumes and extracted vectors will be automatically purged once their retention window expires.
-              </p>
-
-              <form onSubmit={handleSaveRetention} className="space-y-4 pt-2">
-                <div className="space-y-1.5">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-[#A8A5A0]">
-                    Auto-Deletion Window (Days)
-                  </label>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="number"
-                      min={1}
-                      max={3650}
-                      value={retentionDays}
-                      onChange={(e) => setRetentionDays(parseInt(e.target.value) || 90)}
-                      required
-                      className="w-32 px-4 py-2 rounded-xl bg-black/40 border border-white/10 text-sm font-mono font-bold text-[#00D4AA] focus:border-[#00D4AA] focus:outline-none"
-                    />
-                    <span className="text-xs text-[#A8A5A0] font-mono">Days (Default: 90 Days)</span>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={savingRetention}
-                  className="flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-xs text-[#070709] transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 cursor-pointer shadow-md"
-                  style={{
-                    background: "linear-gradient(135deg, #00D4AA 0%, #00B4D8 100%)",
-                  }}
-                >
-                  {savingRetention ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Saving Policy...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-3.5 h-3.5" />
-                      <span>Update Retention Policy</span>
-                    </>
-                  )}
-                </button>
-              </form>
-            </div>
-
-            {/* ATS Integrations Placeholder */}
-            <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <LinkIcon className="w-4 h-4 text-[#818CF8]" />
-                  <h3 className="font-semibold text-xs text-[#E8E6E1]">ATS &amp; HRMS Integrations</h3>
-                </div>
-                <span className="text-[10px] font-mono text-[#818CF8] bg-[#818CF8]/10 px-2 py-0.5 rounded">
-                  v2 Roadmap
-                </span>
-              </div>
-              <p className="text-[11px] text-[#A8A5A0] leading-relaxed">
-                Direct export connectors for Greenhouse, Lever, Ashby, Darwinbox, and Keka are scheduled for v2. Currently, ranked shortlists export to universal CSV spreadsheets.
-              </p>
-            </div>
-          </div>
-
-          {/* Right Column: Immutable Compliance Audit Trail */}
-          <div className="lg:col-span-6 space-y-6">
-            <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-5">
-              <div className="flex items-center justify-between pb-3 border-b border-white/10">
-                <div className="flex items-center gap-2">
-                  <Activity className="w-4 h-4 text-[#00D4AA]" />
-                  <h2 className="font-display text-lg font-bold text-[#E8E6E1]">
-                    Compliance Audit Trail
-                  </h2>
-                </div>
-                <DPDPBadge variant="row" />
-              </div>
-
-              <p className="text-xs text-[#A8A5A0]">
-                Immutable, append-only log of all data processing, consent recording, and erasure events for your organization.
-              </p>
-
-              {auditLogs.length === 0 ? (
-                <div className="p-8 text-center text-xs text-[#A8A5A0] font-mono space-y-1">
-                  <div>No audit events recorded yet.</div>
-                  <div className="text-[10px]">Events will appear here as resumes are uploaded and processed.</div>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-                  {auditLogs.map((log) => {
-                    const isDeletion = log.event_type.includes("deletion") || log.event_type.includes("erasure");
-                    const isConsent = log.event_type.includes("consent");
-                    const isMatch = log.event_type.includes("match") || log.event_type.includes("batch");
-
-                    return (
-                      <div
-                        key={log.id}
-                        className="audit-row text-xs space-y-1 bg-black/40 p-3 rounded-r-xl border-y border-r border-white/5"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span
-                            className="font-mono font-bold text-[11px]"
-                            style={{
-                              color: isDeletion ? "#F87171" : isConsent ? "#22C55E" : isMatch ? "#00D4AA" : "#E8E6E1",
-                            }}
-                          >
-                            {log.event_type.toUpperCase()}
-                          </span>
-                          <span className="font-mono text-[10px] text-[#A8A5A0]">
-                            {new Date(log.created_at).toLocaleString()}
-                          </span>
-                        </div>
-
-                        <div className="text-[11px] text-[#A8A5A0] font-mono">
-                          Actor: {log.actor_type} {log.actor_user_id ? `(${log.actor_user_id.slice(0, 8)})` : ""}
-                        </div>
-
-                        {log.event_metadata && Object.keys(log.event_metadata).length > 0 && (
-                          <div className="text-[10px] font-mono text-[#E8E6E1]/60 truncate">
-                            {JSON.stringify(log.event_metadata)}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-}
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/lib/auth-context";
+import { api } from "@/lib/api";
+import { Organisation, AuditEvent } from "@/lib/types";
+import { AppNavbar } from "@/components/app-navbar";
+import { DPDPBadge } from "@/components/dpdp-badge";
+import {
+  Building2,
+  ShieldCheck,
+  Save,
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Activity,
+  Link as LinkIcon,
+} from "lucide-react";
+
+export default function SettingsPage() {
+  const router = useRouter();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
+
+  const [org, setOrg] = useState<Organisation | null>(null);
+  const [auditLogs, setAuditLogs] = useState<AuditEvent[]>([]);
+  const [retentionDays, setRetentionDays] = useState<number>(90);
+  const [loading, setLoading] = useState(true);
+  const [savingRetention, setSavingRetention] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    if (isAuthenticated) {
+      loadSettings();
+    }
+  }, [authLoading, isAuthenticated, router]);
+
+  const loadSettings = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const [orgData, logsData] = await Promise.all([
+        api.getMyOrg(),
+        api.listAuditLogs(50),
+      ]);
+      setOrg(orgData);
+      setRetentionDays(orgData.retention_days || 90);
+      setAuditLogs(logsData);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to load settings";
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveRetention = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSavingRetention(true);
+    setError(null);
+    setSuccessMessage(null);
+
+    try {
+      const updated = await api.updateMyOrg(retentionDays);
+      setOrg(updated);
+      setSuccessMessage(`Retention policy updated to ${updated.retention_days} days.`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to update retention policy.";
+      setError(msg);
+    } finally {
+      setSavingRetention(false);
+    }
+  };
+
+  if (authLoading || (loading && !org)) {
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center">
+        <Loader2 className="w-8 h-8 animate-spin text-teal-600 dark:text-teal-400 mb-3" />
+        <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">Loading Compliance Settings...</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen pb-16">
+      <AppNavbar />
+
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 space-y-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-200 dark:border-white/10">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono text-teal-700 dark:text-teal-400 uppercase tracking-wider font-semibold">
+                COMPLIANCE &amp; GOVERNANCE
+              </span>
+              <DPDPBadge variant="row" />
+            </div>
+            <h1 className="font-display text-3xl font-normal text-slate-900 dark:text-slate-100">
+              Organisation &amp; DPDP Settings
+            </h1>
+            <p className="text-xs text-slate-500 dark:text-slate-400">
+              Manage retention policies, tenant configuration, and immutable compliance audit trails.
+            </p>
+          </div>
+        </div>
+
+        {error && (
+          <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2.5">
+            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 text-xs flex items-center gap-2.5">
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>{successMessage}</span>
+          </div>
+        )}
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          {/* Left Column: Org Profile & Retention Policy */}
+          <div className="lg:col-span-6 space-y-6">
+            {/* Organisation Profile Card */}
+            <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-slate-200 dark:border-white/10 space-y-4">
+              <div className="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-white/10">
+                <Building2 className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                <h2 className="font-display text-lg font-normal text-slate-900 dark:text-slate-100">
+                  Organisation Profile
+                </h2>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    ORGANISATION NAME
+                  </div>
+                  <div className="font-semibold text-sm text-slate-900 dark:text-slate-100 mt-0.5">
+                    {org?.name || user?.org_name}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    ORGANISATION ID
+                  </div>
+                  <div className="font-mono text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 select-all">
+                    {org?.id}
+                  </div>
+                </div>
+
+                <div>
+                  <div className="text-[10px] font-mono text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+                    ADMINISTRATOR ACCOUNT
+                  </div>
+                  <div className="font-mono text-[11px] text-slate-800 dark:text-slate-200 mt-0.5">
+                    {user?.email}
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-slate-200 dark:border-white/5 flex items-center gap-2 text-[11px] text-emerald-700 dark:text-emerald-400 font-mono">
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>PostgreSQL Row-Level Security Enabled</span>
+                </div>
+              </div>
+            </div>
+
+            {/* DPDP Retention Policy Card */}
+            <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-emerald-500/30 space-y-5 bg-emerald-500/[0.02]">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
+                <div className="flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                  <h2 className="font-display text-lg font-normal text-slate-900 dark:text-slate-100">
+                    DPDP Retention Policy
+                  </h2>
+                </div>
+                <span className="text-[10px] font-mono text-emerald-700 dark:text-emerald-400 font-semibold">INDIA DPDP ACT 2023</span>
+              </div>
+
+              <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+                Configure the automated data lifecycle for your organization. Candidate resumes and extracted vectors will be automatically purged once their retention window expires.
+              </p>
+
+              <form onSubmit={handleSaveRetention} className="space-y-4 pt-2">
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                    Auto-Deletion Window (Days)
+                  </label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="number"
+                      min={1}
+                      max={3650}
+                      value={retentionDays}
+                      onChange={(e) => setRetentionDays(parseInt(e.target.value) || 90)}
+                      required
+                      className="w-32 px-4 py-2 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-sm font-mono font-bold text-teal-700 dark:text-teal-400 focus:border-teal-500 focus:outline-none"
+                    />
+                    <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">Days (Default: 90 Days)</span>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={savingRetention}
+                  className="flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-xs text-white transition-all shadow-md hover:opacity-95 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                  style={{
+                    background: "linear-gradient(135deg, #0D9488 0%, #0284C7 100%)",
+                  }}
+                >
+                  {savingRetention ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving Policy...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3.5 h-3.5" />
+                      <span>Update Retention Policy</span>
+                    </>
+                  )}
+                </button>
+              </form>
+            </div>
+
+            {/* ATS Integrations Placeholder */}
+            <div className="glass-panel p-6 rounded-3xl border border-slate-200 dark:border-white/10 space-y-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <LinkIcon className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                  <h3 className="font-semibold text-xs text-slate-900 dark:text-slate-100">ATS &amp; HRMS Integrations</h3>
+                </div>
+                <span className="text-[10px] font-mono text-indigo-700 dark:text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded">
+                  v2 Roadmap
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                Direct export connectors for Greenhouse, Lever, Ashby, Darwinbox, and Keka are scheduled for v2. Currently, ranked shortlists export to universal CSV spreadsheets.
+              </p>
+            </div>
+          </div>
+
+          {/* Right Column: Immutable Compliance Audit Trail */}
+          <div className="lg:col-span-6 space-y-6">
+            <div className="glass-panel p-6 sm:p-7 rounded-3xl border border-slate-200 dark:border-white/10 space-y-5">
+              <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-white/10">
+                <div className="flex items-center gap-2">
+                  <Activity className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  <h2 className="font-display text-lg font-normal text-slate-900 dark:text-slate-100">
+                    Compliance Audit Trail
+                  </h2>
+                </div>
+                <DPDPBadge variant="row" />
+              </div>
+
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Immutable, append-only log of all data processing, consent recording, and erasure events for your organization.
+              </p>
+
+              {auditLogs.length === 0 ? (
+                <div className="p-8 text-center text-xs text-slate-500 dark:text-slate-400 font-mono space-y-1">
+                  <div>No audit events recorded yet.</div>
+                  <div className="text-[10px]">Events will appear here as resumes are uploaded and processed.</div>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                  {auditLogs.map((log) => {
+                    const isDeletion = log.event_type.includes("deletion") || log.event_type.includes("erasure");
+                    const isConsent = log.event_type.includes("consent");
+                    const isMatch = log.event_type.includes("match") || log.event_type.includes("batch");
+
+                    return (
+                      <div
+                        key={log.id}
+                        className="audit-row text-xs space-y-1 bg-slate-50 dark:bg-black/40 p-3 rounded-r-xl border-y border-r border-slate-200 dark:border-white/5"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span
+                            className="font-mono font-bold text-[11px]"
+                            style={{
+                              color: isDeletion ? "#DC2626" : isConsent ? "#16A34A" : isMatch ? "#0D9488" : "inherit",
+                            }}
+                          >
+                            {log.event_type.toUpperCase()}
+                          </span>
+                          <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400">
+                            {new Date(log.created_at).toLocaleString()}
+                          </span>
+                        </div>
+
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 font-mono">
+                          Actor: {log.actor_type} {log.actor_user_id ? `(${log.actor_user_id.slice(0, 8)})` : ""}
+                        </div>
+
+                        {log.event_metadata && Object.keys(log.event_metadata).length > 0 && (
+                          <div className="text-[10px] font-mono text-slate-600 dark:text-slate-400 truncate">
+                            {JSON.stringify(log.event_metadata)}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
