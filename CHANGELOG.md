@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- Task 10: Unified design system to canonical **"Graphify Precision"** palette across all 9 screens (single source of truth in `globals.css` design tokens — token names preserved, values swapped, zero downstream churn):
+  - **Light mode**: White/Soft-Slate canvas (`#FFFFFF` / `#F8FAFC`), Cobalt Blue primary `#2563EB`, Teal evidence `#0D9488`, Amber gap `#D97706`, Red danger `#DC2626`, Slate ink text.
+  - **Dark mode**: Obsidian canvas `#0A0E1A`, Bright Blue `#3B82F6`, Luminous Mint `#2DD4BF`, Rose danger `#F87171`.
+  - **Typography**: Headlines unified to bold Inter sans with tight tracking (`.font-display` now sans, weight 700); removed DM Serif Display dependency entirely. JetBrains Mono retained for evidence/data.
+  - **Cleanup**: Removed dead Tailwind config aliases (`ink`, `parchment`, `surface`, `data`, `compliance`, `score`, `iris`, glass shadows) pointing at nonexistent variables; fixed `LiquidBackground` orbs to use live tokens; fixed `<body>` classes in root layout; updated `ScoreRing` color fallbacks.
+
 ### Added
 - Task 9: Full production frontend implementation & design upgrade (Next.js 15 App Router + TypeScript + Tailwind + Framer Motion)
   - **Design Read & Palette (Editorial Authority Direction)**: Departed from generic violet/indigo SaaS gradients. Implemented high-contrast `#070709` ink background, `#E8E6E1` warm parchment text, `#00D4AA` teal-cyan precision data accent, `#22C55E` emerald DPDP compliance indicators, and amber-to-emerald score spectrum.

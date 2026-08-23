@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import "@fontsource/dm-serif-display";
 import "@fontsource/jetbrains-mono/400.css";
 import "@fontsource/jetbrains-mono/500.css";
 import "./globals.css";
@@ -24,7 +23,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
-      <body className="font-sans antialiased bg-background text-foreground min-h-screen relative selection:bg-teal-500/20 selection:text-teal-900 dark:selection:bg-teal-500/30 dark:selection:text-teal-100 transition-colors duration-200">
+      <body className="font-sans antialiased bg-[var(--bg-canvas)] text-[var(--text-primary)] min-h-screen relative selection:bg-teal-500/20 selection:text-teal-900 dark:selection:bg-teal-500/30 dark:selection:text-teal-100 transition-colors duration-200">
         <ThemeProvider>
           <AuthProvider>
             <LiquidBackground />

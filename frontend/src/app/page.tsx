@@ -156,11 +156,11 @@ export default function LandingPage() {
               <span>Candidate Screening Instrument</span>
             </div>
 
-            {/* Main Headline (DM Serif Display + Grotesque Contrast) */}
-            <h1 className="font-display text-4xl sm:text-5xl lg:text-[54px] font-normal leading-[1.08] tracking-tight text-[var(--text-primary)]">
+            {/* Main Headline (Graphify Bold Sans Display) */}
+            <h1 className="font-display text-4xl sm:text-5xl lg:text-[54px] leading-[1.08] tracking-tight text-[var(--text-primary)]">
               Stop skimming resumes.
               <br />
-              <span className="font-sans font-bold text-[var(--brand-primary)] text-3xl sm:text-4xl lg:text-[44px] block mt-1">
+              <span className="text-[var(--brand-primary)]">
                 See the evidence behind every shortlist.
               </span>
             </h1>

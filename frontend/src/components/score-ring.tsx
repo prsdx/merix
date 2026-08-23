@@ -12,9 +12,9 @@ interface ScoreRingProps {
 }
 
 function getColor(score: number): string {
-  if (score >= 80) return 'var(--accent-evidence, #0B7258)'
-  if (score >= 60) return 'var(--accent-gap, #B45309)'
-  return 'var(--accent-danger, #BE123C)'
+  if (score >= 80) return 'var(--accent-evidence, #0D9488)'
+  if (score >= 60) return 'var(--accent-gap, #D97706)'
+  return 'var(--accent-danger, #DC2626)'
 }
 
 export function ScoreRing({

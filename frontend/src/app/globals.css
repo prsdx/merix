@@ -3,86 +3,87 @@
 @tailwind utilities;
 
 /* ============================================================
-   MERIX DESIGN SYSTEM — Forensic Ledger of Precision
-   Bespoke Palette (No stock Tailwind defaults):
-   - Light: Warm Alabaster (#FBFBFA) + Deep Obsidian Charcoal (#12151A) + Aegean Blue (#1F46A6) + Forest Sage (#0B7258)
-   - Dark: Carbon Navy (#0B0E14) + Elevated Slate (#111620) + Luminous Lapis (#3E6BE0) + Radiant Mint (#10B981)
+   MERIX DESIGN SYSTEM — "Graphify Precision" (Canonical)
+   Palette: Cobalt Blue (#2563EB) + Teal Mint (#0D9488) + Slate Ink
+   - Light: White / Soft Slate canvas + Cobalt primary + Teal evidence + Amber gap + Rose danger
+   - Dark:  Obsidian (#0A0E1A) / Elevated Slate + Bright Blue (#3B82F6) + Luminous Mint (#2DD4BF)
+   Typography: Inter / System Sans (display = sans, tight tracking) + JetBrains Mono (data/evidence)
    ============================================================ */
 
 :root {
   /* LIGHT MODE */
-  --bg-canvas: #FBFBFA;
+  --bg-canvas: #FFFFFF;
   --bg-surface: #FFFFFF;
-  --bg-subtle: #F3F2EE;
-  --bg-elevated: #EDECE6;
+  --bg-subtle: #F8FAFC;
+  --bg-elevated: #F1F5F9;
 
-  --text-primary: #12151A;
-  --text-secondary: #525866;
-  --text-muted: #868C98;
+  --text-primary: #0A0E1A;
+  --text-secondary: #475569;
+  --text-muted: #94A3B8;
 
-  --border-hairline: #E8E7E1;
-  --border-subtle: #D8D6CD;
-  --border-strong: #BCB9AE;
+  --border-hairline: #E2E8F0;
+  --border-subtle: #CBD5E1;
+  --border-strong: #94A3B8;
 
   /* Brand Accents */
-  --brand-primary: #1F46A6;       /* Aegean Lapis */
-  --brand-primary-hover: #173582;
-  --brand-soft: #EEF2FA;
-  --brand-border: #CDD9F4;
+  --brand-primary: #2563EB;       /* Cobalt Blue 600 */
+  --brand-primary-hover: #1D4ED8; /* Cobalt Blue 700 */
+  --brand-soft: #EFF6FF;          /* Blue 50 */
+  --brand-border: #BFDBFE;        /* Blue 200 */
 
-  --accent-evidence: #0B7258;     /* Deep Forest Sage */
-  --accent-evidence-soft: #E8F5F1;
-  --accent-evidence-border: #B7E2D5;
+  --accent-evidence: #0D9488;     /* Teal 600 */
+  --accent-evidence-soft: #F0FDFA;
+  --accent-evidence-border: #99F6E4;
 
-  --accent-gap: #B45309;          /* Burnt Ochre */
-  --accent-gap-soft: #FEF7EA;
-  --accent-gap-border: #FCD9A8;
+  --accent-gap: #D97706;          /* Amber 600 */
+  --accent-gap-soft: #FFFBEB;
+  --accent-gap-border: #FDE68A;
 
-  --accent-danger: #BE123C;       /* Rose Crimson */
-  --accent-danger-soft: #FFF1F2;
-  --accent-danger-border: #FECDD3;
+  --accent-danger: #DC2626;       /* Red 600 */
+  --accent-danger-soft: #FEF2F2;
+  --accent-danger-border: #FECACA;
 
-  --ring-track: rgba(18, 21, 26, 0.07);
-  --card-shadow: 0 1px 3px rgba(18, 21, 26, 0.04), 0 8px 24px -8px rgba(18, 21, 26, 0.07);
-  --card-shadow-hover: 0 2px 6px rgba(18, 21, 26, 0.05), 0 16px 36px -10px rgba(18, 21, 26, 0.12);
+  --ring-track: rgba(15, 23, 42, 0.08);
+  --card-shadow: 0 1px 3px rgba(10, 14, 26, 0.04), 0 12px 32px -12px rgba(10, 14, 26, 0.08);
+  --card-shadow-hover: 0 1px 3px rgba(10, 14, 26, 0.04), 0 20px 48px -16px rgba(10, 14, 26, 0.14);
 }
 
 .dark {
-  /* DARK MODE */
-  --bg-canvas: #0B0E14;
-  --bg-surface: #111620;
-  --bg-subtle: #161D2B;
-  --bg-elevated: #1D2638;
+  /* DARK MODE: Modern Soft Obsidian & Slate */
+  --bg-canvas: #0A0E1A;
+  --bg-surface: #0F172A;
+  --bg-subtle: #152238;
+  --bg-elevated: #1C2C4A;
 
-  --text-primary: #F4F6F8;
-  --text-secondary: #9DA6B8;
-  --text-muted: #647087;
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
 
-  --border-hairline: #1E2638;
-  --border-subtle: #2B364C;
-  --border-strong: #3D4C68;
+  --border-hairline: rgba(255, 255, 255, 0.08);
+  --border-subtle: rgba(255, 255, 255, 0.16);
+  --border-strong: rgba(255, 255, 255, 0.24);
 
   /* Brand Accents (Dark) */
-  --brand-primary: #3E6BE0;       /* Luminous Lapis */
-  --brand-primary-hover: #5A82E8;
-  --brand-soft: rgba(62, 107, 224, 0.14);
-  --brand-border: rgba(62, 107, 224, 0.32);
+  --brand-primary: #3B82F6;       /* Bright Blue */
+  --brand-primary-hover: #60A5FA;
+  --brand-soft: rgba(59, 130, 246, 0.12);
+  --brand-border: rgba(59, 130, 246, 0.32);
 
-  --accent-evidence: #10B981;     /* Radiant Mint */
-  --accent-evidence-soft: rgba(16, 185, 129, 0.12);
-  --accent-evidence-border: rgba(16, 185, 129, 0.28);
+  --accent-evidence: #2DD4BF;     /* Luminous Mint */
+  --accent-evidence-soft: rgba(45, 212, 191, 0.12);
+  --accent-evidence-border: rgba(45, 212, 191, 0.28);
 
-  --accent-gap: #F59E0B;          /* Amber */
+  --accent-gap: #FBBF24;          /* Amber */
   --accent-gap-soft: rgba(245, 158, 11, 0.12);
   --accent-gap-border: rgba(245, 158, 11, 0.28);
 
-  --accent-danger: #FB7185;       /* Rose */
-  --accent-danger-soft: rgba(251, 113, 133, 0.14);
-  --accent-danger-border: rgba(251, 113, 133, 0.3);
+  --accent-danger: #F87171;       /* Rose */
+  --accent-danger-soft: rgba(248, 113, 113, 0.14);
+  --accent-danger-border: rgba(248, 113, 113, 0.3);
 
   --ring-track: rgba(255, 255, 255, 0.08);
-  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.06);
-  --card-shadow-hover: 0 12px 36px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --card-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.06);
+  --card-shadow-hover: 0 16px 48px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
 }
 
 html {
@@ -101,7 +102,9 @@ body {
 
 /* ---- Typography classes ---- */
 .font-display {
-  font-family: "DM Serif Display", Georgia, serif;
+  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: -0.03em;
+  font-weight: 700;
 }
 
 .font-sans {
