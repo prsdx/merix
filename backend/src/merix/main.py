@@ -17,6 +17,7 @@ from merix.config import settings
 from merix.core.exceptions import (
     AuthenticationError,
     ConflictError,
+    ExtractionError,
     FileTooLargeError,
     MerixError,
     NotFoundError,
@@ -140,6 +141,10 @@ def _register_exception_handlers(app: FastAPI) -> None:
     @app.exception_handler(MerixError)
     async def merix_handler(request: Request, exc: MerixError) -> JSONResponse:
         return JSONResponse(status_code=500, content={"detail": "Internal error"})
+
+    @app.exception_handler(ExtractionError)
+    async def extraction_handler(request: Request, exc: ExtractionError) -> JSONResponse:
+        return JSONResponse(status_code=503, content={"detail": str(exc)})
 
 
 app = create_app()

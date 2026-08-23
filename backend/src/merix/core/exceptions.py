@@ -39,3 +39,11 @@ class UnsupportedFileTypeError(ValidationError):
 
 class UnparseableFileError(ValidationError):
     """File could not be parsed (encrypted, corrupt, or image-only/scanned)."""
+
+
+class ExtractionError(MerixError):
+    """LLM returned malformed/truncated output during structured extraction.
+
+    Retryable: the upstream model call failed to produce valid JSON
+    (e.g. output truncated by the token limit). The client should retry.
+    """

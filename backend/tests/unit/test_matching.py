@@ -1,8 +1,11 @@
 """Unit tests for the matching service (deterministic logic + fake LLM)."""
 
+import json
+
 import pytest
 
 from merix.clients.base import LLMResult
+from merix.core.exceptions import ExtractionError
 from merix.services import matching
 
 
@@ -88,3 +91,82 @@ async def test_generate_rationale_returns_text():
     mc = matching.MatchComputation(score=90.0, matched_skills=[{"skill": "Python", "required": True}], missing_skills=[])
     text = await matching.generate_rationale(llm, {"min_experience_years": 1}, {"experience_years": 2}, mc)
     assert text == "Strong match on Python."
+
+
+# --- extraction robustness (regression: production truncation bug) ---
+#
+# Production incident: resume extraction ran with max_tokens=1024. Long
+# resumes produced >1024-token responses, Groq truncated the JSON
+# mid-string, and the raw JSONDecodeError surfaced as an unhandled 500.
+# These tests pin both halves of the fix: an adequate token budget for
+# long resumes, and a clean domain error when output is still malformed.
+
+
+class RecordingLLM(FakeLLM):
+    """FakeLLM that records every generate() call's keyword arguments."""
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.calls: list[dict] = []
+
+    async def generate(self, prompt, *, system=None, temperature=0.0, max_tokens=1024):
+        self.calls.append({"prompt": prompt, "max_tokens": max_tokens})
+        return await super().generate(prompt, system=system, temperature=temperature, max_tokens=max_tokens)
+
+
+def _long_resume_text(n_skills: int = 80) -> str:
+    """Synthetic dense resume whose extraction reliably exceeds 1024 tokens."""
+    lines = ["ARJUN SHARMA", "Senior Software Engineer - Bengaluru, India", ""]
+    lines.append("SKILLS")
+    for i in range(n_skills):
+        lines.append(f"- Skill {i}: used across multiple production services with measurable impact")
+    lines += [
+        "",
+        "EXPERIENCE",
+        "Principal Engineer, BigCo (2018-present)",
+        "Led platform team, cut p99 latency 40%, mentored 12 engineers.",
+    ]
+    return "\n".join(lines)
+
+
+def _resume_json_with(n_skills: int) -> str:
+    """Valid extraction JSON at a realistic size for a dense resume."""
+    skills = [{"skill": f"Skill {i}", "evidence": f"used Skill {i} across production services"} for i in range(n_skills)]
+    return json.dumps({"skills": skills, "experience_years": 7, "education": "B.Tech"})
+
+
+@pytest.mark.asyncio
+async def test_long_resume_gets_full_token_budget():
+    """A dense resume's extraction call must request >= 4096 completion tokens."""
+    llm = RecordingLLM(resume_json=_resume_json_with(80))
+    out = await matching.extract_resume(llm, _long_resume_text())
+    assert len(out["skills"]) == 80
+    resume_calls = [c for c in llm.calls if "resume" in c["prompt"].lower()]
+    assert resume_calls, "extract_resume did not issue an LLM call"
+    assert all(c["max_tokens"] >= matching._RESUME_EXTRACT_MAX_TOKENS for c in resume_calls)
+
+
+@pytest.mark.asyncio
+async def test_extract_resume_truncated_json_raises_domain_error():
+    """Truncated LLM output must raise ExtractionError, not leak JSONDecodeError."""
+    llm = FakeLLM(resume_json='{"skills": [{"skill": "Python", "evidence": "built serv')
+    with pytest.raises(matching.ExtractionError, match="Resume extraction failed"):
+        await matching.extract_resume(llm, "Arjun Sharma - Python developer")
+
+
+@pytest.mark.asyncio
+async def test_extract_resume_truncated_json_is_retryable_not_jsondecode():
+    """ExtractionError must not be a JSONDecodeError subclass alias — callers catch it explicitly."""
+    llm = FakeLLM(resume_json='{"skills": ["pyth')
+    with pytest.raises(json.JSONDecodeError):
+        # sanity: raw parsing of truncated text really does fail
+        json.loads('{"skills": ["pyth')
+    with pytest.raises(ExtractionError):
+        await matching.extract_resume(llm, "some resume text")
+
+
+@pytest.mark.asyncio
+async def test_extract_jd_malformed_json_raises_domain_error():
+    llm = FakeLLM(jd_json='{"required_skills": ["Go", ')
+    with pytest.raises(ExtractionError, match="Job description extraction failed"):
+        await matching.extract_jd(llm, "We need a Go engineer")

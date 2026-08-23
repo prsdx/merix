@@ -17,7 +17,8 @@ import json
 import logging
 from dataclasses import dataclass, field
 
-from merix.clients.base import LLMClient
+from merix.clients.base import LLMClient, LLMResult
+from merix.core.exceptions import ExtractionError
 
 logger = logging.getLogger("merix.services.matching")
 
@@ -25,6 +26,14 @@ logger = logging.getLogger("merix.services.matching")
 W_REQUIRED = 0.70
 W_PREFERRED = 0.20
 W_EXPERIENCE = 0.10
+
+# Completion-token budgets per call type. Resume extraction emits one
+# {skill, evidence} object per skill, so long resumes need real headroom
+# (1024 truncated the JSON mid-string in production); JD extraction is a
+# compact fixed-shape object; rationales are 2-3 sentences.
+_JD_EXTRACT_MAX_TOKENS = 2048
+_RESUME_EXTRACT_MAX_TOKENS = 4096
+_RATIONALE_MAX_TOKENS = 256
 
 _JD_EXTRACT_SYSTEM = (
     "You extract structured requirements from job descriptions. Return ONLY valid JSON, no prose, no markdown fences."
@@ -55,6 +64,7 @@ _RESUME_EXTRACT_PROMPT = """Extract information from this resume.
 Return JSON with exactly these keys:
 - "skills": list of objects, each {{"skill": string, "evidence": string}} where
   "evidence" is a short verbatim quote from the resume showing that skill
+  (at most 15 words — do not copy whole sentences)
 - "experience_years": number, total years of professional experience (0 if unclear)
 - "education": string, highest education ("" if not stated)
 
@@ -95,6 +105,20 @@ def _parse_json(text: str) -> dict:
     return json.loads(cleaned)
 
 
+def _log_malformed(kind: str, result: LLMResult) -> None:
+    """Log the raw LLM output when it fails to parse as JSON.
+
+    completion_tokens hitting the max_tokens cap exactly is the signature of
+    a truncated response; keep the raw text around for debugging.
+    """
+    logger.error(
+        "llm_%s_extraction_malformed_json completion_tokens=%d raw_response=%.2000r",
+        kind,
+        result.completion_tokens,
+        result.text,
+    )
+
+
 @dataclass
 class MatchComputation:
     """The explainable result of matching one resume to one job."""
@@ -111,20 +135,34 @@ async def extract_jd(llm: LLMClient, jd_text: str) -> dict:
         _JD_EXTRACT_PROMPT.format(jd_text=jd_text),
         system=_JD_EXTRACT_SYSTEM,
         temperature=0.0,
-        max_tokens=1024,
+        max_tokens=_JD_EXTRACT_MAX_TOKENS,
     )
-    return _parse_json(result.text)
+    try:
+        return _parse_json(result.text)
+    except json.JSONDecodeError:
+        _log_malformed("jd", result)
+        raise ExtractionError("Job description extraction failed, please retry") from None
 
 
 async def extract_resume(llm: LLMClient, resume_text: str) -> dict:
-    """Extract structured info from resume text via the LLM."""
+    """Extract structured info from resume text via the LLM.
+
+    The budget is 4096 tokens: the response carries one {skill, evidence}
+    object per skill, so long resumes routinely exceed 1024 (which truncated
+    the JSON mid-string in production). Parsing failures are raised as a
+    retryable ExtractionError instead of leaking a JSONDecodeError 500.
+    """
     result = await llm.generate(
         _RESUME_EXTRACT_PROMPT.format(resume_text=resume_text),
         system=_RESUME_EXTRACT_SYSTEM,
         temperature=0.0,
-        max_tokens=1024,
+        max_tokens=_RESUME_EXTRACT_MAX_TOKENS,
     )
-    return _parse_json(result.text)
+    try:
+        return _parse_json(result.text)
+    except json.JSONDecodeError:
+        _log_malformed("resume", result)
+        raise ExtractionError("Resume extraction failed, please retry") from None
 
 
 def compute_match(jd_parsed: dict, resume_parsed: dict) -> MatchComputation:
@@ -194,6 +232,6 @@ async def generate_rationale(llm: LLMClient, jd_parsed: dict, resume_parsed: dic
         ),
         system=_RATIONALE_SYSTEM,
         temperature=0.0,
-        max_tokens=256,
+        max_tokens=_RATIONALE_MAX_TOKENS,
     )
     return result.text.strip()
