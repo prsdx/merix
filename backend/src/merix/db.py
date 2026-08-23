@@ -9,10 +9,27 @@ from sqlalchemy.pool import NullPool
 
 from merix.config import settings
 
-# NullPool: open a fresh connection per session and close on release.
-# Correct for Supabase's pooler (which does the actual pooling) and avoids
-# cross-event-loop connection reuse errors in tests.
-engine = create_async_engine(settings.DATABASE_URL, echo=settings.DEBUG, poolclass=NullPool)
+# Production uses SQLAlchemy's async queue pool: connections are established once
+# and reused across requests, eliminating the TCP+TLS+asyncpg handshake that
+# NullPool paid on every request (measured 3-6s on simple GETs against Supabase).
+# pool_pre_ping guards against server-side idle disconnects.
+#
+# Development/tests keep NullPool: pytest-asyncio runs each test in a fresh event
+# loop, and pooled asyncpg connections bound to a dead loop raise on reuse.
+# RLS correctness is unaffected by pooling either way: SET ROLE merix_app applies
+# for the life of every connection (the connect hook), and the org context GUC is
+# transaction-local via set_config(..., true), re-applied by scoped_session's
+# after_begin hook on every transaction regardless of which connection serves it.
+if settings.ENVIRONMENT == "production":
+    engine = create_async_engine(
+        settings.DATABASE_URL,
+        echo=settings.DEBUG,
+        pool_size=5,
+        max_overflow=10,
+        pool_pre_ping=True,
+    )
+else:
+    engine = create_async_engine(settings.DATABASE_URL, echo=settings.DEBUG, poolclass=NullPool)
 
 
 @event.listens_for(engine.sync_engine, "connect")
