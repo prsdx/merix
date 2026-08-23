@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
@@ -108,7 +108,7 @@ export default function RankedResultsPage() {
               <DPDPBadge variant="row" />
             </div>
             <p className="text-xs text-[var(--text-muted)] font-mono">
-              Job ID: {jobId} â€¢ Evaluated with Deterministic 70/20/10 Formula
+              Job ID: {jobId} • Evaluated with Deterministic 70/20/10 Formula
             </p>
           </div>
 
@@ -254,7 +254,7 @@ export default function RankedResultsPage() {
                         {m.candidate_name || "Applicant"}
                       </div>
                       <div className="text-[10px] font-mono text-[var(--text-muted)] truncate mt-0.5">
-                        ID: {m.resume_id.substring(0, 8)} â€¢ Click to inspect evidence
+                        ID: {m.resume_id.substring(0, 8)} • Click to inspect evidence
                       </div>
                     </div>
 
@@ -268,12 +268,12 @@ export default function RankedResultsPage() {
                     <div className="col-span-4 flex flex-wrap gap-1 pr-2">
                       {m.matched_skills.slice(0, 3).map((sk) => (
                         <span key={sk} className="tag-evidence text-[10px]">
-                          âœ“ {sk}
+                          ✓ {sk}
                         </span>
                       ))}
                       {m.missing_skills.slice(0, 1).map((sk) => (
                         <span key={sk} className="tag-gap text-[10px]">
-                          âœ• {sk}
+                          ✕ {sk}
                         </span>
                       ))}
                       {m.matched_skills.length > 3 && (
@@ -315,12 +315,12 @@ export default function RankedResultsPage() {
                             <div className="flex flex-wrap gap-1.5">
                               {m.matched_skills.map((sk) => (
                                 <span key={sk} className="tag-evidence">
-                                  âœ“ {sk}
+                                  ✓ {sk}
                                 </span>
                               ))}
                               {m.missing_skills.map((sk) => (
                                 <span key={sk} className="tag-gap">
-                                  âœ• {sk} (Gap)
+                                  ✕ {sk} (Gap)
                                 </span>
                               ))}
                             </div>

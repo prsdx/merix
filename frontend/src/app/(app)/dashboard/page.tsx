@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { JobSummary } from "@/lib/types";
 import { DPDPBadge } from "@/components/dpdp-badge";
 import { CountUp } from "@/components/count-up";
+import { PageHeader, buttonClasses } from "@/components/ui";
 import {
   Briefcase,
   PlusCircle,
@@ -79,27 +80,21 @@ export default function DashboardPage() {
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
         {/* Header Strip */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-[var(--border-hairline)]">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <h1 className="font-display text-2xl sm:text-3xl text-[var(--text-primary)]">
-                Recruiter Workspace
-              </h1>
+        <PageHeader
+          title={
+            <span className="flex items-center gap-2">
+              Recruiter Workspace
               <DPDPBadge variant="row" />
-            </div>
-            <p className="text-xs text-[var(--text-muted)] font-mono">
-              Organisation: {user?.org_name || "Active Workspace"} â€¢ DPDP Act 2023 Verified
-            </p>
-          </div>
-
-          <Link
-            href="/jobs/new"
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] shadow-xs transition-all cursor-pointer"
-          >
-            <PlusCircle className="w-4 h-4" />
-            <span>Post New Job Description</span>
-          </Link>
-        </div>
+            </span>
+          }
+          description={`Organisation: ${user?.org_name || "Active Workspace"} • DPDP Act 2023 Verified`}
+          actions={
+            <Link href="/jobs/new" className={buttonClasses("primary")}>
+              <PlusCircle className="w-4 h-4" />
+              <span>Post New Job Description</span>
+            </Link>
+          }
+        />
 
         {/* 3 Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -172,7 +167,7 @@ export default function DashboardPage() {
 
               <Link
                 href="/jobs/new"
-                className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-xs text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] shadow-xs transition-all"
+                className={buttonClasses("primary", "lg")}
               >
                 <PlusCircle className="w-4 h-4" />
                 <span>Post Your First Job</span>
@@ -203,7 +198,7 @@ export default function DashboardPage() {
                         <Users className="w-3.5 h-3.5" />
                         {job.resume_count || 0} Resumes
                       </span>
-                      <span>â€¢</span>
+                      <span>•</span>
                       <span>{job.match_count || 0} Evaluations</span>
                     </div>
                   </div>

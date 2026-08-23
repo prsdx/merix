@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
@@ -195,7 +195,7 @@ export default function NewJobPage() {
                     Structured Extraction Target
                   </span>
                 </div>
-                <span className="text-[10px] font-mono text-teal-700 dark:text-teal-400">EXTRACT ONCE â€¢ MATCH ALL</span>
+                <span className="text-[10px] font-mono text-teal-700 dark:text-teal-400">EXTRACT ONCE • MATCH ALL</span>
               </div>
 
               {hasContent ? (
