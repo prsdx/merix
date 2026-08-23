@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React from "react";
 
@@ -8,25 +8,25 @@ import React from "react";
 export function LiquidBackground() {
   return (
     <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden="true">
-      {/* Primary teal orb - top-right, slow drift */}
+      {/* Primary orange orb - top-right, slow drift */}
       <div
         className="orb-drift-b absolute -top-40 -right-40 w-[700px] h-[700px] rounded-full opacity-[0.16] dark:opacity-[0.18] blur-[130px]"
         style={{ background: "radial-gradient(circle, var(--accent-evidence) 0%, transparent 70%)" }}
       />
-      {/* Cobalt brand orb - bottom-left, counter drift */}
+      {/* Gold orb - bottom-left, counter drift */}
       <div
         className="orb-drift-a absolute -bottom-40 -left-40 w-[620px] h-[620px] rounded-full opacity-[0.14] dark:opacity-[0.16] blur-[120px]"
         style={{ background: "radial-gradient(circle, var(--brand-primary) 0%, transparent 70%)" }}
       />
-      {/* Sky accent orb - center-left */}
+      {/* Warm brand orb - center-left */}
       <div
         className="orb-drift-a absolute top-1/2 -left-56 w-[480px] h-[480px] rounded-full opacity-[0.10] dark:opacity-[0.11] blur-[110px]"
-        style={{ background: "radial-gradient(circle, var(--brand-primary-hover) 0%, transparent 70%)" }}
+        style={{ background: "radial-gradient(circle, var(--accent-evidence) 0%, transparent 70%)" }}
       />
-      {/* Depth orb - bottom-right (balances composition) */}
+      {/* Green depth orb - bottom-right (balances composition) */}
       <div
         className="orb-drift-a absolute top-[55%] -right-52 w-[420px] h-[420px] rounded-full opacity-[0.08] dark:opacity-[0.10] blur-[100px]"
-        style={{ background: "radial-gradient(circle, var(--brand-primary-hover) 0%, transparent 70%)" }}
+        style={{ background: "radial-gradient(circle, var(--accent-gap) 0%, transparent 70%)" }}
       />
       {/* Subtle grid texture overlay, fading out below the fold */}
       <div
