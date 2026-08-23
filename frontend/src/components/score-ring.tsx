@@ -12,9 +12,9 @@ interface ScoreRingProps {
 }
 
 function getColor(score: number): string {
-  if (score >= 80) return 'var(--color-score-high, #16A34A)'
-  if (score >= 60) return 'var(--color-score-mid, #D97706)'
-  return 'var(--color-score-low, #EA580C)'
+  if (score >= 80) return 'var(--color-score-high, #10B981)'
+  if (score >= 60) return 'var(--color-score-mid, #F59E0B)'
+  return 'var(--color-score-low, #EF4444)'
 }
 
 export function ScoreRing({

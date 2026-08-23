@@ -3,70 +3,93 @@
 @tailwind utilities;
 
 /* ============================================================
-   MERIX DESIGN TOKENS — Editorial Authority (Light & Refined Dark)
-   Typography: Inter (UI) + DM Serif Display (headlines) + JetBrains Mono (data)
+   MERIX DESIGN TOKENS — Inspired by Graphify, Factorial HR & Truffle
+   Palette: Electric Cobalt Blue (#2563EB) + Emerald/Mint (#10B981) + Slate Ink
+   Typography: Inter / System Sans + JetBrains Mono (Data/Evidence)
    ============================================================ */
 
 :root {
-  /* LIGHT MODE (Default presentation: clean, high-contrast, airy) */
-  --background: #F8FAFC;
-  --foreground: #0F172A;
-  --foreground-muted: #64748B;
+  /* LIGHT MODE (Clean, airy, high-contrast) */
+  --background: #FFFFFF;
+  --background-subtle: #F8FAFC;
+  --background-tinted: #F1F5F9;
+  --foreground: #0A0E1A;
+  --foreground-muted: #475569;
+  --foreground-subtle: #94A3B8;
 
-  --color-surface: rgba(255, 255, 255, 0.92);
-  --color-surface-hover: #FFFFFF;
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #F8FAFC;
   --color-surface-solid: #FFFFFF;
-  --color-border: rgba(15, 23, 42, 0.08);
-  --color-border-strong: rgba(15, 23, 42, 0.16);
+  --color-border: #E2E8F0;
+  --color-border-strong: #CBD5E1;
 
-  /* Brand Accents (Light Mode) */
-  --color-data: #0D9488;          /* Teal-600 */
+  /* Primary Brand Accents (Cobalt Blue + Teal Mint) */
+  --color-brand: #2563EB;          /* Cobalt Blue 600 */
+  --color-brand-hover: #1D4ED8;    /* Cobalt Blue 700 */
+  --color-brand-soft: #EFF6FF;     /* Blue 50 */
+  --color-brand-border: #BFDBFE;   /* Blue 200 */
+
+  --color-data: #0D9488;          /* Teal 600 */
   --color-data-dim: rgba(13, 148, 136, 0.08);
   --color-data-faint: rgba(13, 148, 136, 0.04);
-  --color-compliance: #16A34A;    /* Emerald-600 */
-  --color-compliance-dim: rgba(22, 163, 74, 0.08);
-  --color-compliance-faint: rgba(22, 163, 74, 0.04);
-  --color-score-high: #16A34A;
-  --color-score-mid: #D97706;     /* Amber-600 */
-  --color-score-low: #EA580C;     /* Orange-600 */
-  --color-interactive: #6366F1;   /* Indigo-500 */
-  --color-interactive-dim: rgba(99, 102, 241, 0.08);
+  
+  --color-compliance: #10B981;    /* Emerald 500 */
+  --color-compliance-dim: rgba(16, 185, 129, 0.08);
+  --color-compliance-faint: rgba(16, 185, 129, 0.04);
+  
+  --color-score-high: #10B981;    /* Emerald */
+  --color-score-mid: #F59E0B;     /* Amber */
+  --color-score-low: #EF4444;     /* Rose / Red */
+  
+  --color-interactive: #2563EB;   /* Cobalt */
+  --color-interactive-dim: rgba(37, 99, 235, 0.08);
 
   --ring-bg-stroke: rgba(15, 23, 42, 0.08);
-  --panel-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
-  --panel-shadow-hover: 0 12px 32px -4px rgba(15, 23, 42, 0.10), 0 4px 12px -2px rgba(15, 23, 42, 0.05);
-  --panel-border-inset: inset 0 1px 0 0 rgba(255, 255, 255, 0.9);
+  --panel-shadow: 0 1px 3px rgba(10, 14, 26, 0.04), 0 12px 32px -12px rgba(10, 14, 26, 0.08);
+  --panel-shadow-hover: 0 1px 3px rgba(10, 14, 26, 0.04), 0 20px 48px -16px rgba(10, 14, 26, 0.14);
+  --hero-shadow: 0 30px 70px -28px rgba(18, 18, 18, 0.28), 0 2px 8px rgba(18, 18, 18, 0.06);
 }
 
 .dark {
-  /* DARK MODE: Soft Obsidian / Slate-950 (Not harsh pitch black) */
-  --background: #0B0F17;
-  --foreground: #F1F5F9;
+  /* DARK MODE: Modern Soft Obsidian & Slate */
+  --background: #0A0E1A;
+  --background-subtle: #0F172A;
+  --background-tinted: #1E293B;
+  --foreground: #F8FAFC;
   --foreground-muted: #94A3B8;
+  --foreground-subtle: #64748B;
 
-  --color-surface: rgba(255, 255, 255, 0.035);
-  --color-surface-hover: rgba(255, 255, 255, 0.065);
-  --color-surface-solid: #111827;
+  --color-surface: rgba(15, 23, 42, 0.85);
+  --color-surface-hover: rgba(30, 41, 59, 0.85);
+  --color-surface-solid: #0F172A;
   --color-border: rgba(255, 255, 255, 0.08);
   --color-border-strong: rgba(255, 255, 255, 0.16);
 
-  /* Brand Accents (Dark Mode) */
-  --color-data: #00D4AA;          /* Luminous Teal-Cyan */
-  --color-data-dim: rgba(0, 212, 170, 0.12);
-  --color-data-faint: rgba(0, 212, 170, 0.05);
-  --color-compliance: #22C55E;    /* Luminous Emerald */
-  --color-compliance-dim: rgba(34, 197, 94, 0.12);
-  --color-compliance-faint: rgba(34, 197, 94, 0.05);
-  --color-score-high: #22C55E;
-  --color-score-mid: #F59E0B;
-  --color-score-low: #F97316;
-  --color-interactive: #818CF8;
-  --color-interactive-dim: rgba(129, 140, 248, 0.15);
+  /* Primary Brand Accents (Dark) */
+  --color-brand: #3B82F6;          /* Bright Blue */
+  --color-brand-hover: #60A5FA;
+  --color-brand-soft: rgba(59, 130, 246, 0.12);
+  --color-brand-border: rgba(59, 130, 246, 0.3);
+
+  --color-data: #2DD4BF;          /* Mint / Teal-400 */
+  --color-data-dim: rgba(45, 212, 191, 0.12);
+  --color-data-faint: rgba(45, 212, 191, 0.05);
+
+  --color-compliance: #34D399;    /* Luminous Emerald */
+  --color-compliance-dim: rgba(52, 211, 153, 0.12);
+  --color-compliance-faint: rgba(52, 211, 153, 0.05);
+
+  --color-score-high: #34D399;
+  --color-score-mid: #FBBF24;
+  --color-score-low: #F87171;
+
+  --color-interactive: #60A5FA;
+  --color-interactive-dim: rgba(96, 165, 250, 0.15);
 
   --ring-bg-stroke: rgba(255, 255, 255, 0.08);
-  --panel-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.10);
-  --panel-shadow-hover: 0 16px 48px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.18);
-  --panel-border-inset: inset 0 1px 0 0 rgba(255, 255, 255, 0.10);
+  --panel-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  --panel-shadow-hover: 0 16px 48px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+  --hero-shadow: 0 30px 70px -28px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 
 html {
@@ -85,7 +108,8 @@ body {
 
 /* ---- Typography helpers ---- */
 .font-display {
-  font-family: "DM Serif Display", Georgia, serif;
+  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: -0.03em;
 }
 
 .font-data {
@@ -94,16 +118,16 @@ body {
 
 /* ---- Selection ---- */
 ::selection {
-  background: rgba(13, 148, 136, 0.25);
+  background: rgba(37, 99, 235, 0.2);
   color: inherit;
 }
 
 .dark ::selection {
-  background: rgba(0, 212, 170, 0.25);
+  background: rgba(59, 130, 246, 0.3);
   color: #ffffff;
 }
 
-/* ---- Glassmorphic panels ---- */
+/* ---- Glassmorphic / Modern Surfaces ---- */
 .glass-panel {
   background: var(--color-surface);
   backdrop-filter: blur(20px);
@@ -123,7 +147,7 @@ body {
   transform: translateY(-2px);
 }
 
-/* Data surface — teal tinted */
+/* Data surface */
 .data-panel {
   background: var(--color-data-dim);
   border: 1px solid rgba(13, 148, 136, 0.2);
@@ -132,109 +156,124 @@ body {
 }
 
 .dark .data-panel {
-  border-color: rgba(0, 212, 170, 0.2);
+  border-color: rgba(45, 212, 191, 0.25);
 }
 
-/* Compliance surface — emerald tinted */
+/* Compliance surface */
 .compliance-panel {
   background: var(--color-compliance-dim);
-  border: 1px solid rgba(22, 163, 74, 0.25);
+  border: 1px solid rgba(16, 185, 129, 0.25);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
 
 .dark .compliance-panel {
-  border-color: rgba(34, 197, 94, 0.25);
+  border-color: rgba(52, 211, 153, 0.25);
 }
 
-/* ---- Score fill animation ---- */
-@keyframes score-fill {
-  from { width: 0%; }
-  to { width: var(--score-width); }
-}
-
-.score-bar-fill {
-  animation: score-fill 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
-  animation-delay: var(--score-delay, 0.2s);
-}
-
-/* ---- Scroll reveal ---- */
-@keyframes reveal-up {
-  from {
+/* ---- Scanning Radar Line Animation (Truffle inspired) ---- */
+@keyframes scanLine {
+  0% {
+    top: 0%;
     opacity: 0;
-    transform: translateY(20px);
   }
-  to {
-    opacity: 1;
-    transform: translateY(0);
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
   }
 }
 
-.reveal-on-scroll {
-  animation: reveal-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+.scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: linear-gradient(180deg, transparent, rgba(37, 99, 235, 0.12), transparent);
+  border-radius: 12px;
+  pointer-events: none;
+  animation: scanLine 3.5s ease-in-out infinite;
 }
 
-/* ---- Custom scrollbar ---- */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.2);
-  border-radius: 9999px;
-}
-.dark ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
-}
-::-webkit-scrollbar-thumb:hover { background: rgba(100, 116, 139, 0.35); }
-.dark ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.25); }
-
-/* ---- Focus ring ---- */
-:focus-visible {
-  outline: 2px solid var(--color-data);
-  outline-offset: 2px;
+.dark .scan-line {
+  background: linear-gradient(180deg, transparent, rgba(59, 130, 246, 0.2), transparent);
 }
 
-/* ---- Glow utilities ---- */
-.glow-teal {
-  box-shadow: 0 0 20px rgba(13, 148, 136, 0.15), 0 0 60px rgba(13, 148, 136, 0.05);
-}
-.dark .glow-teal {
-  box-shadow: 0 0 20px rgba(0, 212, 170, 0.2), 0 0 60px rgba(0, 212, 170, 0.08);
-}
-
-.glow-emerald {
-  box-shadow: 0 0 20px rgba(22, 163, 74, 0.15), 0 0 60px rgba(22, 163, 74, 0.05);
-}
-.dark .glow-emerald {
-  box-shadow: 0 0 20px rgba(34, 197, 94, 0.2), 0 0 60px rgba(34, 197, 94, 0.08);
+/* ---- Shimmer Effect ---- */
+@keyframes skShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
 }
 
-/* ---- Audit trail row ---- */
+.shimmer {
+  background: linear-gradient(90deg, #F1F5F9 25%, #FFFFFF 38%, #F1F5F9 60%);
+  background-size: 400% 100%;
+  animation: skShimmer 1.8s linear infinite;
+}
+
+.dark .shimmer {
+  background: linear-gradient(90deg, #1E293B 25%, #334155 38%, #1E293B 60%);
+  background-size: 400% 100%;
+  animation: skShimmer 1.8s linear infinite;
+}
+
+/* ---- Monospace Evidence Quotes ---- */
+.evidence-quote {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 11.5px;
+  line-height: 1.55;
+  background: rgba(15, 23, 42, 0.03);
+  border-left: 3px solid var(--color-brand);
+  padding: 10px 14px;
+  border-radius: 0 10px 10px 0;
+  color: var(--foreground);
+}
+
+.dark .evidence-quote {
+  background: rgba(255, 255, 255, 0.04);
+  border-left-color: var(--color-brand);
+  color: #F1F5F9;
+}
+
+/* ---- Audit log row ---- */
 .audit-row {
-  border-left: 2px solid var(--color-data);
-  padding-left: 1rem;
+  border-left: 2px solid var(--color-brand);
+  padding-left: 12px;
   position: relative;
 }
 
 .audit-row::before {
   content: "";
   position: absolute;
-  left: -4.5px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 7px;
-  height: 7px;
+  left: -5px;
+  top: 5px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  background: var(--color-data);
+  background: var(--color-brand);
 }
 
-/* ---- Evidence quote ---- */
-.evidence-quote {
-  font-family: "JetBrains Mono", monospace;
-  font-size: 0.75rem;
-  line-height: 1.6;
-  color: var(--foreground-muted);
-  background: var(--color-data-dim);
-  border-left: 2px solid var(--color-data);
-  padding: 0.6rem 0.85rem;
-  border-radius: 0 6px 6px 0;
+/* ---- Custom Scrollbar ---- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.25);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.45);
 }
