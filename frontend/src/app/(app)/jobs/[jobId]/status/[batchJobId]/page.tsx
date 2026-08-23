@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
@@ -6,7 +6,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { BatchJob, Job } from "@/lib/types";
-import { AppNavbar } from "@/components/app-navbar";
 import { DPDPBadge } from "@/components/dpdp-badge";
 import {
   Loader2,
@@ -114,7 +113,6 @@ export default function BatchJobStatusPage() {
 
   return (
     <div className="min-h-screen pb-16">
-      <AppNavbar />
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 space-y-6">
         {/* Header */}
@@ -166,7 +164,7 @@ export default function BatchJobStatusPage() {
                   </h2>
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
-                  Batch ID: #{batchJobId.slice(0, 8)} • Status: {batchJob?.status.toUpperCase()}
+                  Batch ID: #{batchJobId.slice(0, 8)} â€¢ Status: {batchJob?.status.toUpperCase()}
                 </div>
               </div>
             </div>

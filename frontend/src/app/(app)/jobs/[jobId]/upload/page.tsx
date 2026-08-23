@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
@@ -6,7 +6,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { Job, Resume } from "@/lib/types";
-import { AppNavbar } from "@/components/app-navbar";
 import { DPDPBadge } from "@/components/dpdp-badge";
 import {
   UploadCloud,
@@ -169,7 +168,6 @@ export default function ResumeUploadPage() {
 
   return (
     <div className="min-h-screen pb-16">
-      <AppNavbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
         {/* Navigation & Job Context */}

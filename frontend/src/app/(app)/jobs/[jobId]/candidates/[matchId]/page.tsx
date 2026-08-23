@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
@@ -6,7 +6,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { Job, MatchResult } from "@/lib/types";
-import { AppNavbar } from "@/components/app-navbar";
 import { DPDPBadge } from "@/components/dpdp-badge";
 import { ScoreRing } from "@/components/score-ring";
 import {
@@ -99,7 +98,6 @@ export default function CandidateDetailPage() {
 
   return (
     <div className="min-h-screen pb-16">
-      <AppNavbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
         {/* Top Breadcrumbs */}
@@ -203,10 +201,10 @@ export default function CandidateDetailPage() {
                 <span>DPDP Act (2023) Compliance Record</span>
               </div>
               <div className="text-[11px] text-slate-600 dark:text-slate-400 space-y-1.5 leading-relaxed font-mono">
-                <div>• PII Scrubbed before embedding extraction</div>
-                <div>• Explicit recruiter consent recorded</div>
-                <div>• Automatic 90-day retention purge scheduled</div>
-                <div>• Evaluation ID: #{matchId.slice(0, 10)}</div>
+                <div>â€¢ PII Scrubbed before embedding extraction</div>
+                <div>â€¢ Explicit recruiter consent recorded</div>
+                <div>â€¢ Automatic 90-day retention purge scheduled</div>
+                <div>â€¢ Evaluation ID: #{matchId.slice(0, 10)}</div>
               </div>
             </div>
 

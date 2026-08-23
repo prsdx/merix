@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { JobSummary } from "@/lib/types";
-import { AppNavbar } from "@/components/app-navbar";
 import { DPDPBadge } from "@/components/dpdp-badge";
 import { CountUp } from "@/components/count-up";
 import {
@@ -77,7 +76,6 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen pb-16 bg-[var(--bg-canvas)] text-[var(--text-primary)]">
-      <AppNavbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 space-y-8">
         {/* Header Strip */}
@@ -90,7 +88,7 @@ export default function DashboardPage() {
               <DPDPBadge variant="row" />
             </div>
             <p className="text-xs text-[var(--text-muted)] font-mono">
-              Organisation: {user?.org_name || "Active Workspace"} • DPDP Act 2023 Verified
+              Organisation: {user?.org_name || "Active Workspace"} â€¢ DPDP Act 2023 Verified
             </p>
           </div>
 
@@ -205,7 +203,7 @@ export default function DashboardPage() {
                         <Users className="w-3.5 h-3.5" />
                         {job.resume_count || 0} Resumes
                       </span>
-                      <span>•</span>
+                      <span>â€¢</span>
                       <span>{job.match_count || 0} Evaluations</span>
                     </div>
                   </div>

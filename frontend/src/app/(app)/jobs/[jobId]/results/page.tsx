@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
@@ -6,7 +6,6 @@ import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { Job, MatchResult } from "@/lib/types";
-import { AppNavbar } from "@/components/app-navbar";
 import { DPDPBadge } from "@/components/dpdp-badge";
 import { ScoreRing } from "@/components/score-ring";
 import {
@@ -90,7 +89,6 @@ export default function RankedResultsPage() {
 
   return (
     <div className="min-h-screen pb-16 bg-[var(--bg-canvas)] text-[var(--text-primary)]">
-      <AppNavbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
         {/* Breadcrumb & Header */}
@@ -110,7 +108,7 @@ export default function RankedResultsPage() {
               <DPDPBadge variant="row" />
             </div>
             <p className="text-xs text-[var(--text-muted)] font-mono">
-              Job ID: {jobId} • Evaluated with Deterministic 70/20/10 Formula
+              Job ID: {jobId} â€¢ Evaluated with Deterministic 70/20/10 Formula
             </p>
           </div>
 
@@ -256,7 +254,7 @@ export default function RankedResultsPage() {
                         {m.candidate_name || "Applicant"}
                       </div>
                       <div className="text-[10px] font-mono text-[var(--text-muted)] truncate mt-0.5">
-                        ID: {m.resume_id.substring(0, 8)} • Click to inspect evidence
+                        ID: {m.resume_id.substring(0, 8)} â€¢ Click to inspect evidence
                       </div>
                     </div>
 
@@ -270,12 +268,12 @@ export default function RankedResultsPage() {
                     <div className="col-span-4 flex flex-wrap gap-1 pr-2">
                       {m.matched_skills.slice(0, 3).map((sk) => (
                         <span key={sk} className="tag-evidence text-[10px]">
-                          ✓ {sk}
+                          âœ“ {sk}
                         </span>
                       ))}
                       {m.missing_skills.slice(0, 1).map((sk) => (
                         <span key={sk} className="tag-gap text-[10px]">
-                          ✕ {sk}
+                          âœ• {sk}
                         </span>
                       ))}
                       {m.matched_skills.length > 3 && (
@@ -317,12 +315,12 @@ export default function RankedResultsPage() {
                             <div className="flex flex-wrap gap-1.5">
                               {m.matched_skills.map((sk) => (
                                 <span key={sk} className="tag-evidence">
-                                  ✓ {sk}
+                                  âœ“ {sk}
                                 </span>
                               ))}
                               {m.missing_skills.map((sk) => (
                                 <span key={sk} className="tag-gap">
-                                  ✕ {sk} (Gap)
+                                  âœ• {sk} (Gap)
                                 </span>
                               ))}
                             </div>

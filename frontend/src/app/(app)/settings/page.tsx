@@ -1,11 +1,10 @@
-"use client";
+﻿"use client";
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { Organisation, AuditEvent } from "@/lib/types";
-import { AppNavbar } from "@/components/app-navbar";
 import { DPDPBadge } from "@/components/dpdp-badge";
 import {
   Building2,
@@ -89,7 +88,6 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen pb-16">
-      <AppNavbar />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 space-y-8">
         {/* Header */}

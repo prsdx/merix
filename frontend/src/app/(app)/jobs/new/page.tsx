@@ -1,11 +1,10 @@
-"use client";
+﻿"use client";
 
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
-import { AppNavbar } from "@/components/app-navbar";
 import { DPDPBadge } from "@/components/dpdp-badge";
 import {
   ArrowLeft,
@@ -82,7 +81,6 @@ export default function NewJobPage() {
 
   return (
     <div className="min-h-screen pb-16">
-      <AppNavbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
         {/* Breadcrumb */}
@@ -197,7 +195,7 @@ export default function NewJobPage() {
                     Structured Extraction Target
                   </span>
                 </div>
-                <span className="text-[10px] font-mono text-teal-700 dark:text-teal-400">EXTRACT ONCE • MATCH ALL</span>
+                <span className="text-[10px] font-mono text-teal-700 dark:text-teal-400">EXTRACT ONCE â€¢ MATCH ALL</span>
               </div>
 
               {hasContent ? (
