@@ -97,8 +97,8 @@ export default function BatchJobStatusPage() {
   if (authLoading || (loading && !batchJob)) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center">
-        <Loader2 className="w-8 h-8 animate-spin text-teal-600 dark:text-teal-400 mb-3" />
-        <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">Connecting to Evaluation Pipeline...</span>
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-evidence)] mb-3" />
+        <span className="text-xs text-[var(--text-muted)] font-mono">Connecting to Evaluation Pipeline...</span>
       </div>
     );
   }
@@ -116,12 +116,12 @@ export default function BatchJobStatusPage() {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 space-y-6">
         {/* Header */}
-        <div className="flex justify-between items-center pb-4 border-b border-slate-200 dark:border-white/10">
+        <div className="flex justify-between items-center pb-4 border-b border-[var(--border-hairline)]">
           <div>
-            <div className="text-[11px] font-mono text-teal-700 dark:text-teal-400 uppercase tracking-wider font-semibold">
+            <div className="text-[11px] font-mono text-[var(--accent-evidence)]  uppercase tracking-wider font-semibold">
               EVALUATION PIPELINE STATUS
             </div>
-            <h1 className="font-display text-2xl sm:text-3xl font-normal text-slate-900 dark:text-slate-100">
+            <h1 className="font-display text-2xl sm:text-3xl font-normal text-[var(--text-primary)]">
               {job?.title || "Batch Processing"}
             </h1>
           </div>
@@ -129,8 +129,8 @@ export default function BatchJobStatusPage() {
         </div>
 
         {error && (
-          <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2.5">
-            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+          <div className="p-4 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-[var(--accent-danger)] text-xs flex items-center gap-2.5">
+            <AlertCircle className="w-4 h-4 text-[var(--accent-danger)] shrink-0" />
             <span>{error}</span>
           </div>
         )}
@@ -138,32 +138,32 @@ export default function BatchJobStatusPage() {
         {/* Backend-reported failure reason (e.g. all resumes failed processing) */}
         {isFailed && batchJob?.error_message && (
           <div className="p-3.5 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-[var(--accent-danger)] text-xs flex items-center gap-2.5">
-            <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+            <AlertTriangle className="w-4 h-4 text-[var(--accent-danger)] shrink-0" />
             <span>{batchJob.error_message}</span>
           </div>
         )}
 
         {/* Main Status & Progress Panel */}
-        <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-white/10 space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200 dark:border-white/10">
+        <div className="merix-card p-6 sm:p-8 rounded-3xl border border-[var(--border-hairline)] space-y-6">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-[var(--border-hairline)]">
             <div className="flex items-center gap-3">
               {isFinished ? (
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
+                <div className="w-10 h-10 rounded-xl bg-[var(--accent-evidence-soft)] border border-[var(--accent-evidence-border)] flex items-center justify-center text-[var(--accent-evidence)]">
                   <CheckCircle2 className="w-6 h-6" />
                 </div>
               ) : isFailed ? (
-                <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/25 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                <div className="w-10 h-10 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] flex items-center justify-center text-[var(--accent-danger)]">
                   <AlertCircle className="w-6 h-6" />
                 </div>
               ) : (
-                <div className="w-10 h-10 rounded-xl bg-teal-500/10 border border-teal-500/25 flex items-center justify-center text-teal-600 dark:text-teal-400">
+                <div className="w-10 h-10 rounded-xl bg-[var(--accent-evidence-soft)] border border-[var(--accent-evidence)]/25 flex items-center justify-center text-[var(--accent-evidence)]">
                   <Loader2 className="w-6 h-6 animate-spin" />
                 </div>
               )}
 
               <div>
                 <div className="flex items-center gap-2">
-                  <h2 className="font-display text-xl font-normal text-slate-900 dark:text-slate-100">
+                  <h2 className="font-display text-xl font-normal text-[var(--text-primary)]">
                     {isFinished
                       ? "Batch Evaluation Completed"
                       : isFailed
@@ -171,7 +171,7 @@ export default function BatchJobStatusPage() {
                       : "Processing Candidates Against JD"}
                   </h2>
                 </div>
-                <div className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
+                <div className="text-xs text-[var(--text-muted)] font-mono mt-0.5">
                   Batch ID: #{batchJobId.slice(0, 8)} • Status: {batchJob?.status.toUpperCase()}
                 </div>
               </div>
@@ -194,25 +194,25 @@ export default function BatchJobStatusPage() {
           {/* Progress Bar & Percentage */}
           <div className="space-y-3">
             <div className="flex justify-between items-baseline">
-              <span className="text-xs font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400">
+              <span className="text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)]">
                 Extraction &amp; Deterministic Scoring Progress
               </span>
-              <span className="font-mono text-2xl font-bold text-teal-700 dark:text-teal-400">
+              <span className="font-mono text-2xl font-bold text-[var(--accent-evidence)] ">
                 {percent}%
               </span>
             </div>
 
-            <div className="w-full bg-slate-200 dark:bg-white/10 h-3 rounded-full overflow-hidden p-0.5 border border-slate-200 dark:border-white/10">
+            <div className="w-full bg-[var(--bg-subtle)] h-3 rounded-full overflow-hidden p-0.5 border border-[var(--border-hairline)]">
               <div
-                className="bg-gradient-to-r from-teal-600 to-sky-600 h-full rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-[var(--accent-evidence)] to-sky-600 h-full rounded-full transition-all duration-500"
                 style={{ width: `${percent}%` }}
               />
             </div>
 
-            <div className="flex justify-between text-xs font-mono text-slate-500 dark:text-slate-400">
+            <div className="flex justify-between text-xs font-mono text-[var(--text-muted)]">
               <span>{completed} of {total} candidate resumes processed</span>
               {isFinished && countdown !== null && (
-                <span className="text-teal-700 dark:text-teal-400 font-semibold">Redirecting in {countdown}s...</span>
+                <span className="text-[var(--accent-evidence)]  font-semibold">Redirecting in {countdown}s...</span>
               )}
             </div>
           </div>
@@ -230,7 +230,7 @@ export default function BatchJobStatusPage() {
           {/* Itemized Candidate Ingestion Results Table */}
           {batchResults.length > 0 && (
             <div className="space-y-3 pt-2">
-              <div className="text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              <div className="text-xs font-mono uppercase tracking-wider text-[var(--text-muted)]">
                 Processed Candidate Stream
               </div>
 
@@ -238,15 +238,15 @@ export default function BatchJobStatusPage() {
                 {batchResults.map((res, i) => (
                   <div
                     key={i}
-                    className="p-3 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/5 flex items-center justify-between text-xs font-mono"
+                    className="p-3 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--border-hairline)] dark:border-white/5 flex items-center justify-between text-xs font-mono"
                   >
                     <div className="flex items-center gap-2.5 truncate">
                       {res.status === "matched" ? (
-                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent-evidence)] shrink-0" />
                       ) : (
                         <AlertCircle className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400 shrink-0" />
                       )}
-                      <span className="text-slate-900 dark:text-slate-100 truncate font-medium">
+                      <span className="text-[var(--text-primary)] truncate font-medium">
                         {res.candidate_name || `Resume #${i + 1}`}
                       </span>
                     </div>

@@ -23,7 +23,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
-      <body className="font-sans antialiased bg-[var(--bg-canvas)] text-[var(--text-primary)] min-h-screen relative selection:bg-teal-500/20 selection:text-teal-900 dark:selection:bg-teal-500/30 dark:selection:text-teal-100 transition-colors duration-200">
+      <body className="font-sans antialiased bg-[var(--bg-canvas)] text-[var(--text-primary)] min-h-screen relative selection:bg-[var(--accent-evidence)]/20 selection:text-[var(--text-primary)] dark:selection:bg-[var(--accent-evidence)]/30 dark:selection:text-[var(--text-primary)] transition-colors duration-200">
         <ThemeProvider>
           <AuthProvider>
             <LiquidBackground />
