@@ -40,7 +40,9 @@ async def test_org_b_cannot_access_org_a_data_via_api(client, make_org_user):
         data={"candidate_name": "Jane Doe", "consent_given": "true"},
         headers=a,
     )
-    assert r.status_code == 201, r.text
+    # Upload is async now (202 Accepted + BatchJobStatus); TestClient runs
+    # the background processor before returning, so Org A's data exists.
+    assert r.status_code == 202, r.text
 
     r = client.post(f"/api/jobs/{job_id}/match", headers=a)
     assert r.status_code == 202, r.text

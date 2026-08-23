@@ -32,8 +32,8 @@ from merix.models.user import User
 from merix.schemas.batch_job import BatchJobCreate, BatchJobStatus
 from merix.schemas.job import JobCreate, JobResponse, JobSummaryResponse
 from merix.schemas.match import ResumeResponse
-from merix.services import extraction, pipeline
-from merix.services.batch import run_batch_match_background
+from merix.services import consent, extraction, pipeline
+from merix.services.batch import process_resume_background, run_batch_match_background
 
 router = APIRouter()
 
@@ -121,11 +121,12 @@ async def list_job_resumes(
 
 @router.post(
     "/{job_id}/resumes",
-    response_model=ResumeResponse,
-    status_code=status.HTTP_201_CREATED,
+    response_model=BatchJobStatus,
+    status_code=status.HTTP_202_ACCEPTED,
 )
 async def upload_resume(
     job_id: uuid.UUID,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     candidate_name: str | None = Form(None, max_length=255),
     consent_given: bool = Form(...),
@@ -133,12 +134,20 @@ async def upload_resume(
     db: AsyncSession = Depends(get_scoped_db),
     llm: LLMClient = Depends(get_llm),
     embedder: EmbeddingClient = Depends(get_embedder),
-) -> object:
-    """Upload a resume PDF for a job: validate, extract, embed, persist.
+) -> BatchJob:
+    """Upload a resume PDF for a job: validate now, process asynchronously.
 
-    consent_given must be true; the consent timestamp is recorded server-side.
+    Fast checks happen synchronously so bad uploads are rejected immediately
+    with the same errors as before: job must exist in the caller's org (404),
+    DPDP consent must be given (400), file within size cap (413), valid
+    parseable PDF (422). The slow LLM extraction + embedding then run in a
+    background task using Task 5's BatchJob infrastructure; returns 202
+    Accepted with the BatchJobStatus — poll ``GET /api/batch-jobs/{id}``
+    for completion.
     """
-    job = await pipeline.get_job_or_404(db, job_id, user.org_id)
+    await pipeline.get_job_or_404(db, job_id, user.org_id)
+    # DPDP gate: reject missing consent immediately instead of 202-then-fail.
+    consent.require_consent(consent_given)
     # Read at most one byte beyond the cap so an oversized/malicious upload can
     # never be fully buffered in memory before being rejected.
     data = await file.read(extraction.MAX_FILE_BYTES + 1)
@@ -146,17 +155,32 @@ async def upload_resume(
         raise FileTooLargeError(extraction.MAX_FILE_BYTES)
     text = extraction.extract_text_from_pdf(data)  # raises domain errors on reject
     scrubbed = extraction.scrub_pii(text)
-    resume = await pipeline.add_resume(
-        db,
-        llm,
-        embedder,
-        job,
+
+    batch_job = BatchJob(
+        org_id=user.org_id,
+        job_description_id=job_id,
+        status="queued",
+        total_resumes=1,
+        completed_resumes=0,
+    )
+    db.add(batch_job)
+    await db.commit()
+    await db.refresh(batch_job)
+
+    # Enqueue the slow processing. The background task creates its own
+    # scoped session; we pass the clients so they can be mocked in tests.
+    background_tasks.add_task(
+        process_resume_background,
+        org_id=user.org_id,
+        job_id=job_id,
+        batch_job_id=batch_job.id,
         raw_text=scrubbed,
         original_filename=file.filename or "resume.pdf",
         candidate_name=candidate_name,
-        consent_given=consent_given,
+        llm=llm,
+        embedder=embedder,
     )
-    return resume
+    return batch_job
 
 
 @router.post(

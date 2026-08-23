@@ -42,6 +42,21 @@ async def _upload_resume(client, headers, job_id, consent_given: bool = True):
     return r
 
 
+async def _upload_and_get_resume_id(client, headers, job_id) -> str:
+    """Upload via the API and return the persisted resume id.
+
+    Upload is async (202 + BatchJobStatus); the background processor has run
+    by the time TestClient returns, so the batch job can be polled for the
+    created resume's id via the public status contract.
+    """
+    r = await _upload_resume(client, headers, job_id, consent_given=True)
+    assert r.status_code == 202, r.text
+    batch_job_id = r.json()["id"]
+    body = client.get(f"/api/batch-jobs/{batch_job_id}", headers=headers).json()
+    assert body["status"] == "completed", body
+    return body["batch_results"][0]["resume_id"]
+
+
 async def test_upload_without_consent_is_rejected(client, org_user):
     headers, _org_id, job_id = org_user
     r = await _upload_resume(client, headers, job_id, consent_given=False)
@@ -52,14 +67,14 @@ async def test_upload_without_consent_is_rejected(client, org_user):
 async def test_upload_with_consent_records_timestamp_and_expiry(client, org_user):
     headers, org_id, job_id = org_user
     r = await _upload_resume(client, headers, job_id, consent_given=True)
-    assert r.status_code == 201, r.text
-    payload = r.json()
-    assert payload["consent_given"] is True
-    assert payload["consent_timestamp"] is not None
-    assert payload["retention_expires_at"] is not None
+    assert r.status_code == 202, r.text
 
+    # The 202 response is a BatchJobStatus now; consent fields are verified on
+    # the persisted resume row instead of the upload response payload.
     async with scoped_session(org_id) as session:
-        resume = await session.get(Resume, uuid.UUID(payload["id"]))
+        resumes = (await session.scalars(select(Resume).where(Resume.job_id == job_id))).all()
+        assert len(resumes) == 1
+        resume = resumes[0]
         assert resume.consent_given is True
         assert resume.consent_timestamp is not None
         assert resume.retention_expires_at == resume.consent_timestamp + timedelta(days=90)
@@ -69,8 +84,7 @@ async def test_manual_deletion_removes_resume_and_matches(client, org_user):
     headers, org_id, job_id = org_user
 
     # Upload and match
-    r = await _upload_resume(client, headers, job_id, consent_given=True)
-    resume_id = r.json()["id"]
+    resume_id = await _upload_and_get_resume_id(client, headers, job_id)
     client.post(f"/api/jobs/{job_id}/match", headers=headers)
 
     async with scoped_session(org_id) as session:
@@ -105,8 +119,7 @@ async def test_manual_deletion_removes_resume_and_matches(client, org_user):
 async def test_retention_sweep_deletes_expired_resumes(client, org_user):
     headers, org_id, job_id = org_user
 
-    r = await _upload_resume(client, headers, job_id, consent_given=True)
-    resume_id = r.json()["id"]
+    resume_id = await _upload_and_get_resume_id(client, headers, job_id)
     client.post(f"/api/jobs/{job_id}/match", headers=headers)
 
     # Force expiration
