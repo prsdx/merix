@@ -83,7 +83,7 @@ export default function CandidateDetailPage() {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center">
         <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-evidence)] mb-3" />
-        <span className="text-xs text-[var(--text-muted)] font-mono">Loading Candidate Dossier...</span>
+        <span className="text-sm text-[var(--text-muted)] font-mono">Loading Candidate Dossier...</span>
       </div>
     );
   }
@@ -104,7 +104,7 @@ export default function CandidateDetailPage() {
         <div className="flex justify-between items-center pb-3 border-b border-[var(--border-hairline)]">
           <Link
             href={`/jobs/${jobId}/results`}
-            className="inline-flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Ranked Shortlist</span>
@@ -113,7 +113,7 @@ export default function CandidateDetailPage() {
         </div>
 
         {error && (
-          <div className="p-4 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-[var(--accent-danger)] text-xs flex items-center gap-2.5">
+          <div className="p-4 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-[var(--accent-danger)] text-sm flex items-center gap-2.5">
             <AlertCircle className="w-4 h-4 text-[var(--accent-danger)] shrink-0" />
             <span>{error}</span>
           </div>
@@ -125,13 +125,13 @@ export default function CandidateDetailPage() {
             {/* Score Centerpiece Card */}
             <div className="merix-card p-8 rounded-3xl border border-[var(--border-hairline)] text-center space-y-6 shadow-xl">
               <div className="space-y-1">
-                <span className="text-[11px] font-mono text-[var(--accent-evidence)]  uppercase tracking-wider font-semibold">
+                <span className="text-xs font-mono text-[var(--accent-evidence)]  uppercase tracking-wider font-semibold">
                   EVIDENCE-GROUNDED MATCH SCORE
                 </span>
                 <h1 className="font-display text-2xl font-normal text-[var(--text-primary)]">
                   {match?.candidate_name || "Candidate Evaluation"}
                 </h1>
-                <p className="text-xs text-[var(--text-muted)]">Applied for {job?.title}</p>
+                <p className="text-sm text-[var(--text-muted)]">Applied for {job?.title}</p>
               </div>
 
               {/* Large Animated Score Ring */}
@@ -140,7 +140,7 @@ export default function CandidateDetailPage() {
               </div>
 
               <div
-                className="inline-block px-3 py-1 rounded-full text-xs font-semibold font-mono"
+                className="inline-block px-3 py-1 rounded-full text-sm font-semibold font-mono"
                 style={{ color: scoreCategory.color, background: scoreCategory.bg }}
               >
                 {scoreCategory.label}
@@ -148,12 +148,12 @@ export default function CandidateDetailPage() {
 
               {/* 70/20/10 Breakdown Bars */}
               <div className="space-y-3 pt-4 border-t border-[var(--border-hairline)] text-left">
-                <div className="text-[11px] font-mono uppercase tracking-wider text-[var(--text-muted)]">
+                <div className="text-xs font-mono uppercase tracking-wider text-[var(--text-muted)]">
                   Deterministic Weight Breakdown
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-mono">
+                  <div className="flex justify-between text-sm font-mono">
                     <span className="text-[var(--text-primary)]">Required Technical Skills (70%)</span>
                     <span className="text-[var(--accent-evidence)]  font-bold">
                       {Math.round((match?.matched_skills.length || 0) > 0 ? (score * 0.7) : 0)} / 70
@@ -168,7 +168,7 @@ export default function CandidateDetailPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-mono">
+                  <div className="flex justify-between text-sm font-mono">
                     <span className="text-[var(--text-primary)]">Preferred Qualifications (20%)</span>
                     <span className="text-amber-700 dark:text-amber-400 font-bold">
                       {score >= 80 ? "20 / 20" : "10 / 20"}
@@ -183,7 +183,7 @@ export default function CandidateDetailPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <div className="flex justify-between text-xs font-mono">
+                  <div className="flex justify-between text-sm font-mono">
                     <span className="text-[var(--text-primary)]">Experience &amp; Domain (10%)</span>
                     <span className="text-[var(--accent-evidence)] font-bold">10 / 10</span>
                   </div>
@@ -196,11 +196,11 @@ export default function CandidateDetailPage() {
 
             {/* DPDP Compliance Card */}
             <div className="merix-card p-6 rounded-3xl border border-[var(--border-hairline)] space-y-4">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[var(--accent-evidence)]">
+              <div className="flex items-center gap-2 text-sm font-semibold text-[var(--accent-evidence)]">
                 <ShieldCheck className="w-4 h-4" />
                 <span>DPDP Act (2023) Compliance Record</span>
               </div>
-              <div className="text-[11px] text-[var(--text-secondary)] space-y-1.5 leading-relaxed font-mono">
+              <div className="text-xs text-[var(--text-secondary)] space-y-1.5 leading-relaxed font-mono">
                 <div>• PII Scrubbed before embedding extraction</div>
                 <div>• Explicit recruiter consent recorded</div>
                 <div>• Automatic 90-day retention purge scheduled</div>
@@ -210,16 +210,16 @@ export default function CandidateDetailPage() {
 
             {/* Candidate Right to Erasure Card */}
             <div className="p-5 rounded-2xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] space-y-3">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[var(--accent-danger)]">
+              <div className="flex items-center gap-2 text-sm font-semibold text-[var(--accent-danger)]">
                 <Trash2 className="w-4 h-4 text-[var(--accent-danger)]" />
                 <span>Candidate Right to Erasure</span>
               </div>
-              <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                 Under India DPDP Act Section 12, candidates may request complete erasure of personal data and match history.
               </p>
               <button
                 onClick={() => setShowDeleteModal(true)}
-                className="w-full py-2 rounded-xl text-xs font-semibold text-[var(--accent-danger)] bg-[var(--accent-danger-soft)] hover:brightness-110 border border-[var(--accent-danger-border)] transition-colors cursor-pointer"
+                className="w-full py-2 rounded-xl text-sm font-semibold text-[var(--accent-danger)] bg-[var(--accent-danger-soft)] hover:brightness-110 border border-[var(--accent-danger-border)] transition-colors cursor-pointer"
               >
                 Permanently Erase Candidate Data
               </button>
@@ -236,7 +236,7 @@ export default function CandidateDetailPage() {
                   AI Grounded Match Rationale
                 </h2>
               </div>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                 {match?.rationale || "No detailed rationale generated."}
               </p>
             </div>
@@ -250,7 +250,7 @@ export default function CandidateDetailPage() {
                     Verified Matched Skills ({match?.matched_skills.length || 0})
                   </h3>
                 </div>
-                <span className="text-[10px] font-mono text-[var(--accent-evidence)] ">VERBATIM EVIDENCE</span>
+                <span className="text-xs font-mono text-[var(--accent-evidence)] ">VERBATIM EVIDENCE</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -259,11 +259,11 @@ export default function CandidateDetailPage() {
                     key={skill}
                     className="p-3 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--accent-evidence)]/20 space-y-1"
                   >
-                    <div className="flex items-center gap-1.5 text-xs font-semibold text-[var(--accent-evidence)]">
+                    <div className="flex items-center gap-1.5 text-sm font-semibold text-[var(--accent-evidence)]">
                       <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                       <span>{skill}</span>
                     </div>
-                    <div className="text-[10px] font-mono text-[var(--text-muted)]">
+                    <div className="text-xs font-mono text-[var(--text-muted)]">
                       Verified from candidate career history
                     </div>
                   </div>
@@ -281,7 +281,7 @@ export default function CandidateDetailPage() {
               </div>
 
               {match?.missing_skills.length === 0 ? (
-                <div className="p-4 rounded-xl bg-[var(--accent-evidence-soft)] border border-[var(--accent-evidence)]/20 text-xs text-[var(--accent-evidence)] flex items-center gap-2">
+                <div className="p-4 rounded-xl bg-[var(--accent-evidence-soft)] border border-[var(--accent-evidence)]/20 text-sm text-[var(--accent-evidence)] flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 shrink-0" />
                   <span>This candidate satisfies all required and preferred skills from the Job Description.</span>
                 </div>
@@ -292,11 +292,11 @@ export default function CandidateDetailPage() {
                       key={gap}
                       className="p-3 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--accent-danger-border)] space-y-1"
                     >
-                      <div className="flex items-center gap-1.5 text-xs font-semibold text-orange-800 dark:text-orange-300">
+                      <div className="flex items-center gap-1.5 text-sm font-semibold text-orange-800 dark:text-orange-300">
                         <XCircle className="w-3.5 h-3.5 shrink-0" />
                         <span>{gap}</span>
                       </div>
-                      <div className="text-[10px] font-mono text-[var(--text-muted)]">
+                      <div className="text-xs font-mono text-[var(--text-muted)]">
                         No direct evidence cited in submitted resume
                       </div>
                     </div>
@@ -320,7 +320,7 @@ export default function CandidateDetailPage() {
               <h3 className="font-display text-xl font-normal text-[var(--text-primary)]">
                 Execute DPDP Data Erasure?
               </h3>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                 This will permanently delete the candidate&apos;s resume, parsed embeddings, and match result from your database. An immutable audit record will be logged.
               </p>
             </div>
@@ -330,7 +330,7 @@ export default function CandidateDetailPage() {
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
-                className="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
               >
                 Cancel
               </button>
@@ -338,7 +338,7 @@ export default function CandidateDetailPage() {
                 type="button"
                 onClick={handleDelete}
                 disabled={isDeleting}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[var(--accent-danger)] hover:bg-[var(--accent-danger)] transition-colors shadow-md"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-[var(--accent-danger)] hover:bg-[var(--accent-danger)] transition-colors shadow-md"
               >
                 {isDeleting ? (
                   <>

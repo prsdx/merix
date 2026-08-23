@@ -149,7 +149,7 @@ body {
 /* ---- Monospace Pill Tag (Varying Styles) ---- */
 .tag-evidence {
   font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 6px;
@@ -160,7 +160,7 @@ body {
 
 .tag-gap {
   font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 600;
   padding: 3px 8px;
   border-radius: 6px;
@@ -171,7 +171,7 @@ body {
 
 .tag-neutral {
   font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 500;
   padding: 3px 8px;
   border-radius: 6px;
@@ -186,7 +186,7 @@ body {
   color: var(--accent-evidence);
   border: 1px solid var(--accent-evidence-border);
   font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 6px;
@@ -197,7 +197,7 @@ body {
   color: var(--accent-gap);
   border: 1px solid var(--accent-gap-border);
   font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 6px;
@@ -208,7 +208,7 @@ body {
   color: var(--accent-danger);
   border: 1px solid var(--accent-danger-border);
   font-family: "JetBrains Mono", monospace;
-  font-size: 11px;
+  font-size: 12px;
   font-weight: 700;
   padding: 2px 7px;
   border-radius: 6px;

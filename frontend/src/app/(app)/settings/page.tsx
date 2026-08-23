@@ -81,7 +81,7 @@ export default function SettingsPage() {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center">
         <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-evidence)] mb-3" />
-        <span className="text-xs text-[var(--text-muted)] font-mono">Loading Compliance Settings...</span>
+        <span className="text-sm text-[var(--text-muted)] font-mono">Loading Compliance Settings...</span>
       </div>
     );
   }
@@ -94,7 +94,7 @@ export default function SettingsPage() {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-[var(--border-hairline)]">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="text-xs font-mono text-[var(--accent-evidence)]  uppercase tracking-wider font-semibold">
+              <span className="text-sm font-mono text-[var(--accent-evidence)]  uppercase tracking-wider font-semibold">
                 COMPLIANCE &amp; GOVERNANCE
               </span>
               <DPDPBadge variant="row" />
@@ -102,21 +102,21 @@ export default function SettingsPage() {
             <h1 className="font-display text-3xl font-normal text-[var(--text-primary)]">
               Organisation &amp; DPDP Settings
             </h1>
-            <p className="text-xs text-[var(--text-muted)]">
+            <p className="text-sm text-[var(--text-muted)]">
               Manage retention policies, tenant configuration, and immutable compliance audit trails.
             </p>
           </div>
         </div>
 
         {error && (
-          <div className="p-4 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-[var(--accent-danger)] text-xs flex items-center gap-2.5">
+          <div className="p-4 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-[var(--accent-danger)] text-sm flex items-center gap-2.5">
             <AlertCircle className="w-4 h-4 text-[var(--accent-danger)] shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
         {successMessage && (
-          <div className="p-4 rounded-xl bg-[var(--accent-evidence-soft)] border border-[var(--accent-evidence-border)] text-[var(--accent-evidence)] text-xs flex items-center gap-2.5">
+          <div className="p-4 rounded-xl bg-[var(--accent-evidence-soft)] border border-[var(--accent-evidence-border)] text-[var(--accent-evidence)] text-sm flex items-center gap-2.5">
             <CheckCircle2 className="w-4 h-4 text-[var(--accent-evidence)] shrink-0" />
             <span>{successMessage}</span>
           </div>
@@ -134,35 +134,35 @@ export default function SettingsPage() {
                 </h2>
               </div>
 
-              <div className="space-y-3 text-xs">
+              <div className="space-y-3 text-sm">
                 <div>
-                  <div className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
+                  <div className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">
                     ORGANISATION NAME
                   </div>
-                  <div className="font-semibold text-sm text-[var(--text-primary)] mt-0.5">
+                  <div className="font-semibold text-base text-[var(--text-primary)] mt-0.5">
                     {org?.name || user?.org_name}
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
+                  <div className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">
                     ORGANISATION ID
                   </div>
-                  <div className="font-mono text-[11px] text-[var(--text-secondary)] mt-0.5 select-all">
+                  <div className="font-mono text-xs text-[var(--text-secondary)] mt-0.5 select-all">
                     {org?.id}
                   </div>
                 </div>
 
                 <div>
-                  <div className="text-[10px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
+                  <div className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">
                     ADMINISTRATOR ACCOUNT
                   </div>
-                  <div className="font-mono text-[11px] text-[var(--text-primary)] mt-0.5">
+                  <div className="font-mono text-xs text-[var(--text-primary)] mt-0.5">
                     {user?.email}
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-[var(--border-hairline)] dark:border-white/5 flex items-center gap-2 text-[11px] text-[var(--accent-evidence)] font-mono">
+                <div className="pt-2 border-t border-[var(--border-hairline)] dark:border-white/5 flex items-center gap-2 text-xs text-[var(--accent-evidence)] font-mono">
                   <ShieldCheck className="w-3.5 h-3.5" />
                   <span>PostgreSQL Row-Level Security Enabled</span>
                 </div>
@@ -178,16 +178,16 @@ export default function SettingsPage() {
                     DPDP Retention Policy
                   </h2>
                 </div>
-                <span className="text-[10px] font-mono text-[var(--accent-evidence)] font-semibold">INDIA DPDP ACT 2023</span>
+                <span className="text-xs font-mono text-[var(--accent-evidence)] font-semibold">INDIA DPDP ACT 2023</span>
               </div>
 
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                 Configure the automated data lifecycle for your organization. Candidate resumes and extracted vectors will be automatically purged once their retention window expires.
               </p>
 
               <form onSubmit={handleSaveRetention} className="space-y-4 pt-2">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)]">
+                  <label className="block text-sm font-mono uppercase tracking-wider text-[var(--text-secondary)]">
                     Auto-Deletion Window (Days)
                   </label>
                   <div className="flex items-center gap-3">
@@ -198,16 +198,16 @@ export default function SettingsPage() {
                       value={retentionDays}
                       onChange={(e) => setRetentionDays(parseInt(e.target.value) || 90)}
                       required
-                      className="w-32 px-4 py-2 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--border-hairline)] text-sm font-mono font-bold text-[var(--accent-evidence)]  focus:border-[var(--accent-evidence)] focus:outline-none"
+                      className="w-32 px-4 py-2 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--border-hairline)] text-base font-mono font-bold text-[var(--accent-evidence)]  focus:border-[var(--accent-evidence)] focus:outline-none"
                     />
-                    <span className="text-xs text-[var(--text-muted)] font-mono">Days (Default: 90 Days)</span>
+                    <span className="text-sm text-[var(--text-muted)] font-mono">Days (Default: 90 Days)</span>
                   </div>
                 </div>
 
                 <button
                   type="submit"
                   disabled={savingRetention}
-                  className="flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-xs text-white transition-all shadow-md hover:opacity-95 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                  className="flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-sm text-white transition-all shadow-md hover:opacity-95 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                   style={{
                     background: "linear-gradient(135deg, #0D9488 0%, #0284C7 100%)",
                   }}
@@ -232,13 +232,13 @@ export default function SettingsPage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <LinkIcon className="w-4 h-4 text-[var(--brand-primary)]" />
-                  <h3 className="font-semibold text-xs text-[var(--text-primary)]">ATS &amp; HRMS Integrations</h3>
+                  <h3 className="font-semibold text-sm text-[var(--text-primary)]">ATS &amp; HRMS Integrations</h3>
                 </div>
-                <span className="text-[10px] font-mono text-[var(--brand-primary)] bg-[var(--brand-soft)] px-2 py-0.5 rounded">
+                <span className="text-xs font-mono text-[var(--brand-primary)] bg-[var(--brand-soft)] px-2 py-0.5 rounded">
                   v2 Roadmap
                 </span>
               </div>
-              <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                 Direct export connectors for Greenhouse, Lever, Ashby, Darwinbox, and Keka are scheduled for v2. Currently, ranked shortlists export to universal CSV spreadsheets.
               </p>
             </div>
@@ -257,14 +257,14 @@ export default function SettingsPage() {
                 <DPDPBadge variant="row" />
               </div>
 
-              <p className="text-xs text-[var(--text-muted)]">
+              <p className="text-sm text-[var(--text-muted)]">
                 Immutable, append-only log of all data processing, consent recording, and erasure events for your organization.
               </p>
 
               {auditLogs.length === 0 ? (
-                <div className="p-8 text-center text-xs text-[var(--text-muted)] font-mono space-y-1">
+                <div className="p-8 text-center text-sm text-[var(--text-muted)] font-mono space-y-1">
                   <div>No audit events recorded yet.</div>
-                  <div className="text-[10px]">Events will appear here as resumes are uploaded and processed.</div>
+                  <div className="text-xs">Events will appear here as resumes are uploaded and processed.</div>
                 </div>
               ) : (
                 <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
@@ -276,28 +276,28 @@ export default function SettingsPage() {
                     return (
                       <div
                         key={log.id}
-                        className="audit-row text-xs space-y-1 bg-[var(--bg-subtle)] dark:bg-black/40 p-3 rounded-r-xl border-y border-r border-[var(--border-hairline)] dark:border-white/5"
+                        className="audit-row text-sm space-y-1 bg-[var(--bg-subtle)] dark:bg-black/40 p-3 rounded-r-xl border-y border-r border-[var(--border-hairline)] dark:border-white/5"
                       >
                         <div className="flex items-center justify-between">
                           <span
-                            className="font-mono font-bold text-[11px]"
+                            className="font-mono font-bold text-xs"
                             style={{
                               color: isDeletion ? "#DC2626" : isConsent ? "#16A34A" : isMatch ? "#0D9488" : "inherit",
                             }}
                           >
                             {log.event_type.toUpperCase()}
                           </span>
-                          <span className="font-mono text-[10px] text-[var(--text-muted)]">
+                          <span className="font-mono text-xs text-[var(--text-muted)]">
                             {new Date(log.created_at).toLocaleString()}
                           </span>
                         </div>
 
-                        <div className="text-[11px] text-[var(--text-muted)] font-mono">
+                        <div className="text-xs text-[var(--text-muted)] font-mono">
                           Actor: {log.actor_type} {log.actor_user_id ? `(${log.actor_user_id.slice(0, 8)})` : ""}
                         </div>
 
                         {log.event_metadata && Object.keys(log.event_metadata).length > 0 && (
-                          <div className="text-[10px] font-mono text-[var(--text-secondary)] truncate">
+                          <div className="text-xs font-mono text-[var(--text-secondary)] truncate">
                             {JSON.stringify(log.event_metadata)}
                           </div>
                         )}

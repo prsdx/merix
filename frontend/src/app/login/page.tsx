@@ -75,27 +75,27 @@ export default function LoginPage() {
               <h1 className="font-sans text-3xl font-bold text-[var(--text-primary)] leading-tight tracking-tight">
                 Welcome back to your hiring workspace.
               </h1>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                 Access your organization&apos;s candidate evaluation pipelines, shortlists, and DPDP-compliant audit trails.
               </p>
             </div>
 
             <div className="space-y-3 pt-2">
-              <div className="flex items-start gap-2.5 text-xs text-[var(--text-secondary)]">
+              <div className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
                 <CheckCircle2 className="w-4 h-4 text-[var(--brand-primary)] shrink-0 mt-0.5" />
                 <span>Explainable 0–100 matching with verbatim evidence quotes</span>
               </div>
-              <div className="flex items-start gap-2.5 text-xs text-[var(--text-secondary)]">
+              <div className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
                 <CheckCircle2 className="w-4 h-4 text-[var(--brand-primary)] shrink-0 mt-0.5" />
                 <span>Batch screening 100 resumes in &lt;8 minutes</span>
               </div>
-              <div className="flex items-start gap-2.5 text-xs text-[var(--text-secondary)]">
+              <div className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
                 <ShieldCheck className="w-4 h-4 text-[var(--accent-evidence)] shrink-0 mt-0.5" />
                 <span>Automated 90-day DPDP retention enforcement</span>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-[var(--border-hairline)] text-[11px] font-mono text-[var(--text-muted)]">
+            <div className="pt-4 border-t border-[var(--border-hairline)] text-xs font-mono text-[var(--text-muted)]">
               Secure Supabase JWT Authentication with Row-Level Security isolation.
             </div>
           </div>
@@ -105,13 +105,13 @@ export default function LoginPage() {
             <div className="p-8 md:p-10 rounded-3xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)] shadow-xl">
               <div className="mb-6 space-y-1">
                 <h2 className="font-sans text-2xl font-bold text-[var(--text-primary)]">Sign In</h2>
-                <p className="text-xs text-[var(--text-secondary)]">
+                <p className="text-sm text-[var(--text-secondary)]">
                   Choose your preferred authentication method to continue.
                 </p>
               </div>
 
               {error && (
-                <div className="mb-5 p-3.5 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-[var(--accent-danger)] text-xs flex items-center gap-2.5">
+                <div className="mb-5 p-3.5 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-[var(--accent-danger)] text-sm flex items-center gap-2.5">
                   <AlertCircle className="w-4 h-4 shrink-0 text-[var(--accent-danger)]" />
                   <span>{error}</span>
                 </div>
@@ -121,7 +121,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={loginWithGoogle}
-                className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] font-semibold text-xs transition-all shadow-xs hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] font-semibold text-sm transition-all shadow-xs hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
               >
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                   <path
@@ -149,14 +149,14 @@ export default function LoginPage() {
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-[var(--border-hairline)]" />
                 </div>
-                <span className="relative px-3 bg-[var(--bg-subtle)] text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
+                <span className="relative px-3 bg-[var(--bg-subtle)] text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">
                   or sign in with email
                 </span>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] font-semibold">
+                  <label className="block text-sm font-mono uppercase tracking-wider text-[var(--text-secondary)] font-semibold">
                     Work Email Address
                   </label>
                   <div className="relative">
@@ -167,13 +167,13 @@ export default function LoginPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="recruiter@organisation.com"
                       required
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--brand-primary)] focus:outline-none transition-colors"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--brand-primary)] focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] font-semibold">
+                  <label className="block text-sm font-mono uppercase tracking-wider text-[var(--text-secondary)] font-semibold">
                     Password
                   </label>
                   <div className="relative">
@@ -184,7 +184,7 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••••••"
                       required
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--brand-primary)] focus:outline-none transition-colors"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--brand-primary)] focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -192,7 +192,7 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-xs text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)] shadow-md shadow-md/25 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 mt-2 cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)] shadow-md shadow-md/25 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 mt-2 cursor-pointer"
                 >
                   {loading ? (
                     <>
@@ -208,7 +208,7 @@ export default function LoginPage() {
                 </button>
               </form>
 
-              <div className="mt-6 pt-5 border-t border-[var(--border-hairline)] text-center text-xs text-[var(--text-secondary)]">
+              <div className="mt-6 pt-5 border-t border-[var(--border-hairline)] text-center text-sm text-[var(--text-secondary)]">
                 Don&apos;t have an organization account?{" "}
                 <Link href="/signup" className="text-[var(--brand-primary)] font-semibold hover:underline">
                   Create Account
@@ -220,7 +220,7 @@ export default function LoginPage() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full max-w-6xl mx-auto py-4 text-center text-[11px] font-mono text-[var(--text-muted)]">
+      <footer className="w-full max-w-6xl mx-auto py-4 text-center text-xs font-mono text-[var(--text-muted)]">
         India DPDP Act (2023) Protected • Row-Level Tenant Isolation
       </footer>
     </div>

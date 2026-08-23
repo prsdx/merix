@@ -159,7 +159,7 @@ export default function ResumeUploadPage() {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center">
         <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-evidence)] mb-3" />
-        <span className="text-xs text-[var(--text-muted)] font-mono">Loading Job Workspace...</span>
+        <span className="text-sm text-[var(--text-muted)] font-mono">Loading Job Workspace...</span>
       </div>
     );
   }
@@ -175,7 +175,7 @@ export default function ResumeUploadPage() {
           <div className="space-y-1">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Dashboard</span>
@@ -193,7 +193,7 @@ export default function ResumeUploadPage() {
               <button
                 onClick={handleStartMatching}
                 disabled={isMatching}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-xs text-white transition-all shadow-md hover:opacity-95 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm text-white transition-all shadow-md hover:opacity-95 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
                 style={{
                   background: "linear-gradient(135deg, #0D9488 0%, #0284C7 100%)",
                 }}
@@ -215,7 +215,7 @@ export default function ResumeUploadPage() {
         </div>
 
         {error && (
-          <div className="p-4 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-[var(--accent-danger)] text-xs flex items-center gap-2.5">
+          <div className="p-4 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-[var(--accent-danger)] text-sm flex items-center gap-2.5">
             <AlertCircle className="w-4 h-4 text-[var(--accent-danger)] shrink-0" />
             <span>{error}</span>
           </div>
@@ -251,14 +251,14 @@ export default function ResumeUploadPage() {
                 <h3 className="font-display text-lg font-normal text-[var(--text-primary)]">
                   Drag &amp; Drop Batch Resumes (PDF)
                 </h3>
-                <p className="text-xs text-[var(--text-muted)]">
+                <p className="text-sm text-[var(--text-muted)]">
                   Select up to 100 candidate PDF resumes (max 5MB each). Magic bytes verified.
                 </p>
               </div>
 
               <button
                 type="button"
-                className="px-4 py-1.5 rounded-lg text-xs font-semibold text-[var(--accent-evidence)] bg-[var(--accent-evidence-soft)] border border-[var(--accent-evidence)]/25 group-hover:bg-[var(--accent-evidence)]/20 transition-colors"
+                className="px-4 py-1.5 rounded-lg text-sm font-semibold text-[var(--accent-evidence)] bg-[var(--accent-evidence-soft)] border border-[var(--accent-evidence)]/25 group-hover:bg-[var(--accent-evidence)]/20 transition-colors"
               >
                 Browse Files
               </button>
@@ -270,7 +270,7 @@ export default function ResumeUploadPage() {
                 <div className="flex justify-between items-center pb-3 border-b border-[var(--border-hairline)]">
                   <div className="flex items-center gap-2">
                     <FileText className="w-4 h-4 text-[var(--accent-evidence)]" />
-                    <span className="text-xs font-mono font-semibold text-[var(--text-primary)]">
+                    <span className="text-sm font-mono font-semibold text-[var(--text-primary)]">
                       Batch Ingestion Queue ({queue.length} files)
                     </span>
                   </div>
@@ -278,7 +278,7 @@ export default function ResumeUploadPage() {
                   <button
                     onClick={handleUploadAll}
                     disabled={isUploading || !consentConfirmed}
-                    className="px-4 py-1.5 rounded-lg text-xs font-semibold text-white transition-all shadow-sm hover:opacity-95 disabled:opacity-40 cursor-pointer"
+                    className="px-4 py-1.5 rounded-lg text-sm font-semibold text-white transition-all shadow-sm hover:opacity-95 disabled:opacity-40 cursor-pointer"
                     style={{
                       background: "linear-gradient(135deg, #0D9488 0%, #0284C7 100%)",
                     }}
@@ -291,15 +291,15 @@ export default function ResumeUploadPage() {
                   {queue.map((item) => (
                     <div
                       key={item.id}
-                      className="p-3 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--border-hairline)] dark:border-white/5 flex items-center justify-between gap-3 text-xs"
+                      className="p-3 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--border-hairline)] dark:border-white/5 flex items-center justify-between gap-3 text-sm"
                     >
                       <div className="flex items-center gap-3 truncate">
                         <FileText className="w-4 h-4 text-[var(--text-muted)] shrink-0" />
                         <div className="truncate">
-                          <div className="font-mono text-[var(--text-primary)] text-[11px] truncate">
+                          <div className="font-mono text-[var(--text-primary)] text-xs truncate">
                             {item.file.name}
                           </div>
-                          <div className="text-[10px] text-[var(--text-muted)]">
+                          <div className="text-xs text-[var(--text-muted)]">
                             {(item.file.size / (1024 * 1024)).toFixed(2)} MB
                           </div>
                         </div>
@@ -307,19 +307,19 @@ export default function ResumeUploadPage() {
 
                       <div className="flex items-center gap-3 shrink-0">
                         {item.status === "uploading" && (
-                          <div className="flex items-center gap-1.5 text-xs text-[var(--accent-evidence)]  font-mono">
+                          <div className="flex items-center gap-1.5 text-sm text-[var(--accent-evidence)]  font-mono">
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
                             <span>Uploading</span>
                           </div>
                         )}
                         {item.status === "success" && (
-                          <div className="flex items-center gap-1.5 text-xs text-[var(--accent-evidence)] font-mono">
+                          <div className="flex items-center gap-1.5 text-sm text-[var(--accent-evidence)] font-mono">
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span>Uploaded</span>
                           </div>
                         )}
                         {item.status === "error" && (
-                          <div className="flex items-center gap-1.5 text-xs text-orange-700 dark:text-orange-400 font-mono" title={item.errorMessage}>
+                          <div className="flex items-center gap-1.5 text-sm text-orange-700 dark:text-orange-400 font-mono" title={item.errorMessage}>
                             <AlertCircle className="w-3.5 h-3.5" />
                             <span>Failed</span>
                           </div>
@@ -359,17 +359,17 @@ export default function ResumeUploadPage() {
                   <h3 className="font-display text-lg font-normal text-[var(--text-primary)]">
                     DPDP Consent Affirmation
                   </h3>
-                  <div className="text-[11px] font-mono text-[var(--accent-evidence)] font-semibold">
+                  <div className="text-xs font-mono text-[var(--accent-evidence)] font-semibold">
                     DIGITAL PERSONAL DATA PROTECTION ACT 2023
                   </div>
                 </div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/50 border border-[var(--border-hairline)] dark:border-white/5 text-xs text-[var(--text-secondary)] leading-relaxed space-y-2">
+              <div className="p-3.5 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/50 border border-[var(--border-hairline)] dark:border-white/5 text-sm text-[var(--text-secondary)] leading-relaxed space-y-2">
                 <p>
                   As an authorized recruiter or placement officer, you must confirm that all candidates uploaded in this batch have given explicit, informed consent for their personal data to be processed for job matching.
                 </p>
-                <div className="text-[11px] font-mono text-[var(--text-secondary)]">
+                <div className="text-xs font-mono text-[var(--text-secondary)]">
                   Server will automatically timestamp consent and enforce org-wide 90-day retention purging.
                 </div>
               </div>
@@ -388,7 +388,7 @@ export default function ResumeUploadPage() {
                   onChange={(e) => setConsentConfirmed(e.target.checked)}
                   className="mt-0.5 w-4 h-4 rounded accent-[var(--accent-evidence)] cursor-pointer"
                 />
-                <span className="text-xs text-[var(--text-primary)] font-medium leading-snug">
+                <span className="text-sm text-[var(--text-primary)] font-medium leading-snug">
                   I confirm that all candidate resumes uploaded comply with DPDP Act (2023) consent requirements.
                 </span>
               </label>
@@ -399,7 +399,7 @@ export default function ResumeUploadPage() {
               <div className="flex justify-between items-center pb-3 border-b border-[var(--border-hairline)]">
                 <div className="flex items-center gap-2">
                   <Users className="w-4 h-4 text-[var(--accent-evidence)]" />
-                  <span className="text-xs font-mono font-semibold text-[var(--text-primary)]">
+                  <span className="text-sm font-mono font-semibold text-[var(--text-primary)]">
                     Ingested Resumes ({totalAvailableResumes})
                   </span>
                 </div>
@@ -407,7 +407,7 @@ export default function ResumeUploadPage() {
               </div>
 
               {existingResumes.length === 0 ? (
-                <div className="p-6 text-center text-xs text-[var(--text-muted)] font-mono">
+                <div className="p-6 text-center text-sm text-[var(--text-muted)] font-mono">
                   No resumes uploaded for this job yet. Add PDF files to begin.
                 </div>
               ) : (
@@ -415,13 +415,13 @@ export default function ResumeUploadPage() {
                   {existingResumes.map((res) => (
                     <div
                       key={res.id}
-                      className="p-2.5 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--border-hairline)] dark:border-white/5 flex items-center justify-between text-xs"
+                      className="p-2.5 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--border-hairline)] dark:border-white/5 flex items-center justify-between text-sm"
                     >
                       <div className="truncate pr-2">
-                        <div className="font-medium text-[var(--text-primary)] text-[11px] truncate">
+                        <div className="font-medium text-[var(--text-primary)] text-xs truncate">
                           {res.candidate_name || res.original_filename}
                         </div>
-                        <div className="text-[10px] text-[var(--text-muted)] font-mono">
+                        <div className="text-xs text-[var(--text-muted)] font-mono">
                           Consent stamped: {res.consent_timestamp ? new Date(res.consent_timestamp).toLocaleDateString() : "Valid"}
                         </div>
                       </div>
@@ -435,7 +435,7 @@ export default function ResumeUploadPage() {
                 <button
                   onClick={handleStartMatching}
                   disabled={isMatching}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-xs text-white transition-all shadow-md hover:opacity-95 active:scale-[0.99] disabled:opacity-50 cursor-pointer mt-2"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm text-white transition-all shadow-md hover:opacity-95 active:scale-[0.99] disabled:opacity-50 cursor-pointer mt-2"
                   style={{
                     background: "linear-gradient(135deg, #0D9488 0%, #0284C7 100%)",
                   }}

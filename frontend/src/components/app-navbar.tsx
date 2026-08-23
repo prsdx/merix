@@ -38,7 +38,7 @@ export function AppNavbar() {
           </Link>
 
           {user && (
-            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md text-xs bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--text-secondary)]">
+            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md text-sm bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--text-secondary)]">
               <Building2 className="w-3.5 h-3.5 text-[var(--brand-primary)]" />
               <span className="font-semibold">{user.org_name || "Organisation"}</span>
             </div>
@@ -54,7 +54,7 @@ export function AppNavbar() {
                 <Link
                   key={href}
                   href={href}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-all ${
                     active
                       ? "bg-[var(--brand-soft)] text-[var(--brand-primary)] border border-[var(--brand-border)]"
                       : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
@@ -67,7 +67,7 @@ export function AppNavbar() {
             })}
           </nav>
         ) : (
-          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-[var(--text-secondary)]">
+          <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-[var(--text-secondary)]">
             <a href="#how-it-works" className="hover:text-[var(--text-primary)] transition-colors">
               How It Works
             </a>
@@ -87,12 +87,12 @@ export function AppNavbar() {
 
           {isAuthenticated ? (
             <div className="flex items-center gap-2 sm:gap-3">
-              <span className="hidden sm:inline-block text-xs text-[var(--text-muted)] max-w-[130px] truncate font-mono">
+              <span className="hidden sm:inline-block text-sm text-[var(--text-muted)] max-w-[130px] truncate font-mono">
                 {user?.email}
               </span>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--accent-danger)] hover:bg-[var(--accent-danger-soft)] transition-all cursor-pointer"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--accent-danger)] hover:bg-[var(--accent-danger-soft)] transition-all cursor-pointer"
                 title="Sign out"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -103,13 +103,13 @@ export function AppNavbar() {
             <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
+                className="px-3.5 py-1.5 rounded-lg text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
               >
                 Sign In
               </Link>
               <Link
                 href="/signup"
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] shadow-xs transition-all"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] shadow-xs transition-all"
               >
                 <span>Get Started</span>
                 <ArrowRight className="w-3.5 h-3.5" />

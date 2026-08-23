@@ -38,10 +38,10 @@ export function TestimonialsCta() {
           >
             <div className="space-y-2">
               <div className={`text-2xl font-mono font-bold ${t.metricClass}`}>{t.metric}</div>
-              <div className="text-xs font-bold text-[var(--text-primary)]">{t.headline}</div>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
+              <div className="text-sm font-bold text-[var(--text-primary)]">{t.headline}</div>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
             </div>
-            <div className="pt-3 border-t border-[var(--border-hairline)] text-[11px] font-mono text-[var(--text-muted)]">
+            <div className="pt-3 border-t border-[var(--border-hairline)] text-xs font-mono text-[var(--text-muted)]">
               {t.author}
             </div>
           </div>
@@ -60,7 +60,7 @@ export function TestimonialsCta() {
           <h2 className="font-display text-3xl sm:text-4xl text-[var(--bg-canvas)]">
             Screen your next 100 resumes in minutes.
           </h2>
-          <p className="text-xs sm:text-sm text-[var(--bg-canvas)] opacity-80 leading-relaxed font-sans">
+          <p className="text-sm sm:text-base text-[var(--bg-canvas)] opacity-80 leading-relaxed font-sans">
             Merix never rejects silently — every candidate reaches you with the evidence to decide.
           </p>
         </div>
@@ -68,19 +68,19 @@ export function TestimonialsCta() {
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
           <Link
             href="/signup"
-            className="px-6 py-3.5 rounded-xl font-semibold text-xs text-[var(--text-primary)] bg-[var(--bg-canvas)] hover:bg-[var(--bg-elevated)] transition-transform hover:scale-[1.02] cursor-pointer"
+            className="px-6 py-3.5 rounded-xl font-semibold text-sm text-[var(--text-primary)] bg-[var(--bg-canvas)] hover:bg-[var(--bg-elevated)] transition-transform hover:scale-[1.02] cursor-pointer"
           >
             Create Free Organisation Account
           </Link>
           <Link
             href="/login"
-            className="px-5 py-3.5 rounded-xl font-semibold text-xs text-[var(--bg-canvas)] border border-[var(--border-subtle)] hover:bg-[var(--bg-canvas)]/10 transition-colors cursor-pointer"
+            className="px-5 py-3.5 rounded-xl font-semibold text-sm text-[var(--bg-canvas)] border border-[var(--border-subtle)] hover:bg-[var(--bg-canvas)]/10 transition-colors cursor-pointer"
           >
             Sign In to Pipeline
           </Link>
         </div>
 
-        <div className="text-[10px] font-mono opacity-60 pt-2">
+        <div className="text-xs font-mono opacity-60 pt-2">
           India DPDP Act (2023) Protected • Row-Level Multi-Tenant Isolation
         </div>
       </div>

@@ -23,7 +23,7 @@ export function StatCard({
           <div className="font-display text-2xl text-[var(--text-primary)] leading-none">
             {value}
           </div>
-          <div className="mt-1.5 font-mono text-[11px] uppercase tracking-wider text-[var(--text-muted)]">
+          <div className="mt-1.5 font-mono text-xs uppercase tracking-wider text-[var(--text-muted)]">
             {label}
           </div>
         </div>

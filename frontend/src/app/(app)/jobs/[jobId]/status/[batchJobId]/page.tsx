@@ -98,7 +98,7 @@ export default function BatchJobStatusPage() {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center">
         <Loader2 className="w-8 h-8 animate-spin text-[var(--accent-evidence)] mb-3" />
-        <span className="text-xs text-[var(--text-muted)] font-mono">Connecting to Evaluation Pipeline...</span>
+        <span className="text-sm text-[var(--text-muted)] font-mono">Connecting to Evaluation Pipeline...</span>
       </div>
     );
   }
@@ -118,7 +118,7 @@ export default function BatchJobStatusPage() {
         {/* Header */}
         <div className="flex justify-between items-center pb-4 border-b border-[var(--border-hairline)]">
           <div>
-            <div className="text-[11px] font-mono text-[var(--accent-evidence)]  uppercase tracking-wider font-semibold">
+            <div className="text-xs font-mono text-[var(--accent-evidence)]  uppercase tracking-wider font-semibold">
               EVALUATION PIPELINE STATUS
             </div>
             <h1 className="font-display text-2xl sm:text-3xl font-normal text-[var(--text-primary)]">
@@ -129,7 +129,7 @@ export default function BatchJobStatusPage() {
         </div>
 
         {error && (
-          <div className="p-4 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-[var(--accent-danger)] text-xs flex items-center gap-2.5">
+          <div className="p-4 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-[var(--accent-danger)] text-sm flex items-center gap-2.5">
             <AlertCircle className="w-4 h-4 text-[var(--accent-danger)] shrink-0" />
             <span>{error}</span>
           </div>
@@ -137,7 +137,7 @@ export default function BatchJobStatusPage() {
 
         {/* Backend-reported failure reason (e.g. all resumes failed processing) */}
         {isFailed && batchJob?.error_message && (
-          <div className="p-3.5 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-[var(--accent-danger)] text-xs flex items-center gap-2.5">
+          <div className="p-3.5 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-[var(--accent-danger)] text-sm flex items-center gap-2.5">
             <AlertTriangle className="w-4 h-4 text-[var(--accent-danger)] shrink-0" />
             <span>{batchJob.error_message}</span>
           </div>
@@ -171,7 +171,7 @@ export default function BatchJobStatusPage() {
                       : "Processing Candidates Against JD"}
                   </h2>
                 </div>
-                <div className="text-xs text-[var(--text-muted)] font-mono mt-0.5">
+                <div className="text-sm text-[var(--text-muted)] font-mono mt-0.5">
                   Batch ID: #{batchJobId.slice(0, 8)} • Status: {batchJob?.status.toUpperCase()}
                 </div>
               </div>
@@ -180,7 +180,7 @@ export default function BatchJobStatusPage() {
             {isFinished && (
               <Link
                 href={`/jobs/${jobId}/results`}
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-xs text-white transition-all shadow-md hover:opacity-95 active:scale-[0.98]"
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-sm text-white transition-all shadow-md hover:opacity-95 active:scale-[0.98]"
                 style={{
                   background: "linear-gradient(135deg, #0D9488 0%, #0284C7 100%)",
                 }}
@@ -194,7 +194,7 @@ export default function BatchJobStatusPage() {
           {/* Progress Bar & Percentage */}
           <div className="space-y-3">
             <div className="flex justify-between items-baseline">
-              <span className="text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)]">
+              <span className="text-sm font-mono uppercase tracking-wider text-[var(--text-secondary)]">
                 Extraction &amp; Deterministic Scoring Progress
               </span>
               <span className="font-mono text-2xl font-bold text-[var(--accent-evidence)] ">
@@ -209,7 +209,7 @@ export default function BatchJobStatusPage() {
               />
             </div>
 
-            <div className="flex justify-between text-xs font-mono text-[var(--text-muted)]">
+            <div className="flex justify-between text-sm font-mono text-[var(--text-muted)]">
               <span>{completed} of {total} candidate resumes processed</span>
               {isFinished && countdown !== null && (
                 <span className="text-[var(--accent-evidence)]  font-semibold">Redirecting in {countdown}s...</span>
@@ -219,7 +219,7 @@ export default function BatchJobStatusPage() {
 
           {/* Partial Failure Notice */}
           {failedCount > 0 && (
-            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-xs flex items-center gap-2.5">
+            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-sm flex items-center gap-2.5">
               <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
               <span>
                 {failedCount} resume(s) could not be parsed (corrupt PDF or encrypted). The remaining {completed - failedCount} resumes were evaluated successfully.
@@ -230,7 +230,7 @@ export default function BatchJobStatusPage() {
           {/* Itemized Candidate Ingestion Results Table */}
           {batchResults.length > 0 && (
             <div className="space-y-3 pt-2">
-              <div className="text-xs font-mono uppercase tracking-wider text-[var(--text-muted)]">
+              <div className="text-sm font-mono uppercase tracking-wider text-[var(--text-muted)]">
                 Processed Candidate Stream
               </div>
 
@@ -238,7 +238,7 @@ export default function BatchJobStatusPage() {
                 {batchResults.map((res, i) => (
                   <div
                     key={i}
-                    className="p-3 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--border-hairline)] dark:border-white/5 flex items-center justify-between text-xs font-mono"
+                    className="p-3 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--border-hairline)] dark:border-white/5 flex items-center justify-between text-sm font-mono"
                   >
                     <div className="flex items-center gap-2.5 truncate">
                       {res.status === "matched" ? (
@@ -254,7 +254,7 @@ export default function BatchJobStatusPage() {
                     <div className="flex items-center gap-3 shrink-0">
                       {res.status === "matched" && res.score !== undefined && (
                         <span
-                          className="px-2 py-0.5 rounded font-bold text-xs"
+                          className="px-2 py-0.5 rounded font-bold text-sm"
                           style={{
                             background:
                               res.score >= 80
@@ -274,7 +274,7 @@ export default function BatchJobStatusPage() {
                         </span>
                       )}
                       {res.status === "failed" && (
-                        <span className="text-[10px] text-orange-600 dark:text-orange-400 truncate max-w-[160px]">
+                        <span className="text-xs text-orange-600 dark:text-orange-400 truncate max-w-[160px]">
                           {res.error || "Parsing failed"}
                         </span>
                       )}

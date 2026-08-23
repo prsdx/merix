@@ -78,27 +78,27 @@ export default function SignupPage() {
           {/* Left Branding / Trust Pane */}
           <div className="hidden lg:block lg:col-span-5 space-y-6">
             <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold text-[var(--brand-primary)] bg-[var(--brand-soft)]  border border-[var(--brand-border)]">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-mono font-semibold text-[var(--brand-primary)] bg-[var(--brand-soft)]  border border-[var(--brand-border)]">
                 <span>Enterprise Onboarding</span>
               </div>
               <h1 className="font-sans text-3xl font-bold text-[var(--text-primary)] leading-tight tracking-tight">
                 Hire smarter. Stay compliant.
               </h1>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                 Create a dedicated organization workspace for your campus placement team, tech staffing agency, or enterprise hiring pipeline.
               </p>
             </div>
 
             <div className="space-y-3 pt-2">
-              <div className="flex items-start gap-2.5 text-xs text-[var(--text-secondary)]">
+              <div className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
                 <CheckCircle2 className="w-4 h-4 text-[var(--brand-primary)] shrink-0 mt-0.5" />
                 <span>Deterministic 70/20/10 scoring with verified evidence quotes</span>
               </div>
-              <div className="flex items-start gap-2.5 text-xs text-[var(--text-secondary)]">
+              <div className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
                 <ShieldCheck className="w-4 h-4 text-[var(--accent-evidence)] shrink-0 mt-0.5" />
                 <span>India DPDP Act (2023) consent tracking &amp; auto-retention</span>
               </div>
-              <div className="flex items-start gap-2.5 text-xs text-[var(--text-secondary)]">
+              <div className="flex items-start gap-2.5 text-sm text-[var(--text-secondary)]">
                 <CheckCircle2 className="w-4 h-4 text-[var(--brand-primary)] shrink-0 mt-0.5" />
                 <span>Multi-tenant Row-Level Security tenant isolation</span>
               </div>
@@ -114,13 +114,13 @@ export default function SignupPage() {
             <div className="p-8 md:p-10 rounded-3xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)] shadow-xl">
               <div className="mb-6 space-y-1">
                 <h2 className="font-sans text-2xl font-bold text-[var(--text-primary)]">Create Account</h2>
-                <p className="text-xs text-[var(--text-secondary)]">
+                <p className="text-sm text-[var(--text-secondary)]">
                   Choose your signup method to get started in seconds.
                 </p>
               </div>
 
               {error && (
-                <div className="mb-5 p-3.5 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-[var(--accent-danger)] text-xs flex items-center gap-2.5">
+                <div className="mb-5 p-3.5 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-[var(--accent-danger)] text-sm flex items-center gap-2.5">
                   <AlertCircle className="w-4 h-4 shrink-0 text-[var(--accent-danger)]" />
                   <span>{error}</span>
                 </div>
@@ -130,7 +130,7 @@ export default function SignupPage() {
               <button
                 type="button"
                 onClick={loginWithGoogle}
-                className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] font-semibold text-xs transition-all shadow-xs hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
+                className="w-full flex items-center justify-center gap-3 py-3 px-4 rounded-xl border border-[var(--border-subtle)] bg-[var(--bg-surface)] text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] font-semibold text-sm transition-all shadow-xs hover:scale-[1.01] active:scale-[0.99] cursor-pointer"
               >
                 <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
                   <path
@@ -158,14 +158,14 @@ export default function SignupPage() {
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-[var(--border-hairline)]" />
                 </div>
-                <span className="relative px-3 bg-[var(--bg-subtle)] text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
+                <span className="relative px-3 bg-[var(--bg-subtle)] text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">
                   or register with email
                 </span>
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] font-semibold">
+                  <label className="block text-sm font-mono uppercase tracking-wider text-[var(--text-secondary)] font-semibold">
                     Organisation Name
                   </label>
                   <div className="relative">
@@ -176,13 +176,13 @@ export default function SignupPage() {
                       onChange={(e) => setOrgName(e.target.value)}
                       placeholder="e.g. Apex Staffing / IIT Placement Cell"
                       required
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--brand-primary)] focus:outline-none transition-colors"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--brand-primary)] focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] font-semibold">
+                  <label className="block text-sm font-mono uppercase tracking-wider text-[var(--text-secondary)] font-semibold">
                     Work Email Address
                   </label>
                   <div className="relative">
@@ -193,13 +193,13 @@ export default function SignupPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="recruiter@organisation.com"
                       required
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--brand-primary)] focus:outline-none transition-colors"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--brand-primary)] focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-[var(--text-secondary)] font-semibold">
+                  <label className="block text-sm font-mono uppercase tracking-wider text-[var(--text-secondary)] font-semibold">
                     Password (min. 8 characters)
                   </label>
                   <div className="relative">
@@ -211,7 +211,7 @@ export default function SignupPage() {
                       placeholder="••••••••••••"
                       required
                       minLength={8}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--brand-primary)] focus:outline-none transition-colors"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:border-[var(--brand-primary)] focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -219,7 +219,7 @@ export default function SignupPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-xs text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)] shadow-md shadow-md/25 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 mt-2 cursor-pointer"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-sm text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] dark:bg-[var(--brand-primary)] dark:hover:bg-[var(--brand-primary)] shadow-md shadow-md/25 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 mt-2 cursor-pointer"
                 >
                   {loading ? (
                     <>
@@ -235,7 +235,7 @@ export default function SignupPage() {
                 </button>
               </form>
 
-              <div className="mt-6 pt-5 border-t border-[var(--border-hairline)] text-center text-xs text-[var(--text-secondary)]">
+              <div className="mt-6 pt-5 border-t border-[var(--border-hairline)] text-center text-sm text-[var(--text-secondary)]">
                 Already registered?{" "}
                 <Link href="/login" className="text-[var(--brand-primary)] font-semibold hover:underline">
                   Sign In
@@ -247,7 +247,7 @@ export default function SignupPage() {
       </main>
 
       {/* Footer */}
-      <footer className="w-full max-w-6xl mx-auto py-4 text-center text-[11px] font-mono text-[var(--text-muted)]">
+      <footer className="w-full max-w-6xl mx-auto py-4 text-center text-xs font-mono text-[var(--text-muted)]">
         India DPDP Act (2023) Protected • Row-Level Tenant Isolation
       </footer>
     </div>

@@ -12,7 +12,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       ref={ref}
       className={cn(
         "w-full rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)]",
-        "text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)]",
+        "text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)]",
         "focus:outline-none focus:border-[var(--brand-primary)] transition-colors",
         "px-4 py-2",
         className
@@ -36,7 +36,7 @@ export function Label({
     <label
       htmlFor={htmlFor}
       className={cn(
-        "block text-[11px] font-semibold font-mono uppercase tracking-wider text-[var(--text-secondary)] mb-1.5",
+        "block text-xs font-semibold font-mono uppercase tracking-wider text-[var(--text-secondary)] mb-1.5",
         className
       )}
     >
