@@ -109,11 +109,29 @@ async def test_wrong_audience_returns_401(client, make_org_user):
     assert r.status_code == 401, r.text
 
 
-async def test_token_for_unknown_user_returns_401(client):
-    # Validly signed token, but no such user profile exists.
-    r = client.get(f"/api/jobs/{uuid.uuid4()}", headers=auth_headers(uuid.uuid4()))
-    assert r.status_code == 401, r.text
-    assert "no account" in r.json()["detail"]
+async def test_token_for_unknown_user_is_auto_provisioned(client):
+    # Validly signed token, but no such user profile exists yet. Since the
+    # Google OAuth rebuild (auto-provisioning), get_current_user creates the
+    # missing user + organisation on first request instead of rejecting, so
+    # the token authenticates and the request proceeds (job lookup -> 404).
+    unknown_user_id = uuid.uuid4()
+    try:
+        r = client.get(f"/api/jobs/{uuid.uuid4()}", headers=auth_headers(unknown_user_id))
+        assert r.status_code == 404, r.text  # authenticated, but job doesn't exist
+        assert "not found" in r.json()["detail"]
+
+        async with AsyncSessionLocal() as session:
+            user = await session.get(User, unknown_user_id)
+            assert user is not None, "expected auto-provisioned user profile"
+    finally:
+        # Cascade-clean the auto-provisioned org + user from the shared DB.
+        async with AsyncSessionLocal() as session:
+            user = await session.get(User, unknown_user_id)
+            if user is not None:
+                org = await session.get(Organisation, user.org_id)
+                if org is not None:
+                    await session.delete(org)
+                    await session.commit()
 
 
 # --- Authenticated happy path -----------------------------------------------
