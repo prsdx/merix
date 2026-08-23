@@ -59,10 +59,12 @@ async def run_batch_match_background(
 
         batch_results: list[dict] = []
         completed = 0
+        succeeded = 0
 
         for resume in resumes:
             try:
                 await pipeline.run_match_for_resume(session, llm, job, resume)
+                succeeded += 1
                 batch_results.append(
                     {
                         "resume_id": str(resume.id),
@@ -88,14 +90,29 @@ async def run_batch_match_background(
             await session.commit()
 
         batch_job = await session.get(BatchJob, batch_job_id)
-        batch_job.status = "completed"
+        if resumes and succeeded == 0:
+            # Every resume failed: reporting "completed" with an empty shortlist
+            # hides the outage behind a success state. Surface it as failed so
+            # the frontend stops showing a green path to zero results.
+            batch_job.status = "failed"
+            batch_job.error_message = (
+                f"All {len(resumes)} resume(s) failed processing — see batch_results for per-resume errors"
+            )
+            logger.error("batch_match_all_failed job_id=%s resumes=%d", job_id, len(resumes))
+        else:
+            batch_job.status = "completed"
         await session.commit()
 
-        logger.info("batch_match_completed job_id=%s resumes=%d", job_id, completed)
+        logger.info("batch_match_completed job_id=%s resumes=%d succeeded=%d", job_id, completed, succeeded)
 
     except Exception as exc:
         logger.exception("batch_match_failed job_id=%s", job_id)
         try:
+            # The session may be sitting in a failed transaction (e.g. the
+            # exception came out of a commit); roll back before reusing it to
+            # mark the failure, otherwise the marking itself fails silently
+            # and the job stays "running" until the stale timeout.
+            await session.rollback()
             batch_job = await session.get(BatchJob, batch_job_id)
             if batch_job is not None:
                 batch_job.status = "failed"

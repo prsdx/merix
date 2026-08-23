@@ -40,17 +40,30 @@ class GroqLLMClient:
             max_tokens=max_tokens,
         )
         usage = response.usage
+        choice = response.choices[0] if response.choices else None
         result = LLMResult(
-            text=response.choices[0].message.content or "",
+            text=(choice.message.content or "") if choice else "",
             prompt_tokens=usage.prompt_tokens if usage else 0,
             completion_tokens=usage.completion_tokens if usage else 0,
+            finish_reason=getattr(choice, "finish_reason", None) if choice else None,
         )
         logger.info(
-            "llm_call model=%s prompt_tokens=%d completion_tokens=%d",
+            "llm_call model=%s prompt_tokens=%d completion_tokens=%d finish_reason=%s",
             self._model,
             result.prompt_tokens,
             result.completion_tokens,
+            result.finish_reason,
         )
+        if result.truncated:
+            # Truncation is the root cause of malformed-JSON extraction failures
+            # and silently-clipped rationales; make it visible in every log.
+            logger.warning(
+                "llm_response_truncated model=%s completion_tokens=%d "
+                "(hit max_tokens=%d — output was cut off mid-generation)",
+                self._model,
+                result.completion_tokens,
+                max_tokens,
+            )
         return result
 
 

@@ -135,6 +135,14 @@ export default function BatchJobStatusPage() {
           </div>
         )}
 
+        {/* Backend-reported failure reason (e.g. all resumes failed processing) */}
+        {isFailed && batchJob?.error_message && (
+          <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-800 dark:text-rose-200 text-xs flex items-center gap-2.5">
+            <AlertTriangle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
+            <span>{batchJob.error_message}</span>
+          </div>
+        )}
+
         {/* Main Status & Progress Panel */}
         <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-white/10 space-y-6">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200 dark:border-white/10">
