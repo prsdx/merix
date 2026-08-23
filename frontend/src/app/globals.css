@@ -1,10 +1,29 @@
-@tailwind base;
+﻿@tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* ============================================================
+   MERIX DESIGN TOKENS — v10 (Editorial Authority direction)
+   Palette: blue-black bg / warm off-white text / teal-cyan data
+   Typography: Inter (UI) + DM Serif Display (headlines) + JetBrains Mono (data)
+   ============================================================ */
+
 :root {
-  --background: #050505;
-  --foreground: #f4f4f5;
+  --background: #070709;
+  --foreground: #E8E6E1;
+
+  /* Brand palette */
+  --color-data: #00D4AA;          /* teal-cyan: data accents, score numbers */
+  --color-data-dim: #00D4AA33;    /* teal-cyan 20%: subtle backgrounds */
+  --color-compliance: #22C55E;    /* emerald: DPDP / compliance signals */
+  --color-compliance-dim: #22C55E1A; /* emerald 10% */
+  --color-score-high: #22C55E;    /* 80+ scores */
+  --color-score-mid: #F59E0B;     /* 60-79 scores */
+  --color-score-low: #F97316;     /* <60 scores / gaps */
+  --color-interactive: #818CF8;   /* indigo-400: interactive / focus accent */
+  --color-surface: rgba(255,255,255,0.03);
+  --color-border: rgba(255,255,255,0.09);
+  --color-border-strong: rgba(255,255,255,0.15);
 }
 
 html {
@@ -20,52 +39,135 @@ body {
   overflow-x: hidden;
 }
 
+/* ---- Typography helpers ---- */
+.font-display {
+  font-family: "DM Serif Display", Georgia, serif;
+}
+
+.font-data {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* ---- Selection ---- */
 ::selection {
-  background: rgba(139, 92, 246, 0.4);
+  background: rgba(0, 212, 170, 0.25);
   color: #ffffff;
 }
 
-/* Custom Glassmorphic Utilities (v7 Apple Liquid Glass) */
+/* ---- Glassmorphic panels ---- */
 .glass-panel {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--color-surface);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 0 rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 8px 32px 0 rgba(0,0,0,0.55), inset 0 1px 0 0 rgba(255,255,255,0.10);
 }
 
 .glass-panel-hover {
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .glass-panel-hover:hover {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.2);
+  background: rgba(255,255,255,0.05);
+  border-color: rgba(255,255,255,0.18);
+  box-shadow: 0 16px 48px 0 rgba(0,0,0,0.65), inset 0 1px 0 0 rgba(255,255,255,0.18);
   transform: translateY(-2px);
 }
 
-/* Custom subtle scrollbar */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+/* Data surface — teal tinted */
+.data-panel {
+  background: rgba(0,212,170,0.04);
+  border: 1px solid rgba(0,212,170,0.15);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
-::-webkit-scrollbar-track {
-  background: #050505;
+/* Compliance surface — emerald tinted */
+.compliance-panel {
+  background: rgba(34,197,94,0.05);
+  border: 1px solid rgba(34,197,94,0.2);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 }
 
+/* ---- Score fill animation ---- */
+@keyframes score-fill {
+  from { width: 0%; }
+  to { width: var(--score-width); }
+}
+
+.score-bar-fill {
+  animation: score-fill 1.1s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--score-delay, 0.2s);
+}
+
+/* ---- Scroll reveal ---- */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal-on-scroll {
+  animation: reveal-up 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ---- Custom scrollbar ---- */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--background); }
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255,255,255,0.12);
   border-radius: 9999px;
 }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.25); }
 
-::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+/* ---- Focus ring ---- */
+:focus-visible {
+  outline: 2px solid var(--color-data);
+  outline-offset: 2px;
 }
 
-/* Focus outline */
-:focus-visible {
-  outline: 2px solid rgba(139, 92, 246, 0.8);
-  outline-offset: 2px;
+/* ---- Glow utilities ---- */
+.glow-teal {
+  box-shadow: 0 0 20px rgba(0,212,170,0.2), 0 0 60px rgba(0,212,170,0.08);
+}
+
+.glow-emerald {
+  box-shadow: 0 0 20px rgba(34,197,94,0.2), 0 0 60px rgba(34,197,94,0.08);
+}
+
+/* ---- Audit trail row ---- */
+.audit-row {
+  border-left: 2px solid rgba(0,212,170,0.3);
+  padding-left: 1rem;
+  position: relative;
+}
+
+.audit-row::before {
+  content: "";
+  position: absolute;
+  left: -4.5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-data);
+}
+
+/* ---- Evidence quote ---- */
+.evidence-quote {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.72rem;
+  line-height: 1.6;
+  color: rgba(232,230,225,0.65);
+  background: rgba(0,212,170,0.04);
+  border-left: 2px solid rgba(0,212,170,0.35);
+  padding: 0.5rem 0.75rem;
+  border-radius: 0 4px 4px 0;
 }

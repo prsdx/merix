@@ -1,45 +1,38 @@
-"use client";
+﻿"use client";
 
-import { motion } from "framer-motion";
+import React from "react";
 
+/**
+ * LiquidBackground — ambient atmospheric orbs.
+ * v10: Updated from violet/indigo to teal-cyan/emerald
+ * to match new palette (editorial authority direction).
+ */
 export function LiquidBackground() {
   return (
-    <div className="fixed inset-0 z-0 overflow-hidden bg-[#050505] pointer-events-none">
-      {/* Dynamic colorful glowing orbs (v7 Apple Liquid Glass aesthetic) */}
-      <motion.div
-        animate={{
-          x: [0, 60, -30, 0],
-          y: [0, -60, 30, 0],
-          scale: [1, 1.08, 0.92, 1],
-        }}
-        transition={{ duration: 22, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-[8%] left-[12%] w-[45vw] h-[45vw] bg-violet-600/20 rounded-full blur-[120px]"
+    <div className="fixed inset-0 z-0 overflow-hidden pointer-events-none" aria-hidden="true">
+      {/* Primary teal orb — top-right */}
+      <div
+        className="absolute -top-40 -right-40 w-[600px] h-[600px] rounded-full opacity-[0.06] blur-[120px]"
+        style={{ background: "radial-gradient(circle, #00D4AA 0%, transparent 70%)" }}
       />
-      <motion.div
-        animate={{
-          x: [0, -70, 40, 0],
-          y: [0, 70, -40, 0],
-          scale: [1, 1.15, 0.85, 1],
-        }}
-        transition={{ duration: 28, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-[35%] right-[8%] w-[40vw] h-[40vw] bg-indigo-600/18 rounded-full blur-[130px]"
+      {/* Secondary emerald orb — bottom-left */}
+      <div
+        className="absolute -bottom-32 -left-32 w-[500px] h-[500px] rounded-full opacity-[0.05] blur-[100px]"
+        style={{ background: "radial-gradient(circle, #22C55E 0%, transparent 70%)" }}
       />
-      <motion.div
-        animate={{
-          x: [0, 40, -50, 0],
-          y: [0, 80, -30, 0],
-          scale: [1, 0.95, 1.05, 1],
-        }}
-        transition={{ duration: 25, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute -bottom-[10%] left-[30%] w-[50vw] h-[50vw] bg-blue-600/15 rounded-full blur-[140px]"
+      {/* Iris accent orb — center-left */}
+      <div
+        className="absolute top-1/2 -left-48 w-[350px] h-[350px] rounded-full opacity-[0.04] blur-[80px]"
+        style={{ background: "radial-gradient(circle, #818CF8 0%, transparent 70%)" }}
       />
-      
-      {/* Subtle Noise Texture */}
-      <div 
-        className="absolute inset-0 opacity-[0.035] mix-blend-overlay pointer-events-none" 
-        style={{ 
-          backgroundImage: 'url("data:image/svg+xml,%3Csvg viewBox=%220 0 200 200%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cfilter id=%22noiseFilter%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.8%22 numOctaves=%223%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22100%25%22 height=%22100%25%22 filter=%22url(%23noiseFilter)%22/%3E%3C/svg%3E")' 
-        }} 
+      {/* Subtle grid texture overlay */}
+      <div
+        className="absolute inset-0 opacity-[0.015]"
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(232,230,225,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(232,230,225,0.5) 1px, transparent 1px)",
+          backgroundSize: "48px 48px",
+        }}
       />
     </div>
   );

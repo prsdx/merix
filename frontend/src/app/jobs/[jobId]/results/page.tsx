@@ -8,12 +8,13 @@ import { api } from "@/lib/api";
 import { Job, MatchResult, ShortlistResponse } from "@/lib/types";
 import { AppNavbar } from "@/components/app-navbar";
 import { DPDPBadge } from "@/components/dpdp-badge";
+import { ScoreRing } from "@/components/score-ring";
 import {
   Sparkles,
   Download,
   Search,
-  Filter,
   ArrowRight,
+  ArrowLeft,
   CheckCircle2,
   XCircle,
   ShieldCheck,
@@ -24,6 +25,7 @@ import {
   Layers,
   ChevronRight,
   SlidersHorizontal,
+  FileSpreadsheet,
 } from "lucide-react";
 
 export default function RankedResultsPage() {
@@ -78,232 +80,261 @@ export default function RankedResultsPage() {
 
   const exportUrl = api.getExportUrl(jobId, minScoreFilter);
 
-  const getScoreBadgeClass = (score: number) => {
-    if (score >= 80) return "text-emerald-400 bg-emerald-500/10 border-emerald-500/30";
-    if (score >= 60) return "text-amber-300 bg-amber-500/10 border-amber-500/30";
-    return "text-zinc-400 bg-zinc-500/10 border-zinc-500/30";
-  };
+  if (authLoading || (loading && !job)) {
+    return (
+      <div className="min-h-screen flex flex-col justify-center items-center">
+        <Loader2 className="w-8 h-8 animate-spin text-[#00D4AA] mb-3" />
+        <span className="text-xs text-[#A8A5A0] font-mono">Loading Ranked Shortlist...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-16">
       <AppNavbar />
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
-        {/* Header Breadcrumb & Actions */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-white/10">
-          <div>
-            <div className="flex items-center gap-2 text-xs text-zinc-400 mb-1">
-              <Link href="/dashboard" className="hover:text-white transition-colors">
-                Jobs
-              </Link>
-              <span>/</span>
-              <span className="text-zinc-200 font-medium truncate max-w-xs">{job?.title || "Job"}</span>
-              <span>/</span>
-              <span className="text-emerald-400 font-medium">Ranked Results</span>
+      <main className="max-w-7xl mx-auto px-4 space-y-6">
+        {/* Breadcrumb & Header */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-white/10">
+          <div className="space-y-1">
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center gap-1.5 text-xs text-[#A8A5A0] hover:text-[#E8E6E1] transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Back to Dashboard</span>
+            </Link>
+            <div className="flex items-center gap-2">
+              <h1 className="font-display text-2xl sm:text-3xl font-bold text-[#E8E6E1]">
+                {job?.title}
+              </h1>
+              <DPDPBadge variant="row" />
             </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white flex items-center gap-2.5">
-              <Sparkles className="w-6 h-6 text-violet-400" />
-              <span>Explainable Shortlist ({matches.length} Candidates)</span>
-            </h1>
+            <p className="text-xs text-[#A8A5A0]">
+              Ranked shortlist based on 70/20/10 deterministic skill comparison.
+            </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Link
               href={`/jobs/${jobId}/upload`}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-300 bg-white/5 hover:bg-white/10 border border-white/10 transition-colors"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium text-[#E8E6E1] bg-white/[0.04] border border-white/10 hover:border-white/20 transition-all"
             >
-              <UploadCloud className="w-4 h-4 text-zinc-400" />
-              <span>Upload More</span>
+              <UploadCloud className="w-3.5 h-3.5 text-[#00D4AA]" />
+              <span>Add More Resumes</span>
             </Link>
 
             <a
               href={exportUrl}
-              download
-              className="flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-xs text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-lg shadow-violet-600/30 transition-all hover:scale-[1.02]"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-[#070709] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md"
+              style={{
+                background: "linear-gradient(135deg, #00D4AA 0%, #00B4D8 100%)",
+              }}
             >
-              <Download className="w-4 h-4" />
-              <span>Export Shortlist CSV</span>
+              <FileSpreadsheet className="w-3.5 h-3.5" />
+              <span>Export CSV Shortlist</span>
             </a>
           </div>
         </div>
 
         {error && (
-          <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/25 flex items-start gap-3 text-xs text-rose-300">
-            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs flex items-center gap-2.5">
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
-        {/* Filter & Search Bar */}
-        <div className="glass-panel p-4 rounded-2xl border border-white/10 flex flex-col sm:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-2 w-full sm:w-auto overflow-x-auto pb-1 sm:pb-0">
-            <span className="text-xs font-medium text-zinc-400 flex items-center gap-1.5 shrink-0 pl-1">
-              <SlidersHorizontal className="w-3.5 h-3.5 text-zinc-500" />
-              <span>Threshold:</span>
+        {/* Filter Toolbar */}
+        <div className="glass-panel p-4 rounded-2xl border border-white/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          {/* Threshold Filter Buttons */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs font-mono uppercase tracking-wider text-[#A8A5A0] mr-1">
+              Filter by Fit:
             </span>
-
-            <button
-              onClick={() => setMinScoreFilter(undefined)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shrink-0 ${
-                minScoreFilter === undefined
-                  ? "bg-violet-600 text-white shadow-sm"
-                  : "bg-white/5 text-zinc-400 hover:text-white"
-              }`}
-            >
-              All Scores
-            </button>
-            <button
-              onClick={() => setMinScoreFilter(80)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shrink-0 ${
-                minScoreFilter === 80
-                  ? "bg-emerald-600 text-white shadow-sm"
-                  : "bg-white/5 text-zinc-400 hover:text-white"
-              }`}
-            >
-              High Fit (80+)
-            </button>
-            <button
-              onClick={() => setMinScoreFilter(70)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shrink-0 ${
-                minScoreFilter === 70
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "bg-white/5 text-zinc-400 hover:text-white"
-              }`}
-            >
-              Good Fit (70+)
-            </button>
-            <button
-              onClick={() => setMinScoreFilter(60)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors shrink-0 ${
-                minScoreFilter === 60
-                  ? "bg-amber-600 text-white shadow-sm"
-                  : "bg-white/5 text-zinc-400 hover:text-white"
-              }`}
-            >
-              Review (60+)
-            </button>
+            {[
+              { label: "All Candidates", value: undefined },
+              { label: "80+ Strong Fit", value: 80 },
+              { label: "70+ Good Fit", value: 70 },
+              { label: "60+ Moderate Fit", value: 60 },
+            ].map((f) => {
+              const active = minScoreFilter === f.value;
+              return (
+                <button
+                  key={f.label}
+                  onClick={() => setMinScoreFilter(f.value)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                    active
+                      ? "bg-[#00D4AA] text-[#070709] font-bold shadow-md"
+                      : "bg-white/[0.04] text-[#A8A5A0] hover:text-[#E8E6E1] border border-white/5"
+                  }`}
+                >
+                  {f.label}
+                </button>
+              );
+            })}
           </div>
 
-          <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-zinc-500" />
+          {/* Search Box */}
+          <div className="relative w-full md:w-64">
+            <Search className="w-4 h-4 text-[#A8A5A0] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Filter by candidate or skill..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl bg-black/40 border border-white/10 text-white placeholder-zinc-500 text-xs focus:outline-none focus:border-violet-500 transition-all"
+              placeholder="Search candidate or skill..."
+              className="w-full pl-9 pr-4 py-1.5 rounded-xl bg-black/40 border border-white/10 text-xs text-[#E8E6E1] placeholder:text-[#A8A5A0]/50 focus:border-[#00D4AA] focus:outline-none transition-colors"
             />
           </div>
         </div>
 
-        {/* Explainable Ranked Candidates List */}
-        {loading ? (
-          <div className="text-center py-20">
-            <Loader2 className="w-8 h-8 animate-spin text-violet-400 mx-auto mb-3" />
-            <span className="text-xs text-zinc-400 font-mono">Loading Explainable Match Results...</span>
-          </div>
-        ) : filteredMatches.length === 0 ? (
-          <div className="glass-panel rounded-3xl p-12 text-center max-w-lg mx-auto border border-white/10 space-y-4">
-            <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center mx-auto text-zinc-400">
-              <Filter className="w-6 h-6" />
-            </div>
-            <h3 className="text-base font-bold text-white">No Matching Candidates Found</h3>
-            <p className="text-xs text-zinc-400">
-              No candidates meet the score threshold of {minScoreFilter || 0}+ with the current search term.
-            </p>
-            <button
-              onClick={() => {
-                setMinScoreFilter(undefined);
-                setSearchTerm("");
-              }}
-              className="px-4 py-2 rounded-xl text-xs font-semibold bg-white/10 hover:bg-white/15 text-white transition-colors"
-            >
-              Reset Filters
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredMatches.map((match, index) => {
-              return (
-                <div
-                  key={match.id}
-                  className="glass-panel glass-panel-hover rounded-2xl p-5 md:p-6 border border-white/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
+        {/* Ranked Candidate Data Table */}
+        <div className="glass-panel rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+          {filteredMatches.length === 0 ? (
+            <div className="p-12 text-center space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-white/[0.04] border border-white/10 flex items-center justify-center text-[#A8A5A0] mx-auto">
+                <FileText className="w-6 h-6" />
+              </div>
+              <div className="space-y-1">
+                <h3 className="font-display text-lg font-bold text-[#E8E6E1]">
+                  No Candidates Match Filter Criteria
+                </h3>
+                <p className="text-xs text-[#A8A5A0]">
+                  {minScoreFilter
+                    ? `No candidates scored above ${minScoreFilter}. Try resetting the filter.`
+                    : "No resume evaluations found. Upload candidate resumes to generate scores."}
+                </p>
+              </div>
+              {minScoreFilter && (
+                <button
+                  onClick={() => setMinScoreFilter(undefined)}
+                  className="px-4 py-2 rounded-xl text-xs font-semibold text-[#00D4AA] bg-[#00D4AA]/10 border border-[#00D4AA]/25 hover:bg-[#00D4AA]/20 transition-colors"
                 >
-                  {/* Left: Rank, Name, Skills & Verbatim Rationale Preview */}
-                  <div className="space-y-3 flex-1 min-w-0">
-                    <div className="flex items-center gap-3">
-                      <span className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-xs font-bold font-mono text-zinc-300">
-                        {index + 1}
-                      </span>
-                      <h3 className="text-base font-bold text-white tracking-tight truncate">
-                        {match.candidate_name || `Candidate #${match.resume_id.substring(0, 8)}`}
-                      </h3>
-                      <DPDPBadge variant="pill" className="text-[10px] py-0.5 px-2" />
-                    </div>
-
-                    {/* AI Rationale Preview */}
-                    <p className="text-xs text-zinc-300 bg-black/40 rounded-xl p-3 border border-white/5 leading-relaxed">
-                      <strong className="text-violet-300 font-medium">Explainable Grounding:</strong>{" "}
-                      {match.rationale}
-                    </p>
-
-                    {/* Matched & Missing Skills at a Glance (No Hidden Clicks) */}
-                    <div className="flex flex-wrap items-center gap-2 pt-1">
-                      {match.matched_skills.slice(0, 4).map((skill, i) => (
-                        <span
-                          key={i}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium bg-emerald-500/10 border border-emerald-500/25 text-emerald-300"
-                        >
-                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                          <span>{skill}</span>
-                        </span>
-                      ))}
-
-                      {match.missing_skills.slice(0, 2).map((skill, i) => (
-                        <span
-                          key={i}
-                          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium bg-rose-500/10 border border-rose-500/25 text-rose-300"
-                        >
-                          <XCircle className="w-3 h-3 text-rose-400" />
-                          <span>Missing: {skill}</span>
-                        </span>
-                      ))}
-
-                      {match.matched_skills.length > 4 && (
-                        <span className="text-[10px] text-zinc-500 font-mono">
-                          +{match.matched_skills.length - 4} more skills
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Right: Score Box & Detailed Drilldown Button */}
-                  <div className="flex md:flex-col items-center md:items-end justify-between w-full md:w-auto gap-3 pt-3 md:pt-0 border-t md:border-t-0 border-white/10 shrink-0">
-                    <div className="text-left md:text-right">
-                      <div
-                        className={`text-2xl md:text-3xl font-bold font-mono px-3 py-1 rounded-xl border ${getScoreBadgeClass(
-                          match.score
-                        )}`}
-                      >
-                        {match.score}
-                        <span className="text-xs opacity-60">/100</span>
-                      </div>
-                    </div>
-
-                    <Link
-                      href={`/jobs/${jobId}/candidates/${match.id}`}
-                      className="flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-md shadow-violet-600/20 transition-all hover:scale-[1.02]"
+                  Clear Threshold Filter
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-white/10 bg-black/40 text-[#A8A5A0] font-mono">
+                    <th className="p-4 w-16 text-center">Rank</th>
+                    <th className="p-4 w-1/4">Candidate Details</th>
+                    <th className="p-4 w-28 text-center">Match Score</th>
+                    <th className="p-4 w-1/3">Matched Skills (Verified)</th>
+                    <th className="p-4">Identified Gaps</th>
+                    <th className="p-4 text-right">Details</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/5 font-sans">
+                  {filteredMatches.map((m, idx) => (
+                    <tr
+                      key={m.id}
+                      className="hover:bg-white/[0.02] transition-colors group cursor-pointer"
+                      onClick={() => router.push(`/jobs/${jobId}/candidates/${m.id}`)}
                     >
-                      <span>Full Drilldown</span>
-                      <ChevronRight className="w-4 h-4" />
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
+                      {/* Rank */}
+                      <td className="p-4 text-center font-mono font-bold text-sm text-[#A8A5A0]">
+                        #{idx + 1}
+                      </td>
+
+                      {/* Candidate Name & Info */}
+                      <td className="p-4">
+                        <div className="font-semibold text-sm text-[#E8E6E1] group-hover:text-[#00D4AA] transition-colors">
+                          {m.candidate_name || `Candidate #${m.id.slice(0, 6)}`}
+                        </div>
+                        <div className="text-[11px] font-mono text-[#A8A5A0] mt-0.5 flex items-center gap-1.5">
+                          <DPDPBadge variant="row" />
+                          <span>Evaluation #MX-{m.id.slice(0, 5)}</span>
+                        </div>
+                      </td>
+
+                      {/* Score Ring Centerpiece */}
+                      <td className="p-4 text-center">
+                        <div className="inline-flex justify-center">
+                          <ScoreRing score={m.score} size={54} strokeWidth={5} animated={true} />
+                        </div>
+                      </td>
+
+                      {/* Matched Skills */}
+                      <td className="p-4">
+                        <div className="flex flex-wrap gap-1.5">
+                          {m.matched_skills.slice(0, 4).map((sk) => (
+                            <span
+                              key={sk}
+                              className="px-2 py-0.5 rounded text-[11px] font-mono bg-[#00D4AA]/10 text-[#00D4AA] border border-[#00D4AA]/25"
+                            >
+                              {sk}
+                            </span>
+                          ))}
+                          {m.matched_skills.length > 4 && (
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-white/5 text-[#A8A5A0]">
+                              +{m.matched_skills.length - 4} more
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Missing Gaps */}
+                      <td className="p-4">
+                        <div className="flex flex-wrap gap-1.5">
+                          {m.missing_skills.length === 0 ? (
+                            <span className="text-[11px] text-[#22C55E] font-mono">
+                              No critical gaps
+                            </span>
+                          ) : (
+                            m.missing_skills.slice(0, 2).map((sk) => (
+                              <span
+                                key={sk}
+                                className="px-2 py-0.5 rounded text-[11px] font-mono bg-rose-500/10 text-rose-300 border border-rose-500/25"
+                              >
+                                {sk}
+                              </span>
+                            ))
+                          )}
+                        </div>
+                      </td>
+
+                      {/* Action */}
+                      <td className="p-4 text-right">
+                        <Link
+                          href={`/jobs/${jobId}/candidates/${m.id}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-[#00D4AA] bg-[#00D4AA]/10 hover:bg-[#00D4AA]/20 border border-[#00D4AA]/25 transition-colors"
+                        >
+                          <span>Inspect</span>
+                          <ChevronRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Legend strip */}
+        <div className="glass-panel p-4 rounded-2xl border border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#22C55E]" />
+              <span className="text-[#E8E6E1]">80–100: Strong Fit (Interview Shortlist)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#F59E0B]" />
+              <span className="text-[#E8E6E1]">60–79: Moderate Fit (Preferred Gap)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-3 h-3 rounded-full bg-[#F97316]" />
+              <span className="text-[#E8E6E1]">&lt;60: Needs Review</span>
+            </div>
           </div>
-        )}
+          <DPDPBadge variant="pill" />
+        </div>
       </main>
     </div>
   );
-}
+}

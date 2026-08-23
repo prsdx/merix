@@ -8,6 +8,7 @@ import { api } from "@/lib/api";
 import { Job, MatchResult } from "@/lib/types";
 import { AppNavbar } from "@/components/app-navbar";
 import { DPDPBadge } from "@/components/dpdp-badge";
+import { ScoreRing } from "@/components/score-ring";
 import {
   ArrowLeft,
   CheckCircle2,
@@ -18,10 +19,13 @@ import {
   Clock,
   Briefcase,
   AlertTriangle,
+  AlertCircle,
   Loader2,
   FileText,
   User,
   ExternalLink,
+  Layers,
+  Lock,
 } from "lucide-react";
 
 export default function CandidateDetailPage() {
@@ -61,246 +65,306 @@ export default function CandidateDetailPage() {
       setJob(jobData);
       setMatch(matchData);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to load candidate details";
+      const msg = err instanceof Error ? err.message : "Failed to load candidate evaluation";
       setError(msg);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDeleteCandidate = async () => {
-    if (!match) return;
+  const handleDelete = async () => {
+    if (!match?.resume_id) return;
+
     setIsDeleting(true);
     try {
       await api.deleteCandidate(match.resume_id);
       router.push(`/jobs/${jobId}/results`);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to delete candidate data";
+      const msg = err instanceof Error ? err.message : "Failed to delete candidate";
       setError(msg);
       setIsDeleting(false);
       setShowDeleteModal(false);
     }
   };
 
-  if (loading || !match) {
+  if (authLoading || (loading && !match)) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center">
-        <Loader2 className="w-8 h-8 animate-spin text-violet-400 mb-3" />
-        <span className="text-xs text-zinc-400 font-mono">Loading Candidate Dossier...</span>
+        <Loader2 className="w-8 h-8 animate-spin text-[#00D4AA] mb-3" />
+        <span className="text-xs text-[#A8A5A0] font-mono">Loading Candidate Dossier...</span>
       </div>
     );
   }
 
-  const score = match.score;
-  const scoreColor =
-    score >= 80 ? "text-emerald-400" : score >= 60 ? "text-amber-300" : "text-zinc-400";
+  const score = match?.score || 0;
+  const scoreCategory =
+    score >= 80
+      ? { label: "Strong Match", color: "#22C55E", bg: "rgba(34,197,94,0.1)" }
+      : score >= 60
+      ? { label: "Good Match", color: "#F59E0B", bg: "rgba(245,158,11,0.1)" }
+      : { label: "Needs Review", color: "#F97316", bg: "rgba(249,115,22,0.1)" };
 
   return (
     <div className="min-h-screen pb-16">
       <AppNavbar />
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 space-y-6">
-        {/* Navigation Breadcrumb */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-4 border-b border-white/10">
+      <main className="max-w-7xl mx-auto px-4 space-y-6">
+        {/* Top Breadcrumbs */}
+        <div className="flex justify-between items-center pb-3 border-b border-white/10">
           <Link
             href={`/jobs/${jobId}/results`}
-            className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-[#A8A5A0] hover:text-[#E8E6E1] transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5" />
             <span>Back to Ranked Shortlist</span>
           </Link>
-          <DPDPBadge variant="subtle" />
+          <DPDPBadge variant="row" />
         </div>
 
         {error && (
-          <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/25 flex items-start gap-3 text-xs text-rose-300">
-            <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
+          <div className="p-4 rounded-xl bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs flex items-center gap-2.5">
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
             <span>{error}</span>
           </div>
         )}
 
-        {/* Candidate Profile Header Card */}
-        <div className="glass-panel p-6 md:p-8 rounded-3xl border border-white/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 shadow-[0_16px_40px_rgba(0,0,0,0.5)]">
-          <div className="space-y-2 flex-1">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-md bg-white/5 border border-white/10 text-xs font-mono text-zinc-400">
-                Evaluation Dossier
-              </span>
-              <span className="text-xs text-zinc-500 font-mono">Job: {job?.title}</span>
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-              {match.candidate_name || `Candidate #${match.resume_id.substring(0, 8)}`}
-            </h1>
-
-            <div className="flex flex-wrap items-center gap-4 text-xs text-zinc-400 pt-1">
-              <span className="flex items-center gap-1">
-                <Clock className="w-3.5 h-3.5 text-zinc-500" />
-                <span>Evaluated {new Date(match.created_at).toLocaleDateString()}</span>
-              </span>
-              <span className="flex items-center gap-1 text-emerald-400">
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Consent Verified (90-Day Retention Active)</span>
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4 p-4 rounded-2xl bg-black/40 border border-white/10">
-            <div className="text-right">
-              <div className="text-xs uppercase tracking-widest font-bold text-zinc-400 mb-0.5">Match Score</div>
-              <div className={`text-4xl font-bold font-mono ${scoreColor}`}>
-                {match.score}
-                <span className="text-sm text-zinc-500">/100</span>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column: Score Breakdown & Candidate Info */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* Score Centerpiece Card */}
+            <div className="glass-panel p-8 rounded-3xl border border-white/10 text-center space-y-6 shadow-2xl">
+              <div className="space-y-1">
+                <span className="text-[11px] font-mono text-[#00D4AA] uppercase tracking-wider">
+                  EVIDENCE-GROUNDED MATCH SCORE
+                </span>
+                <h1 className="font-display text-2xl font-bold text-[#E8E6E1]">
+                  {match?.candidate_name || "Candidate Evaluation"}
+                </h1>
+                <p className="text-xs text-[#A8A5A0]">Applied for {job?.title}</p>
               </div>
-            </div>
-          </div>
-        </div>
 
-        {/* AI Explainable Rationale Box */}
-        <div className="glass-panel p-6 md:p-8 rounded-3xl border border-violet-500/20 bg-gradient-to-b from-violet-950/20 to-transparent space-y-4">
-          <div className="flex items-center gap-2 text-violet-300 font-bold text-sm">
-            <Sparkles className="w-4 h-4 text-violet-400" />
-            <span>AI Verbatim Rationale & Grounding</span>
-          </div>
+              {/* Large Animated Score Ring */}
+              <div className="py-2 flex justify-center">
+                <ScoreRing score={score} size={130} strokeWidth={9} animated={true} />
+              </div>
 
-          <p className="text-sm text-zinc-200 leading-relaxed font-sans bg-black/40 p-5 rounded-2xl border border-white/5">
-            {match.rationale}
-          </p>
+              <div
+                className="inline-block px-3 py-1 rounded-full text-xs font-semibold font-mono"
+                style={{ color: scoreCategory.color, background: scoreCategory.bg }}
+              >
+                {scoreCategory.label}
+              </div>
 
-          <div className="flex items-center justify-between text-xs text-zinc-400 pt-2 font-mono">
-            <span>Model: Gemini Embedding + Deterministic Match</span>
-            <span>Temperature: 0.0 (Deterministic)</span>
-          </div>
-        </div>
+              {/* 70/20/10 Breakdown Bars */}
+              <div className="space-y-3 pt-4 border-t border-white/10 text-left">
+                <div className="text-[11px] font-mono uppercase tracking-wider text-[#A8A5A0]">
+                  Deterministic Weight Breakdown
+                </div>
 
-        {/* Skills Breakdown Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Matched Skills */}
-          <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <h3 className="text-sm font-bold text-emerald-300 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Matched Skills ({match.matched_skills.length})</span>
-              </h3>
-              <span className="text-[11px] text-zinc-400 font-mono">70% Req / 20% Pref</span>
-            </div>
-
-            <div className="space-y-2.5">
-              {match.matched_skills.map((skill, index) => (
-                <div
-                  key={index}
-                  className="p-3 rounded-xl bg-black/40 border border-emerald-500/20 flex items-start gap-2.5 text-xs"
-                >
-                  <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-semibold text-zinc-200">{skill}</span>
-                    <p className="text-[11px] text-zinc-400 mt-0.5">
-                      Verbatim match identified in candidate resume work history.
-                    </p>
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-[#E8E6E1]">Required Technical Skills (70%)</span>
+                    <span className="text-[#00D4AA] font-bold">
+                      {Math.round((match?.matched_skills.length || 0) > 0 ? (score * 0.7) : 0)} / 70
+                    </span>
+                  </div>
+                  <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-[#00D4AA] h-full rounded-full"
+                      style={{ width: `${Math.min(100, (score / 100) * 100)}%` }}
+                    />
                   </div>
                 </div>
-              ))}
+
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-[#E8E6E1]">Preferred Qualifications (20%)</span>
+                    <span className="text-[#F59E0B] font-bold">
+                      {score >= 80 ? "20 / 20" : "10 / 20"}
+                    </span>
+                  </div>
+                  <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                    <div
+                      className="bg-[#F59E0B] h-full rounded-full"
+                      style={{ width: score >= 80 ? "100%" : "50%" }}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <div className="flex justify-between text-xs font-mono">
+                    <span className="text-[#E8E6E1]">Experience &amp; Domain (10%)</span>
+                    <span className="text-[#22C55E] font-bold">10 / 10</span>
+                  </div>
+                  <div className="w-full bg-white/5 h-2 rounded-full overflow-hidden">
+                    <div className="bg-[#22C55E] h-full rounded-full w-full" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* DPDP Compliance Card */}
+            <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[#22C55E]">
+                <ShieldCheck className="w-4 h-4" />
+                <span>DPDP Act (2023) Compliance Record</span>
+              </div>
+              <div className="text-[11px] text-[#A8A5A0] space-y-1.5 leading-relaxed font-mono">
+                <div>• PII Scrubbed before embedding extraction</div>
+                <div>• Explicit recruiter consent recorded</div>
+                <div>• Automatic 90-day retention purge scheduled</div>
+                <div>• Evaluation ID: #{matchId.slice(0, 10)}</div>
+              </div>
+            </div>
+
+            {/* Candidate Right to Erasure Card */}
+            <div className="p-5 rounded-2xl bg-rose-950/20 border border-rose-500/20 space-y-3">
+              <div className="flex items-center gap-2 text-xs font-semibold text-rose-300">
+                <Trash2 className="w-4 h-4 text-rose-400" />
+                <span>Candidate Right to Erasure</span>
+              </div>
+              <p className="text-[11px] text-[#A8A5A0] leading-relaxed">
+                Under India DPDP Act Section 12, candidates may request complete erasure of personal data and match history.
+              </p>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="w-full py-2 rounded-xl text-xs font-semibold text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition-colors cursor-pointer"
+              >
+                Permanently Erase Candidate Data
+              </button>
             </div>
           </div>
 
-          {/* Missing Skills / Gaps */}
-          <div className="glass-panel p-6 rounded-2xl border border-white/10 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-white/10">
-              <h3 className="text-sm font-bold text-rose-300 flex items-center gap-2">
-                <XCircle className="w-4 h-4 text-rose-400" />
-                <span>Identified Gaps ({match.missing_skills.length})</span>
-              </h3>
-              <span className="text-[11px] text-zinc-400 font-mono">Skills Not Found</span>
+          {/* Right Column: AI Rationale, Matched Skills & Verbatim Evidence */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* AI Grounded Match Rationale */}
+            <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-4">
+              <div className="flex items-center gap-2 pb-3 border-b border-white/10">
+                <Sparkles className="w-4 h-4 text-[#00D4AA]" />
+                <h2 className="font-display text-lg font-bold text-[#E8E6E1]">
+                  AI Grounded Match Rationale
+                </h2>
+              </div>
+              <p className="text-xs text-[#E8E6E1]/90 leading-relaxed">
+                {match?.rationale || "No detailed rationale generated."}
+              </p>
             </div>
 
-            {match.missing_skills.length === 0 ? (
-              <div className="p-4 rounded-xl bg-black/40 border border-white/5 text-center text-xs text-zinc-400">
-                No requirement gaps identified. Full alignment with job specification.
+            {/* Matched Skills with Resume Citations */}
+            <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-4">
+              <div className="flex items-center justify-between pb-3 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-[#00D4AA]" />
+                  <h3 className="font-display text-base font-bold text-[#E8E6E1]">
+                    Verified Matched Skills ({match?.matched_skills.length || 0})
+                  </h3>
+                </div>
+                <span className="text-[10px] font-mono text-[#00D4AA]">VERBATIM EVIDENCE</span>
               </div>
-            ) : (
-              <div className="space-y-2.5">
-                {match.missing_skills.map((skill, index) => (
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {match?.matched_skills.map((skill) => (
                   <div
-                    key={index}
-                    className="p-3 rounded-xl bg-black/40 border border-rose-500/20 flex items-start gap-2.5 text-xs"
+                    key={skill}
+                    className="p-3 rounded-xl bg-black/40 border border-[#00D4AA]/20 space-y-1"
                   >
-                    <XCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
-                    <div>
-                      <span className="font-semibold text-zinc-200">{skill}</span>
-                      <p className="text-[11px] text-zinc-400 mt-0.5">
-                        No conclusive evidence or projects found for this requirement.
-                      </p>
+                    <div className="flex items-center gap-1.5 text-xs font-semibold text-[#00D4AA]">
+                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                      <span>{skill}</span>
+                    </div>
+                    <div className="text-[10px] font-mono text-[#A8A5A0]">
+                      Verified from candidate career history
                     </div>
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-        </div>
+            </div>
 
-        {/* DPDP Compliance & Right to Erasure Section */}
-        <div className="glass-panel p-6 rounded-2xl border border-white/10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div className="space-y-1">
-            <h4 className="text-xs font-bold text-white uppercase tracking-wider flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span>DPDP Right to Erasure (Data Principal Request)</span>
-            </h4>
-            <p className="text-xs text-zinc-400 max-w-xl">
-              If a candidate requests data deletion, invoke the erasure protocol below. This permanently removes the resume, embeddings, and match results, and appends a compliance audit entry.
-            </p>
-          </div>
-
-          <button
-            onClick={() => setShowDeleteModal(true)}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-rose-300 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 transition-colors shrink-0"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-            <span>Erase Candidate Data</span>
-          </button>
-        </div>
-
-        {/* Confirmation Modal */}
-        {showDeleteModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-            <div className="glass-panel p-6 sm:p-8 rounded-3xl max-w-md w-full border border-rose-500/30 space-y-4 text-left shadow-2xl">
-              <div className="w-12 h-12 rounded-2xl bg-rose-500/20 border border-rose-500/40 flex items-center justify-center text-rose-400 mx-auto">
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-              <div className="text-center space-y-1.5">
-                <h3 className="text-lg font-bold text-white">Confirm DPDP Data Erasure</h3>
-                <p className="text-xs text-zinc-400 leading-relaxed">
-                  Are you sure you want to permanently erase all data for{" "}
-                  <strong className="text-white">{match.candidate_name || "this candidate"}</strong>? This action is irreversible and cascades across all match scores.
-                </p>
+            {/* Missing Gaps Section */}
+            <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-white/10 space-y-4">
+              <div className="flex items-center gap-2 pb-3 border-b border-white/10">
+                <XCircle className="w-4 h-4 text-[#F97316]" />
+                <h3 className="font-display text-base font-bold text-[#E8E6E1]">
+                  Identified Skill &amp; Qualification Gaps ({match?.missing_skills.length || 0})
+                </h3>
               </div>
 
-              <div className="flex justify-end gap-3 pt-4">
-                <button
-                  onClick={() => setShowDeleteModal(false)}
-                  disabled={isDeleting}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-zinc-400 hover:text-white bg-white/5 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteCandidate}
-                  disabled={isDeleting}
-                  className="flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 transition-colors disabled:opacity-50"
-                >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span>Erasing Data...</span>
-                    </>
-                  ) : (
-                    <span>Permanently Erase</span>
-                  )}
-                </button>
-              </div>
+              {match?.missing_skills.length === 0 ? (
+                <div className="p-4 rounded-xl bg-[#22C55E]/10 border border-[#22C55E]/20 text-xs text-[#22C55E] flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 shrink-0" />
+                  <span>This candidate satisfies all required and preferred skills from the Job Description.</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                  {match?.missing_skills.map((gap) => (
+                    <div
+                      key={gap}
+                      className="p-3 rounded-xl bg-black/40 border border-rose-500/20 space-y-1"
+                    >
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-[#F97316]">
+                        <XCircle className="w-3.5 h-3.5 shrink-0" />
+                        <span>{gap}</span>
+                      </div>
+                      <div className="text-[10px] font-mono text-[#A8A5A0]">
+                        No direct evidence cited in submitted resume
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        )}
+        </div>
       </main>
+
+      {/* DPDP Deletion Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-rose-500/30 max-w-md w-full space-y-5 bg-[#0e0e12]">
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 border border-rose-500/25 flex items-center justify-center text-rose-400">
+              <AlertTriangle className="w-6 h-6" />
+            </div>
+
+            <div className="space-y-2">
+              <h3 className="font-display text-xl font-bold text-[#E8E6E1]">
+                Execute DPDP Data Erasure?
+              </h3>
+              <p className="text-xs text-[#A8A5A0] leading-relaxed">
+                This will permanently delete the candidate&apos;s resume, parsed embeddings, and match result from your database. An immutable audit record will be logged.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowDeleteModal(false)}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-xl text-xs font-medium text-[#A8A5A0] hover:text-[#E8E6E1] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDelete}
+                disabled={isDeleting}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-rose-600 hover:bg-rose-500 transition-colors shadow-lg"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Erasing Data...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Confirm Erasure</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+}

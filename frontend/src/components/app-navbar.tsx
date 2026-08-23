@@ -1,10 +1,10 @@
-"use client";
+﻿"use client";
 
 import React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { Command, Briefcase, PlusCircle, Settings, LogOut, Building2 } from "lucide-react";
+import { Briefcase, PlusCircle, Settings, LogOut, Building2 } from "lucide-react";
 import { DPDPBadge } from "./dpdp-badge";
 
 export function AppNavbar() {
@@ -17,22 +17,54 @@ export function AppNavbar() {
     router.push("/login");
   };
 
+  const navLinks = [
+    { href: "/dashboard", label: "Jobs", icon: Briefcase },
+    { href: "/jobs/new", label: "Post Job", icon: PlusCircle },
+    { href: "/settings", label: "Compliance", icon: Settings },
+  ];
+
   return (
     <header className="sticky top-4 z-50 w-full max-w-7xl mx-auto px-4 mb-8">
-      <div className="flex items-center justify-between px-5 py-3 rounded-2xl bg-[#09090b]/80 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.5)] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.15)]">
+      <div
+        className="flex items-center justify-between px-5 py-3 rounded-2xl backdrop-blur-2xl"
+        style={{
+          background: "rgba(7,7,9,0.82)",
+          border: "1px solid rgba(255,255,255,0.09)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12)",
+        }}
+      >
         {/* Brand */}
-        <div className="flex items-center gap-6">
-          <Link href={isAuthenticated ? "/dashboard" : "/"} className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-tr from-violet-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-violet-600/30 group-hover:scale-105 transition-transform">
-              <Command className="w-4 h-4 text-white" />
+        <div className="flex items-center gap-5">
+          <Link
+            href={isAuthenticated ? "/dashboard" : "/"}
+            className="flex items-center gap-2.5 group"
+          >
+            {/* Merix logomark: M letterform in teal-cyan */}
+            <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center text-[#070709] font-display font-bold text-sm shadow-lg group-hover:scale-105 transition-transform"
+              style={{
+                background: "linear-gradient(135deg, #00D4AA 0%, #00B4D8 100%)",
+                boxShadow: "0 4px 16px rgba(0,212,170,0.3)",
+              }}
+            >
+              M
             </div>
-            <span className="font-bold text-base tracking-tight text-white">Merix</span>
+            <span className="font-display text-base tracking-tight text-[#E8E6E1]">
+              Merix
+            </span>
           </Link>
 
           {user && (
-            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md bg-white/[0.04] border border-white/5 text-xs text-zinc-400">
-              <Building2 className="w-3.5 h-3.5 text-violet-400" />
-              <span className="font-medium text-zinc-200">{user.org_name || "Organisation"}</span>
+            <div
+              className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md text-xs"
+              style={{
+                background: "rgba(255,255,255,0.04)",
+                border: "1px solid rgba(255,255,255,0.06)",
+                color: "#A8A5A0",
+              }}
+            >
+              <Building2 className="w-3.5 h-3.5 text-[#00D4AA]" />
+              <span className="font-medium text-[#E8E6E1]">{user.org_name || "Organisation"}</span>
             </div>
           )}
         </div>
@@ -40,41 +72,28 @@ export function AppNavbar() {
         {/* Navigation Links */}
         {isAuthenticated && (
           <nav className="hidden md:flex items-center gap-1">
-            <Link
-              href="/dashboard"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                pathname === "/dashboard"
-                  ? "bg-white/10 text-white shadow-sm"
-                  : "text-zinc-400 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <Briefcase className="w-3.5 h-3.5" />
-              <span>Jobs</span>
-            </Link>
-
-            <Link
-              href="/jobs/new"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                pathname === "/jobs/new"
-                  ? "bg-white/10 text-white shadow-sm"
-                  : "text-zinc-400 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <PlusCircle className="w-3.5 h-3.5" />
-              <span>Post Job</span>
-            </Link>
-
-            <Link
-              href="/settings"
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                pathname === "/settings"
-                  ? "bg-white/10 text-white shadow-sm"
-                  : "text-zinc-400 hover:text-white hover:bg-white/5"
-              }`}
-            >
-              <Settings className="w-3.5 h-3.5" />
-              <span>Compliance & Org</span>
-            </Link>
+            {navLinks.map(({ href, label, icon: Icon }) => {
+              const active = pathname === href || (href !== "/dashboard" && pathname.startsWith(href));
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                    active
+                      ? "text-[#E8E6E1]"
+                      : "text-[#6B6965] hover:text-[#E8E6E1]"
+                  }`}
+                  style={
+                    active
+                      ? { background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.08)" }
+                      : { border: "1px solid transparent" }
+                  }
+                >
+                  <Icon className="w-3.5 h-3.5" />
+                  <span>{label}</span>
+                </Link>
+              );
+            })}
           </nav>
         )}
 
@@ -84,12 +103,26 @@ export function AppNavbar() {
 
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
-              <span className="hidden sm:inline-block text-xs text-zinc-400 max-w-[150px] truncate">
+              <span className="hidden sm:inline-block text-xs text-[#6B6965] max-w-[150px] truncate font-mono">
                 {user?.email}
               </span>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-400 hover:text-rose-300 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20 transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+                style={{
+                  color: "#6B6965",
+                  border: "1px solid transparent",
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.color = "#F87171";
+                  (e.currentTarget as HTMLButtonElement).style.background = "rgba(248,113,113,0.08)";
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "rgba(248,113,113,0.2)";
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.color = "#6B6965";
+                  (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent";
+                }}
                 title="Sign out"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -100,13 +133,18 @@ export function AppNavbar() {
             <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-zinc-300 hover:text-white hover:bg-white/5 transition-colors"
+                className="px-3.5 py-1.5 rounded-lg text-xs font-medium transition-colors"
+                style={{ color: "#A8A5A0" }}
               >
                 Sign In
               </Link>
               <Link
                 href="/signup"
-                className="px-3.5 py-1.5 rounded-lg text-xs font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-500 hover:to-indigo-500 shadow-md shadow-violet-600/25 transition-all"
+                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[#070709] transition-all hover:scale-[1.02] active:scale-[0.98]"
+                style={{
+                  background: "linear-gradient(135deg, #00D4AA 0%, #00B4D8 100%)",
+                  boxShadow: "0 4px 16px rgba(0,212,170,0.25)",
+                }}
               >
                 Get Started
               </Link>
