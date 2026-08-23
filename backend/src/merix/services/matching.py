@@ -30,10 +30,12 @@ W_EXPERIENCE = 0.10
 # Completion-token budgets per call type. Resume extraction emits one
 # {skill, evidence} object per skill, so long resumes need real headroom
 # (1024 truncated the JSON mid-string in production); JD extraction is a
-# compact fixed-shape object; rationales are 2-3 sentences.
+# compact fixed-shape object but long JDs enumerate many skills; rationales
+# are 2-3 sentences (256 clipped some mid-sentence — 512 is cheap insurance
+# and truncation is detectable via LLMResult.finish_reason).
 _JD_EXTRACT_MAX_TOKENS = 2048
 _RESUME_EXTRACT_MAX_TOKENS = 4096
-_RATIONALE_MAX_TOKENS = 256
+_RATIONALE_MAX_TOKENS = 512
 
 _JD_EXTRACT_SYSTEM = (
     "You extract structured requirements from job descriptions. Return ONLY valid JSON, no prose, no markdown fences."
@@ -112,9 +114,11 @@ def _log_malformed(kind: str, result: LLMResult) -> None:
     a truncated response; keep the raw text around for debugging.
     """
     logger.error(
-        "llm_%s_extraction_malformed_json completion_tokens=%d raw_response=%.2000r",
+        "llm_%s_extraction_malformed_json completion_tokens=%d finish_reason=%s truncated=%s raw_response=%.2000r",
         kind,
         result.completion_tokens,
+        result.finish_reason,
+        result.truncated,
         result.text,
     )
 
@@ -234,4 +238,14 @@ async def generate_rationale(llm: LLMClient, jd_parsed: dict, resume_parsed: dic
         temperature=0.0,
         max_tokens=_RATIONALE_MAX_TOKENS,
     )
+    if result.truncated:
+        # Plain-text output: truncation cannot crash anything downstream, it
+        # just silently serves a mid-sentence rationale to recruiters. Log
+        # loudly so a future budget increase is driven by real evidence.
+        logger.warning(
+            "rationale_truncated completion_tokens=%d finish_reason=%s text=%.200r",
+            result.completion_tokens,
+            result.finish_reason,
+            result.text,
+        )
     return result.text.strip()

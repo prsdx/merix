@@ -21,10 +21,12 @@ import pytest
 from sqlalchemy import select
 from sqlalchemy import text as sa_text
 
+from merix.core.exceptions import ExtractionError
 from merix.db import scoped_session
 from merix.models.batch_job import BatchJob
 from merix.models.resume import Resume
 from merix.services import pipeline
+from merix.services.batch import run_batch_match_background
 from tests.helpers import FakeLLM, auth_headers, make_pdf
 
 # ── helpers ────────────────────────────────────────────────────────────
@@ -400,3 +402,57 @@ class TestAuthentication:
         """POST /api/jobs/{id}/match without auth → 401."""
         r = client.post(f"/api/jobs/{uuid.uuid4()}/match")
         assert r.status_code == 401, r.text
+
+
+# ── Total failure handling ─────────────────────────────────────────────
+
+
+class TestTotalFailureSurfacesAsFailed:
+    """When EVERY resume fails, the job must end 'failed' — not 'completed'
+    with an empty shortlist hiding the outage behind a success state."""
+
+    async def test_all_resumes_failing_marks_batch_failed(self, client, org_a):
+        headers, org_id, _user_id = org_a
+        job_id, _resume_id = await _create_job_and_resume(client, headers, org_id)
+
+        r = client.post(f"/api/jobs/{job_id}/match", headers=headers)
+        assert r.status_code == 202, r.text
+        batch_job_id = r.json()["id"]
+
+        class AlwaysFailsLLM(FakeLLM):
+            async def generate(self, prompt, *, system=None, temperature=0.0, max_tokens=1024):
+                raise ExtractionError("extraction exploded")
+
+        await run_batch_match_background(
+            org_id if isinstance(org_id, uuid.UUID) else uuid.UUID(org_id),
+            uuid.UUID(job_id),
+            uuid.UUID(batch_job_id),
+            llm=AlwaysFailsLLM(),
+        )
+
+        r = client.get(f"/api/batch-jobs/{batch_job_id}", headers=headers)
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["status"] == "failed", f"expected 'failed' for all-failed batch, got '{body['status']}'"
+        assert body["error_message"], "failed job must carry a frontend-visible error message"
+        assert "all" in body["error_message"].lower()
+        results = body["batch_results"] or []
+        assert results, "per-resume dispositions should still be recorded"
+        assert all(e["status"] == "failed" for e in results)
+
+    async def test_partial_failure_still_completes(self, client, org_a):
+        """Partial failure keeps the completed outcome (Task 5 behaviour preserved)."""
+        headers, org_id, _user_id = org_a
+        job_id, resume_id = await _create_job_and_resume(client, headers, org_id)
+
+        r = client.post(f"/api/jobs/{job_id}/match", headers=headers)
+        assert r.status_code == 202, r.text
+        batch_job_id = r.json()["id"]
+
+        await _run_pipeline_and_update_batch_job(org_id, job_id, batch_job_id)
+
+        r = client.get(f"/api/batch-jobs/{batch_job_id}", headers=headers)
+        assert r.status_code == 200, r.text
+        body = r.json()
+        assert body["status"] == "completed"
+        assert body["completed_resumes"] == body["total_resumes"]

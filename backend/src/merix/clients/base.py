@@ -16,6 +16,14 @@ class LLMResult:
     text: str
     prompt_tokens: int = 0
     completion_tokens: int = 0
+    # Provider finish reason ("stop", "length", ...). "length" means the
+    # completion hit max_tokens and was cut off mid-generation.
+    finish_reason: str | None = None
+
+    @property
+    def truncated(self) -> bool:
+        """True when the provider stopped because max_tokens was exhausted."""
+        return self.finish_reason == "length"
 
 
 @runtime_checkable

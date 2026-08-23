@@ -1,6 +1,7 @@
 """Unit tests for the matching service (deterministic logic + fake LLM)."""
 
 import json
+import logging
 
 import pytest
 
@@ -170,3 +171,55 @@ async def test_extract_jd_malformed_json_raises_domain_error():
     llm = FakeLLM(jd_json='{"required_skills": ["Go", ')
     with pytest.raises(ExtractionError, match="Job description extraction failed"):
         await matching.extract_jd(llm, "We need a Go engineer")
+
+
+# --- rationale budget & truncation visibility ---
+# generate_rationale returns plain text, so a too-small max_tokens never
+# crashes anything — it silently clips the explanation mid-sentence. These
+# tests pin the budget and the warning that makes truncation observable.
+
+
+@pytest.mark.asyncio
+async def test_generate_rationale_gets_full_token_budget():
+    """Rationale calls must request >= 512 completion tokens."""
+    llm = RecordingLLM(rationale="Strong match.")
+    await matching.generate_rationale(
+        llm,
+        {"required_skills": ["go"], "min_experience_years": 2},
+        {"experience_years": 3},
+        matching.MatchComputation(score=90.0),
+    )
+    rationale_calls = [c for c in llm.calls if "matched a job" in c["prompt"].lower()]
+    assert rationale_calls, "generate_rationale did not issue an LLM call"
+    assert all(c["max_tokens"] >= matching._RATIONALE_MAX_TOKENS for c in rationale_calls)
+
+
+@pytest.mark.asyncio
+async def test_generate_rationale_warns_when_truncated(caplog):
+    """A length-capped rationale must be logged, not served silently."""
+
+    class TruncatingLLM(FakeLLM):
+        async def generate(self, prompt, *, system=None, temperature=0.0, max_tokens=1024):
+            return LLMResult(
+                text="Strong match on most required skil",
+                prompt_tokens=10,
+                completion_tokens=max_tokens,
+                finish_reason="length",
+            )
+
+    with caplog.at_level(logging.WARNING, logger="merix.services.matching"):
+        out = await matching.generate_rationale(
+            TruncatingLLM(),
+            {},
+            {},
+            matching.MatchComputation(score=50.0),
+        )
+    assert any("rationale_truncated" in record.getMessage() for record in caplog.records)
+    assert out.startswith("Strong match")
+
+
+def test_llmresult_truncated_flag():
+    """truncated is True only for finish_reason == length."""
+    assert LLMResult(text="x", finish_reason="length").truncated
+    assert not LLMResult(text="x", finish_reason="stop").truncated
+    assert not LLMResult(text="x").truncated
