@@ -11,7 +11,22 @@ import {
   AuditEvent,
 } from "./types";
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+/**
+ * Resilient API base URL resolver.
+ * Handles inputs with or without trailing slashes and with or without '/api' suffix.
+ * Examples:
+ *   - "https://merix-backend.onrender.com" -> "https://merix-backend.onrender.com/api"
+ *   - "https://merix-backend.onrender.com/api/" -> "https://merix-backend.onrender.com/api"
+ *   - "http://localhost:8000" -> "http://localhost:8000/api"
+ */
+export function getApiBaseUrl(): string {
+  const raw = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+  let base = raw.trim().replace(/\/+$/, "");
+  if (!base.endsWith("/api")) {
+    base = `${base}/api`;
+  }
+  return base;
+}
 
 export class ApiError extends Error {
   status: number;
@@ -58,7 +73,9 @@ async function request<T>(
     headers.set("Content-Type", "application/json");
   }
 
-  const url = `${API_BASE_URL}${endpoint}`;
+  const cleanEndpoint = endpoint.startsWith("/") ? endpoint : `/${endpoint}`;
+  const baseUrl = getApiBaseUrl();
+  const url = `${baseUrl}${cleanEndpoint}`;
   let response: Response;
 
   try {
@@ -69,7 +86,7 @@ async function request<T>(
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Network error";
     throw new ApiError(
-      `Unable to reach Merix backend at ${API_BASE_URL}. Ensure the server is running. (${errorMsg})`,
+      `Unable to reach Merix backend at ${baseUrl}. Ensure the server is running and CORS allows this origin. (${errorMsg})`,
       0
     );
   }
@@ -111,7 +128,6 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ org_name: orgName, email, password }),
     });
-    setToken(res.access_token);
     return res;
   },
 
@@ -120,12 +136,23 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
-    setToken(res.access_token);
     return res;
   },
 
   async getMe(): Promise<CurrentUser> {
     return request<CurrentUser>("/auth/me");
+  },
+
+  // Organisations
+  async getMyOrg(): Promise<Organisation> {
+    return request<Organisation>("/orgs/me");
+  },
+
+  async updateMyOrg(retentionDays: number): Promise<Organisation> {
+    return request<Organisation>("/orgs/me", {
+      method: "PATCH",
+      body: JSON.stringify({ retention_days: retentionDays }),
+    });
   },
 
   // Jobs
@@ -144,22 +171,19 @@ export const api = {
     return request<Job>(`/jobs/${jobId}`);
   },
 
-  async listJobResumes(jobId: string): Promise<Resume[]> {
-    return request<Resume[]>(`/jobs/${jobId}/resumes`);
-  },
-
+  // Resumes
   async uploadResume(
     jobId: string,
     file: File,
-    candidateName: string | undefined,
-    consentGiven: boolean
+    candidateName?: string,
+    consentGiven: boolean = true
   ): Promise<Resume> {
     const formData = new FormData();
     formData.append("file", file);
     if (candidateName) {
       formData.append("candidate_name", candidateName);
     }
-    formData.append("consent_given", consentGiven ? "true" : "false");
+    formData.append("consent_given", String(consentGiven));
 
     return request<Resume>(`/jobs/${jobId}/resumes`, {
       method: "POST",
@@ -167,58 +191,61 @@ export const api = {
     });
   },
 
-  // Matching & Batch Jobs
+  async listJobResumes(jobId: string): Promise<Resume[]> {
+    return request<Resume[]>(`/jobs/${jobId}/resumes`);
+  },
+
+  // Batch Matching
   async startBatchMatch(jobId: string, idempotencyKey?: string): Promise<BatchJob> {
     return request<BatchJob>(`/jobs/${jobId}/match`, {
       method: "POST",
-      body: JSON.stringify({ idempotency_key: idempotencyKey || null }),
+      body: JSON.stringify(idempotencyKey ? { idempotency_key: idempotencyKey } : {}),
     });
   },
 
-  async getBatchJobStatus(batchJobId: string): Promise<BatchJob> {
+  async createBatchJob(jobId: string, _resumeIds?: string[]): Promise<BatchJob> {
+    return this.startBatchMatch(jobId);
+  },
+
+  async getBatchJobStatus(arg1: string, arg2?: string): Promise<BatchJob> {
+    const batchJobId = arg2 || arg1;
     return request<BatchJob>(`/batch-jobs/${batchJobId}`);
   },
 
-  // Results
+  // Matches & Shortlists
   async listMatches(jobId: string, minScore?: number): Promise<ShortlistResponse> {
     const query = minScore !== undefined ? `?min_score=${minScore}` : "";
-    return request<ShortlistResponse>(`/jobs/${jobId}/matches${query}`);
+    return request<ShortlistResponse>(`/jobs/${jobId}/results${query}`);
   },
 
-  async getMatch(matchId: string): Promise<MatchResult> {
-    return request<MatchResult>(`/matches/${matchId}`);
+  async getMatch(jobId: string, matchId: string): Promise<MatchResult> {
+    return request<MatchResult>(`/jobs/${jobId}/results/${matchId}`);
   },
 
   getExportUrl(jobId: string, minScore?: number): string {
-    const query = minScore !== undefined ? `?min_score=${minScore}` : "";
-    return `${API_BASE_URL}/jobs/${jobId}/matches/export${query}`;
+    const token = getToken();
+    let url = `${getApiBaseUrl()}/jobs/${jobId}/results/export`;
+    const params = new URLSearchParams();
+    if (minScore !== undefined) {
+      params.set("min_score", String(minScore));
+    }
+    if (token) {
+      params.set("token", token);
+    }
+    const queryString = params.toString();
+    return queryString ? `${url}?${queryString}` : url;
   },
 
-  // DPDP Erasure
-  async deleteCandidate(resumeId: string): Promise<void> {
-    await request<void>(`/candidates/${resumeId}`, {
+  // Candidate erasure (DPDP Right to Erasure)
+  async deleteCandidate(jobId: string, resumeId: string): Promise<{ message: string }> {
+    return request<{ message: string }>(`/jobs/${jobId}/resumes/${resumeId}`, {
       method: "DELETE",
     });
   },
 
-  // Organisation & Compliance
-  async getMyOrg(): Promise<Organisation> {
-    return request<Organisation>("/orgs/me");
-  },
-
-  async updateMyOrg(retentionDays: number): Promise<Organisation> {
-    return request<Organisation>("/orgs/me", {
-      method: "PATCH",
-      body: JSON.stringify({ retention_days: retentionDays }),
-    });
-  },
-
-  async listAuditLogs(limit: number = 100): Promise<AuditEvent[]> {
-    return request<AuditEvent[]>(`/orgs/audit-logs?limit=${limit}`);
-  },
-
-  // Health
-  async checkHealth(): Promise<{ status: string; database?: string }> {
-    return request<{ status: string; database?: string }>("/health");
+  // Audit Logs
+  async listAuditLogs(limit?: number): Promise<AuditEvent[]> {
+    const query = limit !== undefined ? `?limit=${limit}` : "";
+    return request<AuditEvent[]>(`/audit-logs${query}`);
   },
 };

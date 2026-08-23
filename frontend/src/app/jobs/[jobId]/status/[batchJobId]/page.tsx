@@ -45,7 +45,7 @@ export default function BatchJobStatusPage() {
     try {
       const [jobData, batchData] = await Promise.all([
         api.getJob(jobId),
-        api.getBatchJobStatus(batchJobId),
+        api.getBatchJobStatus(jobId, batchJobId),
       ]);
       setJob(jobData);
       setBatchJob(batchData);
@@ -59,11 +59,11 @@ export default function BatchJobStatusPage() {
 
   // Polling loop
   useEffect(() => {
-    if (!isAuthenticated || !batchJobId) return;
+    if (!isAuthenticated || !batchJobId || !jobId) return;
 
     const interval = setInterval(async () => {
       try {
-        const latest = await api.getBatchJobStatus(batchJobId);
+        const latest = await api.getBatchJobStatus(jobId, batchJobId);
         setBatchJob(latest);
 
         if (latest.status === "completed") {

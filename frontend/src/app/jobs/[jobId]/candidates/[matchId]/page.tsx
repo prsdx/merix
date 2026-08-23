@@ -53,7 +53,7 @@ export default function CandidateDetailPage() {
     try {
       const [jobData, matchData] = await Promise.all([
         api.getJob(jobId),
-        api.getMatch(matchId),
+        api.getMatch(jobId, matchId),
       ]);
       setJob(jobData);
       setMatch(matchData);
@@ -70,7 +70,7 @@ export default function CandidateDetailPage() {
 
     setIsDeleting(true);
     try {
-      await api.deleteCandidate(match.resume_id);
+      await api.deleteCandidate(jobId, match.resume_id);
       router.push(`/jobs/${jobId}/results`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to delete candidate";
