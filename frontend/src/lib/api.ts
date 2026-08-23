@@ -215,16 +215,19 @@ export const api = {
   // Matches & Shortlists
   async listMatches(jobId: string, minScore?: number): Promise<ShortlistResponse> {
     const query = minScore !== undefined ? `?min_score=${minScore}` : "";
-    return request<ShortlistResponse>(`/jobs/${jobId}/results${query}`);
+    return request<ShortlistResponse>(`/jobs/${jobId}/matches${query}`);
   },
 
   async getMatch(jobId: string, matchId: string): Promise<MatchResult> {
-    return request<MatchResult>(`/jobs/${jobId}/results/${matchId}`);
+    // The single-match endpoint lives at /matches/{match_id} (matches router);
+    // jobId is kept in the signature for caller symmetry but is not in the path.
+    void jobId;
+    return request<MatchResult>(`/matches/${matchId}`);
   },
 
   getExportUrl(jobId: string, minScore?: number): string {
     const token = getToken();
-    let url = `${getApiBaseUrl()}/jobs/${jobId}/results/export`;
+    let url = `${getApiBaseUrl()}/jobs/${jobId}/matches/export`;
     const params = new URLSearchParams();
     if (minScore !== undefined) {
       params.set("min_score", String(minScore));

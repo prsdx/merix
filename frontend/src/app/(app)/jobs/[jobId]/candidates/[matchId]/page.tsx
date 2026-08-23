@@ -256,16 +256,21 @@ export default function CandidateDetailPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 {match?.matched_skills.map((skill) => (
                   <div
-                    key={skill}
+                    key={skill.skill}
                     className="p-3 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--accent-evidence)]/20 space-y-1"
                   >
                     <div className="flex items-center gap-1.5 text-sm font-semibold text-[var(--accent-evidence)]">
                       <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                      <span>{skill}</span>
+                      <span>{skill.skill}</span>
                     </div>
                     <div className="text-xs font-mono text-[var(--text-muted)]">
                       Verified from candidate career history
                     </div>
+                    {skill.evidence && (
+                      <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg p-2 text-[10px] font-mono text-slate-600 dark:text-slate-400">
+                        &ldquo;{skill.evidence}&rdquo;
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -289,12 +294,12 @@ export default function CandidateDetailPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   {match?.missing_skills.map((gap) => (
                     <div
-                      key={gap}
+                      key={gap.skill}
                       className="p-3 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--accent-danger-border)] space-y-1"
                     >
                       <div className="flex items-center gap-1.5 text-sm font-semibold text-orange-800 dark:text-orange-300">
                         <XCircle className="w-3.5 h-3.5 shrink-0" />
-                        <span>{gap}</span>
+                        <span>{gap.skill}</span>
                       </div>
                       <div className="text-xs font-mono text-[var(--text-muted)]">
                         No direct evidence cited in submitted resume
