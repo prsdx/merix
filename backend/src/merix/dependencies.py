@@ -1,5 +1,6 @@
 """FastAPI dependencies."""
 
+import uuid
 from collections.abc import AsyncGenerator
 
 from fastapi import Depends
@@ -12,8 +13,9 @@ from merix.clients.embeddings import get_embedding_client
 from merix.clients.llm import get_llm_client
 from merix.config import settings
 from merix.core.exceptions import AuthenticationError
-from merix.core.security import verify_access_token
+from merix.core.security import decode_access_token
 from merix.db import get_db, scoped_session
+from merix.models.organisation import Organisation
 from merix.models.user import User
 
 __all__ = [
@@ -51,13 +53,36 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
     db: AsyncSession = Depends(get_db),
 ) -> User:
-    """Authenticate the caller: verify the Supabase JWT, load the profile."""
+    """Authenticate the caller: verify the Supabase JWT, load or auto-provision the profile."""
     if credentials is None:
         raise AuthenticationError("missing bearer token")
-    user_id = verify_access_token(credentials.credentials)
+    payload = decode_access_token(credentials.credentials)
+    try:
+        user_id = uuid.UUID(payload["sub"])
+    except (KeyError, ValueError) as exc:
+        raise AuthenticationError("access token has no valid subject") from exc
+
     user = await db.get(User, user_id)
     if user is None:
-        raise AuthenticationError("no account exists for this token")
+        # Auto-provision user & organisation for OAuth sign-ins (e.g. Google Auth)
+        email = payload.get("email") or f"user-{str(user_id)[:8]}@oauth.user"
+        metadata = payload.get("user_metadata") or {}
+        full_name = metadata.get("full_name") or metadata.get("name") or email.split("@")[0].capitalize()
+        org_name = f"{full_name}'s Organisation"
+
+        org = Organisation(name=org_name)
+        db.add(org)
+        await db.flush()
+
+        user = User(id=user_id, org_id=org.id, email=email)
+        db.add(user)
+        try:
+            await db.commit()
+            await db.refresh(user)
+        except Exception:
+            await db.rollback()
+            raise AuthenticationError("failed to provision user account from oauth token")
+
     return user
 
 

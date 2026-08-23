@@ -8,6 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- Task 9: Full production frontend implementation & design upgrade (Next.js 15 App Router + TypeScript + Tailwind + Framer Motion)
+  - **Design Read & Palette (Editorial Authority Direction)**: Departed from generic violet/indigo SaaS gradients. Implemented high-contrast `#070709` ink background, `#E8E6E1` warm parchment text, `#00D4AA` teal-cyan precision data accent, `#22C55E` emerald DPDP compliance indicators, and amber-to-emerald score spectrum.
+  - **Typography**: `@fontsource/dm-serif-display` for authoritative headlines, `@fontsource/jetbrains-mono` for verbatim resume evidence citations and audit log records, and Inter for crisp UI controls.
+  - **Core Interactive Components**:
+    - `ScoreRing`: Animated radial SVG progress ring with glow filter, JetBrains Mono readout, and score color thresholds (80+ emerald, 60-79 amber, <60 orange).
+    - `CountUp`: Viewport-triggered animated metric counters utilizing Framer Motion for high-impact trust metrics.
+    - `DPDPBadge`: 5 standardized compliance markers (pill, subtle, banner, row, stamp) threaded through every candidate touchpoint.
+  - **9 Production Screens (Fully Integrated to Backend API)**:
+    - **Screen 1 (Landing Page, `/`)**: Asymmetric hero with live interactive deterministic match sandbox simulator, trust band with tier-1 Indian academic institutions, proof strip with animated counters, 3-pillar architectural zigzag, 5-dimension comparison table vs legacy keyword ATS, ROI efficiency calculator, testimonials with Indian campus placement roles, DPDP compliance FAQ, and closing CTA.
+    - **Screen 2 (Auth, `/login`, `/signup`)**: Two-pane trust-forward layout with organization creation, Supabase GoTrue JWT session management, row-level security isolation context, and form validation.
+    - **Screen 3 (Dashboard, `/dashboard`)**: Active pipeline metrics with animated counters, search filter, job cards with DPDP row badges, resume/match counts, and 3-step guided empty state.
+    - **Screen 4 (Post a Job, `/jobs/new`)**: Semantic JD parser form with live sample technical JD generator calling `POST /api/jobs` and live structured extraction preview.
+    - **Screen 5 (Batch Upload, `/jobs/[jobId]/upload`)**: Drag-and-drop batch PDF ingestion with prominent **DPDP Consent Gate Card** (explicit legal consent affirmation required before upload) calling `POST /api/jobs/{id}/resumes`.
+    - **Screen 6 (Job Processing Status, `/jobs/[jobId]/status/[batchJobId]`)**: Real-time progress bar polling `GET /api/batch-jobs/{id}` (every 1.5s) with partial failure breakdown and itemized candidate stream.
+    - **Screen 7 (Ranked Shortlist, `/jobs/[jobId]/results`)**: Flagship candidate data table with radial `ScoreRing` centerpieces, verified skill tags, missing gap chips, score threshold filters (All, 80+, 70+, 60+), search, and direct CSV export via `GET /api/jobs/{id}/matches/export`.
+    - **Screen 8 (Candidate Detail Drill-down, `/jobs/[jobId]/candidates/[matchId]`)**: 70/20/10 weighted score breakdown bar chart, verbatim AI rationale, skill matrix with resume quotes, DPDP compliance stamp, and DPDP Candidate Right to Erasure modal (`DELETE /api/candidates/{id}`).
+    - **Screen 9 (Settings & Compliance, `/settings`)**: Org profile, DPDP Retention Policy editor (GET/PATCH `/api/orgs/me`), live immutable audit log view (`GET /api/orgs/audit-logs`), and ATS Integration placeholders.
+  - **Verification**: Next.js 15 production build passes with exit code 0 across all 9 static and dynamic routes. Backend test suite passing cleanly.
+
 - Task 7: Production deployment configuration & health check
   - **Render Blueprint** (`render.yaml`): Web Service specification for FastAPI backend on Python 3.11 with `uv` package manager (`uv sync --frozen`, `uv run uvicorn merix.main:app --host 0.0.0.0 --port $PORT`).
   - **Health check** (`/health`, `/ready`, `/api/health`): Root and `/api` health endpoints verifying application liveness and Postgres database connectivity (`SELECT 1`).

@@ -25,10 +25,12 @@ from merix.clients.base import EmbeddingClient, LLMClient
 from merix.core.exceptions import FileTooLargeError
 from merix.dependencies import get_current_user, get_embedder, get_llm, get_scoped_db
 from merix.models.batch_job import BatchJob
+from merix.models.job import JobDescription
+from merix.models.match import MatchResult
 from merix.models.resume import Resume
 from merix.models.user import User
 from merix.schemas.batch_job import BatchJobCreate, BatchJobStatus
-from merix.schemas.job import JobCreate, JobResponse
+from merix.schemas.job import JobCreate, JobResponse, JobSummaryResponse
 from merix.schemas.match import ResumeResponse
 from merix.services import extraction, pipeline
 from merix.services.batch import run_batch_match_background
@@ -44,6 +46,37 @@ async def _shortlist_payload(db: AsyncSession, job, results) -> dict:
         "count": len(results),
         "results": [pipeline.to_match_response(r, resumes.get(r.resume_id)) for r in results],
     }
+
+
+@router.get("", response_model=list[JobSummaryResponse])
+async def list_jobs(
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_scoped_db),
+) -> list[JobSummaryResponse]:
+    """List all job descriptions for the caller's organisation."""
+    jobs = list(
+        (
+            await db.scalars(
+                select(JobDescription).where(JobDescription.org_id == user.org_id).order_by(JobDescription.created_at.desc())
+            )
+        ).all()
+    )
+
+    summaries = []
+    for j in jobs:
+        r_count = (await db.scalar(select(func.count()).select_from(Resume).where(Resume.job_id == j.id))) or 0
+        m_count = (await db.scalar(select(func.count()).select_from(MatchResult).where(MatchResult.job_id == j.id))) or 0
+        summaries.append(
+            JobSummaryResponse(
+                id=j.id,
+                title=j.title,
+                created_at=j.created_at,
+                resume_count=r_count,
+                match_count=m_count,
+                parsed=j.parsed,
+            )
+        )
+    return summaries
 
 
 @router.post("", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
@@ -66,6 +99,24 @@ async def get_job(
 ) -> object:
     """Get a job description by id (caller's org only)."""
     return await pipeline.get_job_or_404(db, job_id, user.org_id)
+
+
+@router.get("/{job_id}/resumes", response_model=list[ResumeResponse])
+async def list_job_resumes(
+    job_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_scoped_db),
+) -> list[Resume]:
+    """List all resumes uploaded for a job description."""
+    await pipeline.get_job_or_404(db, job_id, user.org_id)
+    resumes = list(
+        (
+            await db.scalars(
+                select(Resume).where(Resume.job_id == job_id, Resume.org_id == user.org_id).order_by(Resume.created_at.desc())
+            )
+        ).all()
+    )
+    return resumes
 
 
 @router.post(

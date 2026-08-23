@@ -1,0 +1,279 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   MERIX DESIGN TOKENS — Inspired by Graphify, Factorial HR & Truffle
+   Palette: Electric Cobalt Blue (#2563EB) + Emerald/Mint (#10B981) + Slate Ink
+   Typography: Inter / System Sans + JetBrains Mono (Data/Evidence)
+   ============================================================ */
+
+:root {
+  /* LIGHT MODE (Clean, airy, high-contrast) */
+  --background: #FFFFFF;
+  --background-subtle: #F8FAFC;
+  --background-tinted: #F1F5F9;
+  --foreground: #0A0E1A;
+  --foreground-muted: #475569;
+  --foreground-subtle: #94A3B8;
+
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #F8FAFC;
+  --color-surface-solid: #FFFFFF;
+  --color-border: #E2E8F0;
+  --color-border-strong: #CBD5E1;
+
+  /* Primary Brand Accents (Cobalt Blue + Teal Mint) */
+  --color-brand: #2563EB;          /* Cobalt Blue 600 */
+  --color-brand-hover: #1D4ED8;    /* Cobalt Blue 700 */
+  --color-brand-soft: #EFF6FF;     /* Blue 50 */
+  --color-brand-border: #BFDBFE;   /* Blue 200 */
+
+  --color-data: #0D9488;          /* Teal 600 */
+  --color-data-dim: rgba(13, 148, 136, 0.08);
+  --color-data-faint: rgba(13, 148, 136, 0.04);
+  
+  --color-compliance: #10B981;    /* Emerald 500 */
+  --color-compliance-dim: rgba(16, 185, 129, 0.08);
+  --color-compliance-faint: rgba(16, 185, 129, 0.04);
+  
+  --color-score-high: #10B981;    /* Emerald */
+  --color-score-mid: #F59E0B;     /* Amber */
+  --color-score-low: #EF4444;     /* Rose / Red */
+  
+  --color-interactive: #2563EB;   /* Cobalt */
+  --color-interactive-dim: rgba(37, 99, 235, 0.08);
+
+  --ring-bg-stroke: rgba(15, 23, 42, 0.08);
+  --panel-shadow: 0 1px 3px rgba(10, 14, 26, 0.04), 0 12px 32px -12px rgba(10, 14, 26, 0.08);
+  --panel-shadow-hover: 0 1px 3px rgba(10, 14, 26, 0.04), 0 20px 48px -16px rgba(10, 14, 26, 0.14);
+  --hero-shadow: 0 30px 70px -28px rgba(18, 18, 18, 0.28), 0 2px 8px rgba(18, 18, 18, 0.06);
+}
+
+.dark {
+  /* DARK MODE: Modern Soft Obsidian & Slate */
+  --background: #0A0E1A;
+  --background-subtle: #0F172A;
+  --background-tinted: #1E293B;
+  --foreground: #F8FAFC;
+  --foreground-muted: #94A3B8;
+  --foreground-subtle: #64748B;
+
+  --color-surface: rgba(15, 23, 42, 0.85);
+  --color-surface-hover: rgba(30, 41, 59, 0.85);
+  --color-surface-solid: #0F172A;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+
+  /* Primary Brand Accents (Dark) */
+  --color-brand: #3B82F6;          /* Bright Blue */
+  --color-brand-hover: #60A5FA;
+  --color-brand-soft: rgba(59, 130, 246, 0.12);
+  --color-brand-border: rgba(59, 130, 246, 0.3);
+
+  --color-data: #2DD4BF;          /* Mint / Teal-400 */
+  --color-data-dim: rgba(45, 212, 191, 0.12);
+  --color-data-faint: rgba(45, 212, 191, 0.05);
+
+  --color-compliance: #34D399;    /* Luminous Emerald */
+  --color-compliance-dim: rgba(52, 211, 153, 0.12);
+  --color-compliance-faint: rgba(52, 211, 153, 0.05);
+
+  --color-score-high: #34D399;
+  --color-score-mid: #FBBF24;
+  --color-score-low: #F87171;
+
+  --color-interactive: #60A5FA;
+  --color-interactive-dim: rgba(96, 165, 250, 0.15);
+
+  --ring-bg-stroke: rgba(255, 255, 255, 0.08);
+  --panel-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45), inset 0 1px 0 0 rgba(255, 255, 255, 0.08);
+  --panel-shadow-hover: 0 16px 48px 0 rgba(0, 0, 0, 0.6), inset 0 1px 0 0 rgba(255, 255, 255, 0.15);
+  --hero-shadow: 0 30px 70px -28px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: var(--foreground);
+  background-color: var(--background);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ---- Typography helpers ---- */
+.font-display {
+  font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: -0.03em;
+}
+
+.font-data {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+}
+
+/* ---- Selection ---- */
+::selection {
+  background: rgba(37, 99, 235, 0.2);
+  color: inherit;
+}
+
+.dark ::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: #ffffff;
+}
+
+/* ---- Glassmorphic / Modern Surfaces ---- */
+.glass-panel {
+  background: var(--color-surface);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--panel-shadow);
+}
+
+.glass-panel-hover {
+  transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-panel-hover:hover {
+  background: var(--color-surface-hover);
+  border-color: var(--color-border-strong);
+  box-shadow: var(--panel-shadow-hover);
+  transform: translateY(-2px);
+}
+
+/* Data surface */
+.data-panel {
+  background: var(--color-data-dim);
+  border: 1px solid rgba(13, 148, 136, 0.2);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.dark .data-panel {
+  border-color: rgba(45, 212, 191, 0.25);
+}
+
+/* Compliance surface */
+.compliance-panel {
+  background: var(--color-compliance-dim);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.dark .compliance-panel {
+  border-color: rgba(52, 211, 153, 0.25);
+}
+
+/* ---- Scanning Radar Line Animation (Truffle inspired) ---- */
+@keyframes scanLine {
+  0% {
+    top: 0%;
+    opacity: 0;
+  }
+  20% {
+    opacity: 0.8;
+  }
+  80% {
+    opacity: 0.8;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+.scan-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: linear-gradient(180deg, transparent, rgba(37, 99, 235, 0.12), transparent);
+  border-radius: 12px;
+  pointer-events: none;
+  animation: scanLine 3.5s ease-in-out infinite;
+}
+
+.dark .scan-line {
+  background: linear-gradient(180deg, transparent, rgba(59, 130, 246, 0.2), transparent);
+}
+
+/* ---- Shimmer Effect ---- */
+@keyframes skShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #F1F5F9 25%, #FFFFFF 38%, #F1F5F9 60%);
+  background-size: 400% 100%;
+  animation: skShimmer 1.8s linear infinite;
+}
+
+.dark .shimmer {
+  background: linear-gradient(90deg, #1E293B 25%, #334155 38%, #1E293B 60%);
+  background-size: 400% 100%;
+  animation: skShimmer 1.8s linear infinite;
+}
+
+/* ---- Monospace Evidence Quotes ---- */
+.evidence-quote {
+  font-family: "JetBrains Mono", "Fira Code", monospace;
+  font-size: 11.5px;
+  line-height: 1.55;
+  background: rgba(15, 23, 42, 0.03);
+  border-left: 3px solid var(--color-brand);
+  padding: 10px 14px;
+  border-radius: 0 10px 10px 0;
+  color: var(--foreground);
+}
+
+.dark .evidence-quote {
+  background: rgba(255, 255, 255, 0.04);
+  border-left-color: var(--color-brand);
+  color: #F1F5F9;
+}
+
+/* ---- Audit log row ---- */
+.audit-row {
+  border-left: 2px solid var(--color-brand);
+  padding-left: 12px;
+  position: relative;
+}
+
+.audit-row::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 5px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-brand);
+}
+
+/* ---- Custom Scrollbar ---- */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.25);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.45);
+}

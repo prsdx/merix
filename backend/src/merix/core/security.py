@@ -6,6 +6,7 @@ issue tokens or handle password hashes ourselves.
 """
 
 import uuid
+from typing import Any
 
 import jwt
 from jwt import PyJWKClient
@@ -27,8 +28,8 @@ def _get_jwks_client() -> PyJWKClient:
     return _jwks_client
 
 
-def verify_access_token(token: str) -> uuid.UUID:
-    """Verify a Supabase Auth access token; return the user id (sub claim)."""
+def decode_access_token(token: str) -> dict[str, Any]:
+    """Verify and decode a Supabase Auth access token; return the payload dict."""
     try:
         header = jwt.get_unverified_header(token)
         alg = header.get("alg", settings.JWT_ALGORITHM)
@@ -45,12 +46,18 @@ def verify_access_token(token: str) -> uuid.UUID:
             algorithms=[alg],
             audience=_GOTRUE_AUDIENCE,
         )
+        return payload
     except jwt.ExpiredSignatureError as exc:
         raise AuthenticationError("access token has expired") from exc
     except jwt.PyJWKClientError as exc:
         raise AuthenticationError("failed to fetch jwks") from exc
     except jwt.InvalidTokenError as exc:
         raise AuthenticationError("invalid access token") from exc
+
+
+def verify_access_token(token: str) -> uuid.UUID:
+    """Verify a Supabase Auth access token; return the user id (sub claim)."""
+    payload = decode_access_token(token)
     try:
         return uuid.UUID(payload["sub"])
     except (KeyError, ValueError) as exc:

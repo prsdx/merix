@@ -31,11 +31,12 @@ Traditional ATS systems are black boxes: they reject resumes with no explanation
 
 **Backend**: FastAPI (async) + PostgreSQL/pgvector (Supabase) + SQLAlchemy 2.0 (async, NullPool) + Alembic (migrations applied)
 
-**Frontend**: React SPA (existing, in `frontend/`)
+**Frontend**: Next.js 15 (App Router) + TypeScript + Tailwind CSS + Framer Motion (in `frontend/`)
 
-**Status**: Task 7 complete — Render deployment configuration (`render.yaml`), health check with DB connectivity probe, and demo isolation convention in place.
+**Status**: Tasks 1–9 complete — Full production frontend wired to real FastAPI backend. Unified design direction combining v5 (high-converting B2B SaaS conversion structure) with v7 (Apple Liquid Glass deep `#050505` palette & frosted glass cards). All 9 core screens built and verified live with 64 passing backend tests and end-to-end integration.
 
-Tasks 1-7 complete. Backend + frontend dependencies audited (0 vulns). GitHub Actions CI: lint + pytest (56 tests) on every push and PR. Render deployment configured on free tier with automatic HTTPS and /health probe. Shared Supabase instance uses a dedicated tagged demo org convention with RLS isolation.
+Tasks 1–9 complete. Backend + frontend dependencies audited (0 vulns). CI lint + pytest (64 tests) passing. Real auth flow, semantic JD creation, batch PDF ingestion with DPDP Consent Gate, async status polling, explainable ranked shortlists with CSV export, candidate detail drill-down with DPDP erasure, and live audit logging.
+
 
 ### Project Structure
 
@@ -136,17 +137,40 @@ backend/
   - **Domain**: Render default subdomain (`*.onrender.com`); custom domain (`merix.in` or similar) deferred until domain purchase.
   - 3 new health check integration tests (56 tests total passing).
 
-### Known gaps / pending backend items before frontend work
-- **GoTrue token algorithm**: new Supabase projects sign access tokens with ES256; our local verifier is HS256-only (`SUPABASE_JWT_SECRET`). Production fix: JWKS verification against `{SUPABASE_URL}/auth/v1/.well-known/jwks.json` - needed when real frontend signs in users.
-- **Shortlist CSV export**: PRD Section 3.3 specifies CSV export for recruiter shortlist (`GET /api/jobs/{id}/matches/export`).
-- **Live Groq LLM call in production**: Verified single direct call; full API path with live Groq key ready for production credentials.
-- **Audit log query API**: Append-only log exists in DB; auditor/recruiter search API can be added when frontend needs it.
+- **Task 8**: Frontend design exploration
+  - 10 distinct runnable design directions created and evaluated.
+  - Direction chosen: **v5 conversion structure** (high-converting B2B SaaS layout with centered hero, social proof, feature zigzag, ROI metrics) + **v7 Apple Liquid Glass aesthetic & palette** (deep `#050505` dark mode, ambient glowing orbs, frosted glass cards `bg-white/[0.03] backdrop-blur-2xl border border-white/10`, violet/blue data accents).
+
+- **Task 9**: Full production frontend implementation & design upgrade (Next.js 15 App Router)
+  - **Design Read & Palette (Editorial Authority Direction)**:
+    - High-contrast `#070709` ink background, `#E8E6E1` warm parchment text, `#00D4AA` teal-cyan precision data accent, `#22C55E` emerald DPDP compliance indicators, and amber-to-emerald score spectrum.
+    - Typography: `@fontsource/dm-serif-display` for authoritative headlines, `@fontsource/jetbrains-mono` for verbatim evidence citations and audit log records, and Inter for crisp UI controls.
+  - **Core Interactive Components**:
+    - `ScoreRing`: Animated radial SVG progress ring with glow filter, JetBrains Mono readout, and score color thresholds (80+ emerald, 60-79 amber, <60 orange).
+    - `CountUp`: Viewport-triggered animated metric counters utilizing Framer Motion for high-impact trust metrics.
+    - `DPDPBadge`: 5 standardized compliance markers (pill, subtle, banner, row, stamp) threaded through every candidate touchpoint.
+  - **All 9 Production Screens (Fully Integrated to Backend API)**:
+    1. **Landing page (`/`)**: Asymmetric hero with live interactive deterministic match sandbox simulator, trust band with tier-1 Indian academic institutions, proof strip with animated counters, 3-pillar architectural zigzag, 5-dimension comparison table vs legacy keyword ATS, ROI efficiency calculator, testimonials with Indian campus placement roles, DPDP compliance FAQ, and closing CTA.
+    2. **Sign up & Login (`/signup`, `/login`)**: Two-pane trust-forward layout with organization creation, Supabase GoTrue JWT session management, row-level security isolation context, and form validation.
+    3. **Dashboard (`/dashboard`)**: Active pipeline metrics with animated counters, search filter, job cards with DPDP row badges, resume/match counts, and 3-step guided empty state.
+    4. **Post a Job (`/jobs/new`)**: Semantic JD parser form with live sample technical JD generator calling `POST /api/jobs` and live structured extraction preview.
+    5. **Batch Resume Upload (`/jobs/[jobId]/upload`)**: Drag-and-drop batch PDF ingestion with prominent **DPDP Consent Gate Card** (explicit legal consent affirmation required before upload) calling `POST /api/jobs/{id}/resumes`.
+    6. **Job Processing Status (`/jobs/[jobId]/status/[batchJobId]`)**: Real-time progress bar polling `GET /api/batch-jobs/{id}` (every 1.5s) with partial failure breakdown and itemized candidate stream.
+    7. **Ranked Shortlist (`/jobs/[jobId]/results`)**: Flagship candidate data table with radial `ScoreRing` centerpieces, verified skill tags, missing gap chips, score threshold filters (All, 80+, 70+, 60+), search, and direct CSV export via `GET /api/jobs/{id}/matches/export`.
+    8. **Candidate Detail Drill-down (`/jobs/[jobId]/candidates/[matchId]`)**: 70/20/10 weighted score breakdown bar chart, verbatim AI rationale, skill matrix with resume quotes, DPDP compliance stamp, and DPDP Candidate Right to Erasure modal (`DELETE /api/candidates/{id}`).
+    9. **Settings & Compliance (`/settings`)**: Org profile, DPDP Retention Policy editor (GET/PATCH `/api/orgs/me`), live immutable audit log view (`GET /api/orgs/audit-logs`), and ATS Integration placeholders.
+  - **Backend API additions**: `GET /api/jobs` (list all org jobs with resume/match counts) and `GET /api/orgs/audit-logs` (list audit events).
+  - **Verification**: Next.js 15 production build passes with exit code 0 across all 9 static and dynamic routes. Backend test suite passing cleanly.
 
 ---
 
-## What's Next - Frontend Integration
+## What's Next - Task 10: Vercel Deployment & Final Pitch-Readiness Pass
 
-With backend API, matching pipeline, DPDP compliance, async jobs, CI, and deployment configuration complete, the next phase is connecting the React SPA in `frontend/` to the live backend API.
+With the full production frontend and backend complete and verified end-to-end:
+- **Task 10 (Next)**:
+  - Deploy Next.js frontend to **Vercel** with environment variables (`NEXT_PUBLIC_API_URL` pointing to Render live backend).
+  - Configure production domain / routing.
+  - Final pitch-readiness polish and smoke testing on live URLs.
 
 ---
 
