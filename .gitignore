@@ -42,3 +42,14 @@ data/resume/
 preparation/
 docs/interview.md
 .env.example.local
+
+# Scratch/debug outputs from manual & agent test sessions
+pytest_*.txt
+
+# Graphify regenerable output - keep only dated reports (graphify-out/<date>/)
+graphify-out/cache/
+graphify-out/graph.*
+graphify-out/GRAPH_REPORT.md
+graphify-out/manifest.json
+graphify-out/.graphify*
+graphify-out/.pending_changes
