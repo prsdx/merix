@@ -21,6 +21,15 @@ export default function LoginPage() {
   React.useEffect(() => {
     if (isAuthenticated) {
       router.push("/dashboard");
+      return;
+    }
+
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const urlError = params.get("error");
+      if (urlError) {
+        setError(decodeURIComponent(urlError));
+      }
     }
   }, [isAuthenticated, router]);
 

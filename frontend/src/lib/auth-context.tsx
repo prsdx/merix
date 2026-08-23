@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { CurrentUser } from "./types";
 import { api, clearToken, setToken } from "./api";
+import { createClient } from "./supabase/client";
 
 interface AuthContextType {
   user: CurrentUser | null;
@@ -10,8 +11,8 @@ interface AuthContextType {
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (orgName: string, email: string, password: string) => Promise<void>;
-  loginWithGoogle: () => void;
-  logout: () => void;
+  loginWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
 }
@@ -38,12 +39,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("merix_token") : null;
-    if (token) {
-      refreshUser();
-    } else {
-      setLoading(false);
+    let mounted = true;
+
+    async function initAuth() {
+      try {
+        const supabase = createClient();
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (session?.access_token) {
+          setToken(session.access_token);
+          await refreshUser();
+        } else {
+          const localToken = typeof window !== "undefined" ? localStorage.getItem("merix_token") : null;
+          if (localToken) {
+            await refreshUser();
+          } else {
+            if (mounted) setLoading(false);
+          }
+        }
+
+        // Listen for Supabase auth state changes (e.g. after OAuth redirect)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+          if (session?.access_token) {
+            setToken(session.access_token);
+            await refreshUser();
+          } else if (_event === "SIGNED_OUT") {
+            clearToken();
+            if (mounted) setUser(null);
+          }
+        });
+
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (err: unknown) {
+        // If Supabase client initialization throws (e.g. during local build with dummy envs), fallback gracefully
+        const localToken = typeof window !== "undefined" ? localStorage.getItem("merix_token") : null;
+        if (localToken) {
+          refreshUser();
+        } else {
+          if (mounted) setLoading(false);
+        }
+      }
     }
+
+    initAuth();
+
+    return () => {
+      mounted = false;
+    };
   }, [refreshUser]);
 
   const login = async (email: string, password: string) => {
@@ -72,18 +116,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const loginWithGoogle = () => {
+  const loginWithGoogle = async () => {
     setError(null);
-    if (typeof window === "undefined") return;
+    try {
+      const supabase = createClient();
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
 
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://projectref.supabase.co";
-    const redirectUrl = `${window.location.origin}/auth/callback`;
-    const authUrl = `${supabaseUrl.replace(/\/$/, "")}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`;
-
-    window.location.href = authUrl;
+      if (oauthError) {
+        throw oauthError;
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to initiate Google sign-in";
+      setError(msg);
+      throw err;
+    }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+    } catch {
+      // Ignore signout error
+    }
     clearToken();
     setUser(null);
   };
