@@ -229,3 +229,73 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--border-strong);
 }
+
+/* ============================================================
+   Graphify Bold Visual Layer (landing overhaul)
+   ============================================================ */
+.gradient-text {
+  background-image: linear-gradient(100deg, var(--brand-primary) 10%, var(--accent-evidence) 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.btn-gradient {
+  background-image: linear-gradient(115deg, var(--brand-primary) 0%, var(--brand-primary-hover) 45%, var(--accent-evidence) 110%);
+  box-shadow: 0 10px 30px -10px rgba(37, 99, 235, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, filter 0.2s ease;
+}
+
+.btn-gradient:hover {
+  transform: translateY(-2px);
+  filter: saturate(1.15) brightness(1.06);
+  box-shadow: 0 18px 44px -12px rgba(37, 99, 235, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.card-glow {
+  position: relative;
+  box-shadow:
+    0 0 0 1px var(--brand-border),
+    0 24px 90px -28px rgba(37, 99, 235, 0.38),
+    var(--card-shadow-hover);
+}
+
+.card-glow::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  border-radius: 14px 14px 0 0;
+  background: linear-gradient(90deg, var(--brand-primary), var(--accent-evidence), transparent);
+  opacity: 0.9;
+}
+
+@keyframes float-y {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.animate-float {
+  animation: float-y 7s ease-in-out infinite;
+}
+
+@keyframes drift-a {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(40px, -30px) scale(1.08); }
+  66% { transform: translate(-25px, 20px) scale(0.95); }
+}
+
+@keyframes drift-b {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  40% { transform: translate(-50px, 35px) scale(1.1); }
+  75% { transform: translate(30px, -20px) scale(0.94); }
+}
+
+.orb-drift-a { animation: drift-a 22s ease-in-out infinite; }
+.orb-drift-b { animation: drift-b 28s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float, .orb-drift-a, .orb-drift-b { animation: none; }
+}
