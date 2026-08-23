@@ -10,6 +10,7 @@ interface AuthContextType {
   error: string | null;
   login: (email: string, password: string) => Promise<void>;
   signup: (orgName: string, email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => void;
   logout: () => void;
   refreshUser: () => Promise<void>;
   isAuthenticated: boolean;
@@ -71,6 +72,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const loginWithGoogle = () => {
+    setError(null);
+    if (typeof window === "undefined") return;
+
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://projectref.supabase.co";
+    const redirectUrl = `${window.location.origin}/auth/callback`;
+    const authUrl = `${supabaseUrl.replace(/\/$/, "")}/auth/v1/authorize?provider=google&redirect_to=${encodeURIComponent(redirectUrl)}`;
+
+    window.location.href = authUrl;
+  };
+
   const logout = () => {
     clearToken();
     setUser(null);
@@ -84,6 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         error,
         login,
         signup,
+        loginWithGoogle,
         logout,
         refreshUser,
         isAuthenticated: !!user,
