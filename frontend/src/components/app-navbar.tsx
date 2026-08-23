@@ -27,7 +27,7 @@ export function AppNavbar() {
 
   return (
     <header className="sticky top-3 z-50 w-full max-w-7xl mx-auto px-4 sm:px-6 mb-6">
-      <div className="flex items-center justify-between px-5 py-3 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all">
+      <div className="flex items-center justify-between px-5 py-3 rounded-2xl bg-[var(--bg-surface)]/95 backdrop-blur-xl border border-[var(--border-hairline)] shadow-xs transition-all">
         {/* Brand with Bespoke Logo */}
         <div className="flex items-center gap-6">
           <Link
@@ -38,8 +38,8 @@ export function AppNavbar() {
           </Link>
 
           {user && (
-            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-lg text-xs bg-slate-100 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300">
-              <Building2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+            <div className="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded-md text-xs bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-[var(--text-secondary)]">
+              <Building2 className="w-3.5 h-3.5 text-[var(--brand-primary)]" />
               <span className="font-semibold">{user.org_name || "Organisation"}</span>
             </div>
           )}
@@ -56,8 +56,8 @@ export function AppNavbar() {
                   href={href}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                     active
-                      ? "bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200/60 dark:border-blue-700/40"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800"
+                      ? "bg-[var(--brand-soft)] text-[var(--brand-primary)] border border-[var(--brand-border)]"
+                      : "text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)]"
                   }`}
                 >
                   <Icon className="w-3.5 h-3.5" />
@@ -67,18 +67,15 @@ export function AppNavbar() {
             })}
           </nav>
         ) : (
-          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-slate-600 dark:text-slate-400">
-            <a href="#how-it-works" className="hover:text-slate-900 dark:hover:text-white transition-colors">
-              How it works
+          <nav className="hidden md:flex items-center gap-6 text-xs font-semibold text-[var(--text-secondary)]">
+            <a href="#how-it-works" className="hover:text-[var(--text-primary)] transition-colors">
+              How It Works
             </a>
-            <a href="#simulator" className="hover:text-slate-900 dark:hover:text-white transition-colors">
-              Live Sandbox
+            <a href="/login" className="hover:text-[var(--text-primary)] transition-colors">
+              Features
             </a>
-            <a href="#comparison" className="hover:text-slate-900 dark:hover:text-white transition-colors">
-              ATS Comparison
-            </a>
-            <a href="#calculator" className="hover:text-slate-900 dark:hover:text-white transition-colors">
-              ROI Calculator
+            <a href="/signup" className="hover:text-[var(--text-primary)] transition-colors">
+              DPDP Compliance
             </a>
           </nav>
         )}
@@ -90,12 +87,12 @@ export function AppNavbar() {
 
           {isAuthenticated ? (
             <div className="flex items-center gap-2 sm:gap-3">
-              <span className="hidden sm:inline-block text-xs text-slate-500 dark:text-slate-400 max-w-[130px] truncate font-mono">
+              <span className="hidden sm:inline-block text-xs text-[var(--text-muted)] max-w-[130px] truncate font-mono">
                 {user?.email}
               </span>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--accent-danger)] hover:bg-[var(--accent-danger-soft)] transition-all cursor-pointer"
                 title="Sign out"
               >
                 <LogOut className="w-3.5 h-3.5" />
@@ -106,15 +103,15 @@ export function AppNavbar() {
             <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-slate-700 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="px-3.5 py-1.5 rounded-lg text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-subtle)] transition-colors"
               >
-                Log In
+                Sign In
               </Link>
               <Link
                 href="/signup"
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 shadow-sm shadow-blue-500/25 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] shadow-xs transition-all"
               >
-                <span>Get Started Free</span>
+                <span>Get Started</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
             </div>

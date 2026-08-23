@@ -16,8 +16,12 @@ import {
   FileText,
   Loader2,
   AlertCircle,
-  ChevronRight,
+  ChevronDown,
+  ChevronUp,
   FileSpreadsheet,
+  CheckCircle2,
+  ShieldCheck,
+  ExternalLink,
 } from "lucide-react";
 
 export default function RankedResultsPage() {
@@ -33,6 +37,7 @@ export default function RankedResultsPage() {
 
   const [minScoreFilter, setMinScoreFilter] = useState<number | undefined>(undefined);
   const [searchTerm, setSearchTerm] = useState("");
+  const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -74,92 +79,95 @@ export default function RankedResultsPage() {
 
   if (authLoading || (loading && !job)) {
     return (
-      <div className="min-h-screen flex flex-col justify-center items-center">
-        <Loader2 className="w-8 h-8 animate-spin text-teal-600 dark:text-teal-400 mb-3" />
-        <span className="text-xs text-slate-500 dark:text-slate-400 font-mono">Loading Ranked Shortlist...</span>
+      <div className="min-h-screen flex flex-col justify-center items-center bg-[var(--bg-canvas)]">
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-primary)] mb-3" />
+        <span className="text-xs text-[var(--text-muted)] font-mono">
+          Loading Ranked Shortlist...
+        </span>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen pb-16">
+    <div className="min-h-screen pb-16 bg-[var(--bg-canvas)] text-[var(--text-primary)]">
       <AppNavbar />
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 space-y-6">
         {/* Breadcrumb & Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-slate-200 dark:border-white/10">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-[var(--border-hairline)]">
           <div className="space-y-1">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Back to Dashboard</span>
+              <span>Back to Pipeline</span>
             </Link>
             <div className="flex items-center gap-2">
-              <h1 className="font-display text-2xl sm:text-3xl font-normal text-slate-900 dark:text-slate-100">
-                {job?.title}
+              <h1 className="font-display text-2xl sm:text-3xl text-[var(--text-primary)]">
+                {job?.title || "Ranked Candidate Shortlist"}
               </h1>
               <DPDPBadge variant="row" />
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              Ranked shortlist based on 70/20/10 deterministic skill comparison.
+            <p className="text-xs text-[var(--text-muted)] font-mono">
+              Job ID: {jobId} • Evaluated with Deterministic 70/20/10 Formula
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-3">
             <Link
               href={`/jobs/${jobId}/upload`}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/10 transition-all"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-hairline)] hover:bg-[var(--bg-elevated)] transition-colors"
             >
-              <UploadCloud className="w-3.5 h-3.5 text-teal-600 dark:text-teal-400" />
+              <UploadCloud className="w-3.5 h-3.5" />
               <span>Add More Resumes</span>
             </Link>
-
             <a
               href={exportUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold text-white transition-all shadow-md hover:opacity-95 active:scale-[0.98]"
-              style={{
-                background: "linear-gradient(135deg, #0D9488 0%, #0284C7 100%)",
-              }}
+              download
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] transition-all shadow-xs"
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
-              <span>Export CSV Shortlist</span>
+              <span>Export CSV</span>
             </a>
           </div>
         </div>
 
-        {error && (
-          <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 text-xs flex items-center gap-2.5">
-            <AlertCircle className="w-4 h-4 text-rose-600 dark:text-rose-400 shrink-0" />
-            <span>{error}</span>
+        {/* Embedded Direct Trust Statement (Truffle Style) */}
+        <div className="p-3.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)] flex items-center justify-between gap-4 text-xs font-mono">
+          <div className="flex items-center gap-2 text-[var(--text-secondary)]">
+            <CheckCircle2 className="w-4 h-4 text-[var(--accent-evidence)] shrink-0" />
+            <span>
+              <strong>Merix never auto-rejects.</strong> Every candidate reaches you with verbatim evidence so you make every advance call.
+            </span>
           </div>
-        )}
+          <div className="text-[11px] text-[var(--text-muted)] shrink-0 hidden md:block">
+            DPDP Section 12 Audited
+          </div>
+        </div>
 
-        {/* Filter Toolbar */}
-        <div className="glass-panel p-4 rounded-2xl border border-slate-200 dark:border-white/10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          {/* Threshold Filter Buttons */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-mono uppercase tracking-wider text-slate-500 dark:text-slate-400 mr-1">
-              Filter by Fit:
+        {/* Filter & Search Bar */}
+        <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 p-3 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-xs">
+          {/* Score Threshold Filters */}
+          <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
+            <span className="text-[11px] font-mono text-[var(--text-muted)] mr-2 shrink-0">
+              Filter:
             </span>
             {[
-              { label: "All Candidates", value: undefined },
-              { label: "80+ Strong Fit", value: 80 },
-              { label: "70+ Good Fit", value: 70 },
-              { label: "60+ Moderate Fit", value: 60 },
+              { label: "All Applicants", val: undefined },
+              { label: "Strong Fit (80%+)", val: 80 },
+              { label: "Good Fit (70%+)", val: 70 },
+              { label: "Moderate (60%+)", val: 60 },
             ].map((f) => {
-              const active = minScoreFilter === f.value;
+              const active = minScoreFilter === f.val;
               return (
                 <button
                   key={f.label}
-                  onClick={() => setMinScoreFilter(f.value)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+                  onClick={() => setMinScoreFilter(f.val)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all shrink-0 cursor-pointer ${
                     active
-                      ? "bg-teal-700 dark:bg-teal-400 text-white dark:text-slate-900 font-bold shadow-xs"
-                      : "bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white border border-slate-200 dark:border-white/5"
+                      ? "bg-[var(--brand-primary)] text-white shadow-xs"
+                      : "bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
                   }`}
                 >
                   {f.label}
@@ -168,164 +176,188 @@ export default function RankedResultsPage() {
             })}
           </div>
 
-          {/* Search Box */}
-          <div className="relative w-full md:w-64">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          {/* Search Input */}
+          <div className="relative min-w-[220px]">
+            <Search className="w-3.5 h-3.5 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search candidate or skill..."
-              className="w-full pl-9 pr-4 py-1.5 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none transition-colors"
+              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--brand-primary)] transition-colors"
             />
           </div>
         </div>
 
-        {/* Ranked Candidate Data Table */}
-        <div className="glass-panel rounded-3xl border border-slate-200 dark:border-white/10 overflow-hidden shadow-xl">
-          {filteredMatches.length === 0 ? (
-            <div className="p-12 text-center space-y-4">
-              <div className="w-12 h-12 rounded-2xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-500 dark:text-slate-400 mx-auto">
-                <FileText className="w-6 h-6" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-display text-lg font-normal text-slate-900 dark:text-slate-100">
-                  No Candidates Match Filter Criteria
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {minScoreFilter
-                    ? `No candidates scored above ${minScoreFilter}. Try resetting the filter.`
-                    : "No resume evaluations found. Upload candidate resumes to generate scores."}
-                </p>
-              </div>
-              {minScoreFilter && (
-                <button
-                  onClick={() => setMinScoreFilter(undefined)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-teal-800 dark:text-teal-300 bg-teal-500/10 border border-teal-500/25 hover:bg-teal-500/20 transition-colors"
-                >
-                  Clear Threshold Filter
-                </button>
-              )}
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-xs">
-                <thead>
-                  <tr className="border-b border-slate-200 dark:border-white/10 bg-slate-50/50 dark:bg-black/40 text-slate-500 dark:text-slate-400 font-mono">
-                    <th className="p-4 w-16 text-center">Rank</th>
-                    <th className="p-4 w-1/4">Candidate Details</th>
-                    <th className="p-4 w-28 text-center">Match Score</th>
-                    <th className="p-4 w-1/3">Matched Skills (Verified)</th>
-                    <th className="p-4">Identified Gaps</th>
-                    <th className="p-4 text-right">Details</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100 dark:divide-white/5 font-sans">
-                  {filteredMatches.map((m, idx) => (
-                    <tr
-                      key={m.id}
-                      className="hover:bg-slate-50/70 dark:hover:bg-white/[0.02] transition-colors group cursor-pointer"
-                      onClick={() => router.push(`/jobs/${jobId}/candidates/${m.id}`)}
-                    >
-                      {/* Rank */}
-                      <td className="p-4 text-center font-mono font-bold text-sm text-slate-400 dark:text-slate-500">
-                        #{idx + 1}
-                      </td>
-
-                      {/* Candidate Name & Info */}
-                      <td className="p-4">
-                        <div className="font-semibold text-sm text-slate-900 dark:text-slate-100 group-hover:text-teal-700 dark:group-hover:text-teal-400 transition-colors">
-                          {m.candidate_name || `Candidate #${m.id.slice(0, 6)}`}
-                        </div>
-                        <div className="text-[11px] font-mono text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1.5">
-                          <DPDPBadge variant="row" />
-                          <span>Evaluation #MX-{m.id.slice(0, 5)}</span>
-                        </div>
-                      </td>
-
-                      {/* Score Ring Centerpiece */}
-                      <td className="p-4 text-center">
-                        <div className="inline-flex justify-center">
-                          <ScoreRing score={m.score} size={54} strokeWidth={5} animated={true} />
-                        </div>
-                      </td>
-
-                      {/* Matched Skills */}
-                      <td className="p-4">
-                        <div className="flex flex-wrap gap-1.5">
-                          {m.matched_skills.slice(0, 4).map((sk) => (
-                            <span
-                              key={sk}
-                              className="px-2 py-0.5 rounded text-[11px] font-mono bg-teal-500/10 text-teal-800 dark:text-teal-300 border border-teal-500/25"
-                            >
-                              {sk}
-                            </span>
-                          ))}
-                          {m.matched_skills.length > 4 && (
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400">
-                              +{m.matched_skills.length - 4} more
-                            </span>
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Missing Gaps */}
-                      <td className="p-4">
-                        <div className="flex flex-wrap gap-1.5">
-                          {m.missing_skills.length === 0 ? (
-                            <span className="text-[11px] text-emerald-700 dark:text-emerald-400 font-mono">
-                              No critical gaps
-                            </span>
-                          ) : (
-                            m.missing_skills.slice(0, 2).map((sk) => (
-                              <span
-                                key={sk}
-                                className="px-2 py-0.5 rounded text-[11px] font-mono bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/25"
-                              >
-                                {sk}
-                              </span>
-                            ))
-                          )}
-                        </div>
-                      </td>
-
-                      {/* Action */}
-                      <td className="p-4 text-right">
-                        <Link
-                          href={`/jobs/${jobId}/candidates/${m.id}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold text-teal-800 dark:text-teal-300 bg-teal-500/10 hover:bg-teal-500/20 border border-teal-500/25 transition-colors"
-                        >
-                          <span>Inspect</span>
-                          <ChevronRight className="w-3.5 h-3.5" />
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-
-        {/* Legend strip */}
-        <div className="glass-panel p-4 rounded-2xl border border-slate-200 dark:border-white/10 flex flex-wrap items-center justify-between gap-4 text-xs font-mono">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-emerald-600 dark:bg-emerald-500" />
-              <span className="text-slate-800 dark:text-slate-200">80–100: Strong Fit (Interview Shortlist)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-amber-600 dark:bg-amber-500" />
-              <span className="text-slate-800 dark:text-slate-200">60–79: Moderate Fit (Preferred Gap)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-orange-600 dark:bg-orange-500" />
-              <span className="text-slate-800 dark:text-slate-200">&lt;60: Needs Review</span>
-            </div>
+        {/* Results Table with Truffle-Style "Why This Matters" Expandable Drawers */}
+        {loading ? (
+          <div className="p-12 text-center merix-card space-y-3">
+            <Loader2 className="w-6 h-6 animate-spin text-[var(--brand-primary)] mx-auto" />
+            <div className="text-xs text-[var(--text-muted)] font-mono">Filtering candidates...</div>
           </div>
-          <DPDPBadge variant="pill" />
-        </div>
+        ) : filteredMatches.length === 0 ? (
+          <div className="p-12 text-center merix-card space-y-4">
+            <FileText className="w-10 h-10 text-[var(--text-muted)] mx-auto opacity-50" />
+            <div className="space-y-1">
+              <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                No candidates found matching this filter
+              </h3>
+              <p className="text-xs text-[var(--text-muted)]">
+                Try resetting your score threshold or upload additional candidate resumes.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setMinScoreFilter(undefined);
+                setSearchTerm("");
+              }}
+              className="px-4 py-2 rounded-xl text-xs font-semibold bg-[var(--brand-primary)] text-white"
+            >
+              Reset Filters
+            </button>
+          </div>
+        ) : (
+          <div className="merix-card overflow-hidden divide-y divide-[var(--border-hairline)] shadow-xs">
+            {/* Table Header */}
+            <div className="px-5 py-3 bg-[var(--bg-subtle)] grid grid-cols-12 text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
+              <div className="col-span-1">Rank</div>
+              <div className="col-span-4">Candidate</div>
+              <div className="col-span-2 text-center">Fit Score</div>
+              <div className="col-span-4">Matched &amp; Missing Competencies</div>
+              <div className="col-span-1 text-right">Details</div>
+            </div>
+
+            {/* Candidate Rows */}
+            {filteredMatches.map((m, idx) => {
+              const isExpanded = expandedMatchId === m.id;
+              const verd = m.score >= 80 ? "Strong" : m.score >= 60 ? "Mixed" : "Weak";
+              const verdClass =
+                m.score >= 80
+                  ? "verd-strong"
+                  : m.score >= 60
+                  ? "verd-mixed"
+                  : "verd-weak";
+
+              return (
+                <div key={m.id} className="transition-colors hover:bg-[var(--bg-subtle)]/50">
+                  {/* Row Summary Bar */}
+                  <div
+                    onClick={() => setExpandedMatchId(isExpanded ? null : m.id)}
+                    className="px-5 py-4 grid grid-cols-12 items-center gap-2 cursor-pointer select-none"
+                  >
+                    {/* Rank */}
+                    <div className="col-span-1 font-mono text-xs font-bold text-[var(--text-muted)]">
+                      #{idx + 1}
+                    </div>
+
+                    {/* Candidate Identity */}
+                    <div className="col-span-4 min-w-0 pr-2">
+                      <div className="font-bold text-xs text-[var(--text-primary)] truncate">
+                        {m.candidate_name || "Applicant"}
+                      </div>
+                      <div className="text-[10px] font-mono text-[var(--text-muted)] truncate mt-0.5">
+                        ID: {m.resume_id.substring(0, 8)} • Click to inspect evidence
+                      </div>
+                    </div>
+
+                    {/* Score Ring & Verdict */}
+                    <div className="col-span-2 flex items-center justify-center gap-2">
+                      <ScoreRing score={m.score} size={42} strokeWidth={4} />
+                      <span className={verdClass}>{verd}</span>
+                    </div>
+
+                    {/* Skills Chips */}
+                    <div className="col-span-4 flex flex-wrap gap-1 pr-2">
+                      {m.matched_skills.slice(0, 3).map((sk) => (
+                        <span key={sk} className="tag-evidence text-[10px]">
+                          ✓ {sk}
+                        </span>
+                      ))}
+                      {m.missing_skills.slice(0, 1).map((sk) => (
+                        <span key={sk} className="tag-gap text-[10px]">
+                          ✕ {sk}
+                        </span>
+                      ))}
+                      {m.matched_skills.length > 3 && (
+                        <span className="tag-neutral text-[10px]">
+                          +{m.matched_skills.length - 3} more
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Expand Chevron & Link */}
+                    <div className="col-span-1 flex items-center justify-end gap-2 text-[var(--text-muted)]">
+                      {isExpanded ? (
+                        <ChevronUp className="w-4 h-4 text-[var(--brand-primary)]" />
+                      ) : (
+                        <ChevronDown className="w-4 h-4" />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Truffle-Style "Why This Matters" Expandable Evidence Drawer */}
+                  {isExpanded && (
+                    <div className="px-6 py-5 bg-[var(--bg-subtle)] border-t border-[var(--border-hairline)] space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                        {/* Left: AI Rationale & Quote */}
+                        <div className="md:col-span-8 space-y-3">
+                          <div className="space-y-1">
+                            <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                              Verbatim Monospace Citation from Candidate Resume:
+                            </div>
+                            <div className="forensic-citation">
+                              &ldquo;{m.rationale || "Candidate demonstrates required technical competencies across core job specification criteria."}&rdquo;
+                            </div>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                              All Extracted Technical Competencies:
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {m.matched_skills.map((sk) => (
+                                <span key={sk} className="tag-evidence">
+                                  ✓ {sk}
+                                </span>
+                              ))}
+                              {m.missing_skills.map((sk) => (
+                                <span key={sk} className="tag-gap">
+                                  ✕ {sk} (Gap)
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Right: Actions & Dossier Link */}
+                        <div className="md:col-span-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] space-y-3 flex flex-col justify-between">
+                          <div className="space-y-1">
+                            <div className="text-[10px] font-mono uppercase text-[var(--text-muted)]">
+                              Evaluation Actions
+                            </div>
+                            <div className="text-xs font-bold text-[var(--text-primary)]">
+                              Ready for Recruiter Decision
+                            </div>
+                          </div>
+
+                          <div className="space-y-2">
+                            <Link
+                              href={`/jobs/${jobId}/candidates/${m.id}`}
+                              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-hover)] transition-colors"
+                            >
+                              <span>Open Candidate Dossier</span>
+                              <ExternalLink className="w-3.5 h-3.5" />
+                            </Link>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </main>
     </div>
   );

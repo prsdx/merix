@@ -12,9 +12,9 @@ interface ScoreRingProps {
 }
 
 function getColor(score: number): string {
-  if (score >= 80) return 'var(--color-score-high, #10B981)'
-  if (score >= 60) return 'var(--color-score-mid, #F59E0B)'
-  return 'var(--color-score-low, #EF4444)'
+  if (score >= 80) return 'var(--accent-evidence, #0B7258)'
+  if (score >= 60) return 'var(--accent-gap, #B45309)'
+  return 'var(--accent-danger, #BE123C)'
 }
 
 export function ScoreRing({
@@ -54,7 +54,7 @@ export function ScoreRing({
       >
         <defs>
           <filter id={filterId} x="-30%" y="-30%" width="160%" height="160%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="blur" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
             <feComposite in="blur" in2="SourceGraphic" operator="over" />
           </filter>
         </defs>
@@ -64,7 +64,7 @@ export function ScoreRing({
           cx={cx}
           cy={cy}
           r={radius}
-          stroke="var(--ring-bg-stroke, rgba(100, 116, 139, 0.15))"
+          stroke="var(--ring-track, rgba(18, 21, 26, 0.08))"
           strokeWidth={strokeWidth}
           fill="none"
           strokeLinecap="round"
@@ -84,12 +84,12 @@ export function ScoreRing({
             filter: `url(#${filterId})`,
           }}
           animate={{ pathLength: targetPathLength, opacity: 1 }}
-          initial={{ pathLength: 0, opacity: animated ? 0.6 : 1 }}
+          initial={{ pathLength: 0, opacity: animated ? 0.7 : 1 }}
           transition={
             animated
               ? {
                   pathLength: {
-                    duration: 1.1,
+                    duration: 0.9,
                     ease: [0.22, 1, 0.36, 1],
                   },
                   opacity: { duration: 0.2 },

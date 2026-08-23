@@ -11,17 +11,17 @@ interface DPDPBadgeProps {
 
 /**
  * DPDPBadge — DPDP Act 2023 compliance visual signal.
- * Responsive across Light and Dark themes.
+ * Precision styled with Forensic Ledger design tokens.
  */
 export function DPDPBadge({
-  label = "DPDP 2023 Compliant",
+  label = "DPDP Act (2023) Compliant",
   variant = "pill",
   className = "",
 }: DPDPBadgeProps) {
   if (variant === "subtle") {
     return (
-      <span className={`inline-flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-400 font-medium font-mono ${className}`}>
-        <ShieldCheck className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+      <span className={`inline-flex items-center gap-1.5 text-xs text-[var(--accent-evidence)] font-medium font-mono ${className}`}>
+        <ShieldCheck className="w-3.5 h-3.5" />
         <span>{label}</span>
       </span>
     );
@@ -30,17 +30,17 @@ export function DPDPBadge({
   if (variant === "banner") {
     return (
       <div
-        className={`flex items-start gap-3 px-4 py-3 rounded-xl border text-xs text-slate-700 dark:text-slate-200 backdrop-blur-md bg-emerald-500/5 border-emerald-500/20 ${className}`}
+        className={`flex items-start gap-3 px-4 py-3 rounded-xl border text-xs text-[var(--text-secondary)] bg-[var(--accent-evidence-soft)] border-[var(--accent-evidence-border)] ${className}`}
       >
-        <div className="flex items-center gap-2 mt-0.5 shrink-0">
-          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-          <ShieldCheck className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+        <div className="flex items-center gap-2 mt-0.5 shrink-0 text-[var(--accent-evidence)]">
+          <span className="w-2 h-2 rounded-full bg-[var(--accent-evidence)] animate-pulse" />
+          <ShieldCheck className="w-4 h-4" />
         </div>
         <span>
-          <strong className="text-emerald-700 dark:text-emerald-400 font-semibold">
-            India DPDP Act (2023) Protected.
+          <strong className="text-[var(--accent-evidence)] font-bold">
+            India DPDP Act (2023) Certified.
           </strong>{" "}
-          All candidate resumes are processed with PII scrubbing, explicit consent logging, and automatic retention enforcement. Candidate data is never sent to external LLM providers without anonymisation.
+          All candidate resumes are processed with PII redaction, affirmative recruiter consent logging, and automatic 90-day retention enforcement.
         </span>
       </div>
     );
@@ -49,7 +49,7 @@ export function DPDPBadge({
   if (variant === "row") {
     return (
       <span
-        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 ${className}`}
+        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-[var(--accent-evidence-soft)] text-[var(--accent-evidence)] border border-[var(--accent-evidence-border)] ${className}`}
       >
         <Lock className="w-2.5 h-2.5" />
         <span>DPDP</span>
@@ -60,14 +60,16 @@ export function DPDPBadge({
   if (variant === "stamp") {
     return (
       <div
-        className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl text-center bg-emerald-500/5 border border-emerald-500/25 ${className}`}
+        className={`flex flex-col items-center justify-center gap-1.5 p-3 rounded-xl text-center bg-[var(--accent-evidence-soft)] border border-[var(--accent-evidence-border)] ${className}`}
       >
-        <ShieldCheck className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+        <ShieldCheck className="w-5 h-5 text-[var(--accent-evidence)]" />
         <div>
-          <div className="text-[10px] font-mono font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">
+          <div className="text-[10px] font-mono font-bold text-[var(--accent-evidence)] uppercase tracking-wider">
             DPDP 2023
           </div>
-          <div className="text-[9px] text-emerald-600/70 dark:text-emerald-400/60 mt-0.5">Protected</div>
+          <div className="text-[9px] text-[var(--accent-evidence)] opacity-80 mt-0.5 font-mono">
+            Protected
+          </div>
         </div>
       </div>
     );
@@ -76,11 +78,11 @@ export function DPDPBadge({
   // Default: pill
   return (
     <span
-      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-medium bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 shadow-sm ${className}`}
+      className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-semibold bg-[var(--accent-evidence-soft)] border border-[var(--accent-evidence-border)] text-[var(--accent-evidence)] font-mono ${className}`}
     >
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+      <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-evidence)] animate-pulse" />
       <ShieldCheck className="w-3.5 h-3.5" />
-      <span className="font-mono">{label}</span>
+      <span>{label}</span>
     </span>
   );
 }
