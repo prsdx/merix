@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { Briefcase, PlusCircle, Settings, LogOut, Building2, ArrowRight } from "lucide-react";
 import { DPDPBadge } from "./dpdp-badge";
 import { ThemeToggle } from "./theme-toggle";
+import { MerixLogo } from "./merix-logo";
 
 export function AppNavbar() {
   const { user, logout, isAuthenticated } = useAuth();
@@ -26,20 +27,14 @@ export function AppNavbar() {
 
   return (
     <header className="sticky top-3 z-50 w-full max-w-7xl mx-auto px-4 sm:px-6 mb-6">
-      <div className="flex items-center justify-between px-5 py-3 rounded-2xl bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800 shadow-sm transition-all">
-        {/* Brand */}
+      <div className="flex items-center justify-between px-5 py-3 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border border-slate-200 dark:border-slate-800 shadow-sm transition-all">
+        {/* Brand with Bespoke Logo */}
         <div className="flex items-center gap-6">
           <Link
             href={isAuthenticated ? "/dashboard" : "/"}
-            className="flex items-center gap-2.5 group"
+            className="flex items-center group cursor-pointer"
           >
-            {/* Merix Cobalt Blue Brand Mark */}
-            <div className="w-8 h-8 rounded-lg bg-blue-600 dark:bg-blue-500 flex items-center justify-center text-white font-sans font-bold text-base shadow-sm shadow-blue-500/30 group-hover:scale-105 transition-transform">
-              M
-            </div>
-            <span className="font-sans text-lg tracking-tight font-bold text-slate-900 dark:text-white">
-              Merix
-            </span>
+            <MerixLogo size={32} showText={true} />
           </Link>
 
           {user && (

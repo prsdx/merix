@@ -7,6 +7,7 @@ import { useAuth } from "@/lib/auth-context";
 import { ArrowRight, Building2, Lock, Mail, AlertCircle, Loader2, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { DPDPBadge } from "@/components/dpdp-badge";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { MerixLogo } from "@/components/merix-logo";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -50,21 +51,11 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between p-4 md:p-8">
+    <div className="min-h-screen flex flex-col justify-between p-4 md:p-8 bg-white dark:bg-[#0A0E1A] text-slate-900 dark:text-slate-100">
       {/* Top Bar */}
       <header className="w-full max-w-6xl mx-auto flex justify-between items-center py-4">
-        <Link href="/" className="flex items-center gap-2.5 group">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-white dark:text-[#0B0F17] font-display font-bold text-sm shadow-md group-hover:scale-105 transition-transform"
-            style={{
-              background: "linear-gradient(135deg, #0D9488 0%, #0284C7 100%)",
-            }}
-          >
-            M
-          </div>
-          <span className="font-display text-lg tracking-tight font-semibold text-slate-900 dark:text-slate-100">
-            Merix
-          </span>
+        <Link href="/" className="flex items-center group">
+          <MerixLogo size={34} showText={true} />
         </Link>
         <div className="flex items-center gap-3">
           <DPDPBadge variant="pill" />
@@ -78,10 +69,10 @@ export default function SignupPage() {
           {/* Left Branding / Trust Pane */}
           <div className="hidden lg:block lg:col-span-5 space-y-6">
             <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-medium text-teal-800 dark:text-teal-300 bg-teal-500/10 border border-teal-500/20">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono font-semibold text-blue-700 dark:text-blue-300 bg-blue-100/70 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800">
                 <span>Enterprise Onboarding</span>
               </div>
-              <h1 className="font-display text-3xl font-normal text-slate-900 dark:text-slate-100 leading-tight">
+              <h1 className="font-sans text-3xl font-bold text-slate-900 dark:text-white leading-tight tracking-tight">
                 Hire smarter. Stay compliant.
               </h1>
               <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
@@ -91,7 +82,7 @@ export default function SignupPage() {
 
             <div className="space-y-3 pt-2">
               <div className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
-                <CheckCircle2 className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                 <span>Deterministic 70/20/10 scoring with verified evidence quotes</span>
               </div>
               <div className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
@@ -99,21 +90,21 @@ export default function SignupPage() {
                 <span>India DPDP Act (2023) consent tracking &amp; auto-retention</span>
               </div>
               <div className="flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300">
-                <CheckCircle2 className="w-4 h-4 text-teal-600 dark:text-teal-400 shrink-0 mt-0.5" />
+                <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
                 <span>Multi-tenant Row-Level Security tenant isolation</span>
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-200 dark:border-white/10">
+            <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
               <DPDPBadge variant="banner" />
             </div>
           </div>
 
           {/* Right Form Card */}
           <div className="lg:col-span-7">
-            <div className="glass-panel p-8 md:p-10 rounded-3xl border border-slate-200 dark:border-white/10 shadow-xl">
+            <div className="p-8 md:p-10 rounded-3xl bg-slate-50/80 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
               <div className="mb-6 space-y-1">
-                <h2 className="font-display text-2xl font-normal text-slate-900 dark:text-slate-100">Create Account</h2>
+                <h2 className="font-sans text-2xl font-bold text-slate-900 dark:text-white">Create Account</h2>
                 <p className="text-xs text-slate-600 dark:text-slate-400">
                   Set up your organization and administrator account.
                 </p>
@@ -128,7 +119,7 @@ export default function SignupPage() {
 
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400 font-semibold">
                     Organisation Name
                   </label>
                   <div className="relative">
@@ -139,13 +130,13 @@ export default function SignupPage() {
                       onChange={(e) => setOrgName(e.target.value)}
                       placeholder="e.g. Apex Staffing / IIT Placement Cell"
                       required
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none transition-colors"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400 font-semibold">
                     Work Email Address
                   </label>
                   <div className="relative">
@@ -156,13 +147,13 @@ export default function SignupPage() {
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="recruiter@organisation.com"
                       required
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none transition-colors"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400">
+                  <label className="block text-xs font-mono uppercase tracking-wider text-slate-600 dark:text-slate-400 font-semibold">
                     Password (min. 8 characters)
                   </label>
                   <div className="relative">
@@ -174,7 +165,7 @@ export default function SignupPage() {
                       placeholder="••••••••••••"
                       required
                       minLength={8}
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-slate-50 dark:bg-black/40 border border-slate-200 dark:border-white/10 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-teal-500 focus:outline-none transition-colors"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:border-blue-500 focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
@@ -182,10 +173,7 @@ export default function SignupPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-xs text-white transition-all hover:opacity-95 active:scale-[0.99] disabled:opacity-50 mt-2 cursor-pointer shadow-md"
-                  style={{
-                    background: "linear-gradient(135deg, #0D9488 0%, #0284C7 100%)",
-                  }}
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-semibold text-xs text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-500 shadow-md shadow-blue-500/25 transition-all hover:scale-[1.01] active:scale-[0.99] disabled:opacity-50 mt-2 cursor-pointer"
                 >
                   {loading ? (
                     <>
@@ -201,9 +189,9 @@ export default function SignupPage() {
                 </button>
               </form>
 
-              <div className="mt-6 pt-5 border-t border-slate-200 dark:border-white/10 text-center text-xs text-slate-600 dark:text-slate-400">
+              <div className="mt-6 pt-5 border-t border-slate-200 dark:border-slate-800 text-center text-xs text-slate-600 dark:text-slate-400">
                 Already registered?{" "}
-                <Link href="/login" className="text-teal-700 dark:text-teal-400 font-semibold hover:underline">
+                <Link href="/login" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">
                   Sign In
                 </Link>
               </div>
