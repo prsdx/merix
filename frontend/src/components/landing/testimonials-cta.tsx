@@ -49,7 +49,13 @@ export function TestimonialsCta() {
       </div>
 
       {/* Final High-Conversion Trust CTA */}
-      <div className="p-8 sm:p-12 rounded-3xl bg-[var(--text-primary)] text-[var(--bg-canvas)] text-center space-y-6 shadow-2xl">
+      <div
+        className="p-8 sm:p-12 rounded-3xl text-center space-y-6 shadow-2xl text-[var(--bg-canvas)]"
+        style={{
+          background:
+            "linear-gradient(135deg, var(--text-primary) 45%, var(--brand-primary) 145%)",
+        }}
+      >
         <div className="max-w-xl mx-auto space-y-3">
           <h2 className="font-display text-3xl sm:text-4xl text-[var(--bg-canvas)]">
             Screen your next 100 resumes in minutes.

@@ -75,13 +75,14 @@ export function HeroSection() {
         {/* Left Column: Thesis & Direct CTAs */}
         <div className="lg:col-span-5 space-y-6 pt-2">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-[11px] font-mono font-semibold uppercase tracking-wider bg-[var(--brand-soft)] text-[var(--brand-primary)] border border-[var(--brand-border)]">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-evidence)] animate-pulse" />
             <span>Candidate Screening Instrument</span>
           </div>
 
           <h1 className="font-display text-4xl sm:text-5xl lg:text-[54px] leading-[1.08] tracking-tight text-[var(--text-primary)]">
             Stop skimming resumes.
             <br />
-            <span className="text-[var(--brand-primary)]">
+            <span className="gradient-text">
               See the evidence behind every shortlist.
             </span>
           </h1>
@@ -94,7 +95,7 @@ export function HeroSection() {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
             <Link
               href="/signup"
-              className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-xs text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] transition-all shadow-md cursor-pointer"
+              className="btn-gradient flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-xs text-white cursor-pointer"
             >
               <span>Start Batch Screening Free</span>
               <ArrowRight className="w-4 h-4" />
@@ -117,7 +118,7 @@ export function HeroSection() {
 
         {/* Right Column: EMBEDDED REAL PRODUCT UI (Truffle-Style Live Candidate Stage) */}
         <div className="lg:col-span-7">
-          <div className="merix-card overflow-hidden border border-[var(--border-subtle)] shadow-xl">
+          <div className="merix-card card-glow overflow-hidden animate-float">
             <div className="px-5 py-3.5 bg-[var(--bg-subtle)] border-b border-[var(--border-hairline)] flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent-evidence)]" />
