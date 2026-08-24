@@ -90,7 +90,10 @@ export default function RankedResultsPage() {
 
   const skillGapMap = new Map<string, number>();
   matches.forEach((m) =>
-    m.missing_skills.forEach((s) => skillGapMap.set(s, (skillGapMap.get(s) || 0) + 1))
+    m.missing_skills.forEach((ms) => {
+      const name = typeof ms === "string" ? ms : ms.skill;
+      skillGapMap.set(name, (skillGapMap.get(name) || 0) + 1);
+    })
   );
   const topGaps = [...skillGapMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
 
