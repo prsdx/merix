@@ -241,7 +241,10 @@ export const api = {
 
   // Candidate erasure (DPDP Right to Erasure)
   async deleteCandidate(jobId: string, resumeId: string): Promise<{ message: string }> {
-    return request<{ message: string }>(`/jobs/${jobId}/resumes/${resumeId}`, {
+    // The delete endpoint lives at /candidates/{resume_id} (candidates router);
+    // jobId is kept in the signature for caller symmetry but is not in the path.
+    void jobId;
+    return request<{ message: string }>(`/candidates/${resumeId}`, {
       method: "DELETE",
     });
   },
