@@ -53,3 +53,6 @@ graphify-out/GRAPH_REPORT.md
 graphify-out/manifest.json
 graphify-out/.graphify*
 graphify-out/.pending_changes
+
+# Graphify generated output - fully regenerable, never track
+graphify-out/
