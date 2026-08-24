@@ -1,11 +1,12 @@
-import next from 'eslint-config-next'
+import nextCoreWebVitals from 'eslint-config-next/core-web-vitals'
 
 export default [
-  ...next.coreWebVitals,
+  ...nextCoreWebVitals,
   {
     rules: {
       'react/no-unescaped-entities': 'off'
     }
   }
 ]
+
 
