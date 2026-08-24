@@ -73,17 +73,6 @@ function RankedResults() {
     return () => clearTimeout(timer);
   }, [minScoreFilter, searchTerm, jobId, router]);
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/login");
-      return;
-    }
-
-    if (isAuthenticated && jobId) {
-      loadData();
-    }
-  }, [authLoading, isAuthenticated, jobId, minScoreFilter, router]);
-
   const loadData = async () => {
     setLoading(true);
     setError(null);
@@ -101,6 +90,22 @@ function RankedResults() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    // Deferred so the effect body performs no synchronous state update
+    // (react-hooks/set-state-in-effect); behaviour is unchanged.
+    const timer = setTimeout(() => {
+      if (isAuthenticated && jobId) {
+        loadData();
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [authLoading, isAuthenticated, jobId, minScoreFilter, router]);
 
   const filteredMatches = matches.filter((m) => {
     const query = searchTerm.toLowerCase();

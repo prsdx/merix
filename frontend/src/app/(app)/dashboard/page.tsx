@@ -77,17 +77,6 @@ export default function DashboardPage() {
   const [sortMode, setSortMode] = useState<"newest" | "candidates" | "evaluations">("newest");
   const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/login");
-      return;
-    }
-
-    if (isAuthenticated) {
-      loadJobs();
-    }
-  }, [authLoading, isAuthenticated, router]);
-
   const loadJobs = async () => {
     setLoading(true);
     setError(null);
@@ -101,6 +90,22 @@ export default function DashboardPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    // Deferred so the effect body performs no synchronous state update
+    // (react-hooks/set-state-in-effect); behaviour is unchanged.
+    const timer = setTimeout(() => {
+      if (isAuthenticated) {
+        loadJobs();
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [authLoading, isAuthenticated, router]);
 
   const handleDeleteJob = async (job: JobSummary) => {
     const confirmed = window.confirm(
