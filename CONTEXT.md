@@ -29,13 +29,12 @@ Traditional ATS systems are black boxes: they reject resumes with no explanation
 
 ## Current Architecture
 
-**Backend**: FastAPI (async) + PostgreSQL/pgvector (Supabase) + SQLAlchemy 2.0 (async, NullPool) + Alembic (migrations applied)
+**Backend**: FastAPI (async) + PostgreSQL/pgvector (Supabase) + SQLAlchemy 2.0 (async, **env-gated pooling** — `QueuePool` in production, NullPool in dev/test) + Alembic (migrations applied)
 
 **Frontend**: Next.js 15 (App Router) + TypeScript + Tailwind CSS + Framer Motion (in `frontend/`)
 
-**Status**: Tasks 1–9 complete — Full production frontend wired to real FastAPI backend. Unified design direction combining v5 (high-converting B2B SaaS conversion structure) with v7 (Apple Liquid Glass deep `#050505` palette & frosted glass cards). All 9 core screens built and verified live with 64 passing backend tests and end-to-end integration.
+**Status**: Tasks 1–11 complete. Tasks 1–9 (full production frontend wired to real FastAPI backend, unified design, all 9 screens verified live with 73 passing backend tests) plus **Task 11: Backend performance pass** — async engine connection pooling (env-gated QueuePool in production, NullPool retained in dev/test to avoid pytest-asyncio cross-event-loop issues), async single-resume upload via BatchJob infrastructure (202 + poll), and worker/health-check configuration review.
 
-Tasks 1–9 complete. Backend + frontend dependencies audited (0 vulns). CI lint + pytest (64 tests) passing. Real auth flow, semantic JD creation, batch PDF ingestion with DPDP Consent Gate, async status polling, explainable ranked shortlists with CSV export, candidate detail drill-down with DPDP erasure, and live audit logging.
 
 
 ### Project Structure
@@ -104,7 +103,7 @@ backend/
   - **RLS policy fix**: Migration `26f49b7b8456` grants merix_app full access to organisations/users tables (RLS was enabled but no app policy existed, breaking signup under the app role).
   - 39 tests total (14 unit + 25 integration): +2 rate-limit tests, +2 RLS bleed-through tests.
 
-- **Task 5**: Background job robustness (async batch matching with status tracking)
+- **Task 5**: Background job robustness (async batch matching with status tracking) — reused by single-resume async upload (Task 11).
   - **BatchJob model** (`models/batch_job.py`): status lifecycle (queued→running→completed/failed), org_id, job_description_id, idempotency_key (optional UUID for deduplication), total_resumes, completed_resumes (progress tracking), batch_results (JSONB array of per-resume disposition), error_message (for failed jobs)
   - **Migration** `13aafa45b687` (applied to live DB): batch_jobs table with RLS policies, grants merix_app full access
   - **Async batch matching**: POST `/api/jobs/{job_id}/match` returns 202 Accepted immediately, creates BatchJob with status="queued", enqueues `run_batch_match_background` via BackgroundTasks
@@ -130,6 +129,8 @@ backend/
 
 - **Task 7**: Live deployment configuration (Render free tier)
   - **Render configuration** (`render.yaml`): Web service blueprint deploying FastAPI backend via `uv sync --frozen` and `uvicorn merix.main:app --host 0.0.0.0 --port $PORT`.
+  - **Workers**: single uvicorn worker retained — Render free tier is 512MB / 0.1 CPU; 2+ workers risk OOM with no throughput gain. Latency was diagnosed as connection-pool, not worker-starvation.
+
   - **Health check** (`/health` and `/ready`): `GET /health` verifies app liveness and database connectivity (`SELECT 1`). Also mounted at `/api/health`.
   - **Render free tier cold-start behavior**: Render free tier instances spin down after 15 minutes of inactivity, requiring ~30-60 seconds on initial cold-start. For live demo pitches, hit `GET /health` 1 minute prior to demo start to warm the container.
   - **Dev/prod shared Supabase tradeoff & Demo Org convention**: We intentionally use a shared Supabase project for dev and demo to conserve cost and infrastructure complexity pre-launch. To ensure messy dev test runs do not pollute pitch demos, all demo data is quarantined under a dedicated tagged demo organisation (e.g. `Demo Placement Cell`), cleanly isolated by PostgreSQL Row-Level Security (`org_isolation` policy). Full project-level Supabase separation is scheduled before onboarding live candidate PII.

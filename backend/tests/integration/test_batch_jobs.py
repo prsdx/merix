@@ -54,8 +54,14 @@ async def _create_job_and_resume(client, headers, org_id, resume_text=None):
         data={"candidate_name": "Jane Doe", "consent_given": "true"},
         headers=headers,
     )
-    assert r.status_code == 201, r.text
-    resume_id = r.json()["id"]
+    assert r.status_code == 202, r.text
+    # Upload is async now: the response is a BatchJobStatus; the resume row is
+    # created by process_resume_background (TestClient runs background tasks
+    # before returning).
+    async with scoped_session(uuid.UUID(str(org_id))) as session:
+        resumes = (await session.scalars(select(Resume).where(Resume.job_id == uuid.UUID(job_id)))).all()
+        assert len(resumes) == 1, r.text
+        resume_id = str(resumes[0].id)
     return job_id, resume_id
 
 

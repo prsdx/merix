@@ -70,7 +70,7 @@ export default function RankedResultsPage() {
   const filteredMatches = matches.filter((m) => {
     const query = searchTerm.toLowerCase();
     const nameMatch = (m.candidate_name || "").toLowerCase().includes(query);
-    const skillMatch = m.matched_skills.some((s) => s.toLowerCase().includes(query));
+    const skillMatch = m.matched_skills.some((s) => s.skill.toLowerCase().includes(query));
     return nameMatch || skillMatch;
   });
 
@@ -357,13 +357,13 @@ export default function RankedResultsPage() {
                     {/* Skills Chips */}
                     <div className="col-span-4 flex flex-wrap gap-1 pr-2">
                       {m.matched_skills.slice(0, 3).map((sk) => (
-                        <span key={sk} className="tag-evidence text-xs">
-                          ✓ {sk}
+                        <span key={sk.skill} className="tag-evidence text-[10px]">
+                          ✓ {sk.skill}
                         </span>
                       ))}
                       {m.missing_skills.slice(0, 1).map((sk) => (
-                        <span key={sk} className="tag-gap text-xs">
-                          ✕ {sk}
+                        <span key={sk.skill} className="tag-gap text-[10px]">
+                          ✗ {sk.skill}
                         </span>
                       ))}
                       {m.matched_skills.length > 3 && (
@@ -404,13 +404,13 @@ export default function RankedResultsPage() {
                             </div>
                             <div className="flex flex-wrap gap-1.5">
                               {m.matched_skills.map((sk) => (
-                                <span key={sk} className="tag-evidence">
-                                  ✓ {sk}
+                                <span key={sk.skill} className="tag-evidence">
+                                  ✓ {sk.skill}
                                 </span>
                               ))}
                               {m.missing_skills.map((sk) => (
-                                <span key={sk} className="tag-gap">
-                                  ✕ {sk} (Gap)
+                                <span key={sk.skill} className="tag-gap">
+                                  ✕ {sk.skill} (Gap)
                                 </span>
                               ))}
                             </div>
