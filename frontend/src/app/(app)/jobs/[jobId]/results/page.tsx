@@ -76,6 +76,24 @@ export default function RankedResultsPage() {
 
   const exportUrl = api.getExportUrl(jobId, minScoreFilter);
 
+  /* ---- Cohort analytics (client-side, zero extra API calls) ---- */
+  const sortedScores = [...matches].map((m) => m.score).sort((a, b) => a - b);
+  const topScore = sortedScores.length ? Math.round(sortedScores[sortedScores.length - 1]) : null;
+  const medianScore =
+    sortedScores.length > 0
+      ? Math.round(
+          sortedScores.length % 2 === 1
+            ? sortedScores[(sortedScores.length - 1) / 2]
+            : (sortedScores[sortedScores.length / 2 - 1] + sortedScores[sortedScores.length / 2]) / 2
+        )
+      : null;
+
+  const skillGapMap = new Map<string, number>();
+  matches.forEach((m) =>
+    m.missing_skills.forEach((s) => skillGapMap.set(s, (skillGapMap.get(s) || 0) + 1))
+  );
+  const topGaps = [...skillGapMap.entries()].sort((a, b) => b[1] - a[1]).slice(0, 6);
+
   if (authLoading || (loading && !job)) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-[var(--bg-canvas)]">
@@ -143,6 +161,78 @@ export default function RankedResultsPage() {
             DPDP Section 12 Audited
           </div>
         </div>
+
+        {/* Cohort Stats + Skill Gap Analysis */}
+        {matches.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            {/* Stat Cards */}
+            <div className="lg:col-span-4 grid grid-cols-3 lg:grid-cols-1 gap-3">
+              <div className="merix-card p-4 space-y-0.5">
+                <div className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">
+                  Candidates Ranked
+                </div>
+                <div className="text-2xl font-mono font-bold text-[var(--text-primary)]">
+                  {matches.length}
+                </div>
+              </div>
+              <div className="merix-card p-4 space-y-0.5">
+                <div className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">
+                  Top Score
+                </div>
+                <div className="text-2xl font-mono font-bold text-[var(--accent-evidence)]">
+                  {topScore !== null ? topScore : "—"}
+                </div>
+              </div>
+              <div className="merix-card p-4 space-y-0.5">
+                <div className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">
+                  Median Score
+                </div>
+                <div className="text-2xl font-mono font-bold text-[var(--brand-primary)]">
+                  {medianScore !== null ? medianScore : "—"}
+                </div>
+              </div>
+            </div>
+
+            {/* Skill Gap Panel */}
+            <div className="lg:col-span-8 merix-card p-5 space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <span className="text-sm font-mono font-semibold text-[var(--text-primary)] uppercase tracking-wider">
+                  Skill Gap Analysis
+                </span>
+                <span className="text-xs font-mono text-[var(--text-muted)]">
+                  most-missing skills across this cohort
+                </span>
+              </div>
+              {topGaps.length === 0 ? (
+                <div className="text-sm text-[var(--text-muted)] font-mono py-2">
+                  No skill gaps detected — strong cohort fit.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {topGaps.map(([skill, count]) => {
+                    const pct = Math.round((count / matches.length) * 100);
+                    return (
+                      <div key={skill} className="flex items-center gap-3 text-sm">
+                        <span className="w-44 shrink-0 truncate font-mono text-xs text-[var(--text-secondary)]">
+                          {skill}
+                        </span>
+                        <div className="flex-1 h-2.5 rounded-full bg-[var(--bg-subtle)] overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-[var(--accent-gap)] transition-all duration-500"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                        <span className="w-20 shrink-0 text-right font-mono text-xs text-[var(--text-muted)]">
+                          {count}/{matches.length} · {pct}%
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Filter & Search Bar */}
         <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 p-3 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-xs">

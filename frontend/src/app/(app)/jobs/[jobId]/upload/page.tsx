@@ -46,6 +46,7 @@ export default function ResumeUploadPage() {
   const [consentConfirmed, setConsentConfirmed] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [isMatching, setIsMatching] = useState(false);
+  const [erasingId, setErasingId] = useState<string | null>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -146,12 +147,34 @@ export default function ResumeUploadPage() {
     setIsMatching(true);
     setError(null);
     try {
-      const batchJob = await api.startBatchMatch(jobId);
+      // Idempotency key guards against double-submission creating duplicate batches
+      const idempotencyKey =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${jobId}-${Date.now()}`;
+      const batchJob = await api.startBatchMatch(jobId, idempotencyKey);
       router.push(`/jobs/${jobId}/status/${batchJob.id}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to trigger batch matching";
       setError(msg);
       setIsMatching(false);
+    }
+  };
+
+  const handleEraseResume = async (resumeId: string, name: string) => {
+    if (!window.confirm(`Permanently erase "${name}" and all evaluation data? This cannot be undone (DPDP Right to Erasure).`)) {
+      return;
+    }
+    setErasingId(resumeId);
+    setError(null);
+    try {
+      await api.deleteCandidate(jobId, resumeId);
+      setExistingResumes((prev) => prev.filter((r) => r.id !== resumeId));
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Failed to erase candidate";
+      setError(msg);
+    } finally {
+      setErasingId(null);
     }
   };
 
@@ -193,10 +216,7 @@ export default function ResumeUploadPage() {
               <button
                 onClick={handleStartMatching}
                 disabled={isMatching}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm text-white transition-all shadow-md hover:opacity-95 active:scale-[0.98] disabled:opacity-50 cursor-pointer"
-                style={{
-                  background: "linear-gradient(135deg, #0D9488 0%, #0284C7 100%)",
-                }}
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] transition-all shadow-md active:scale-[0.98] disabled:opacity-50 cursor-pointer"
               >
                 {isMatching ? (
                   <>
@@ -278,10 +298,7 @@ export default function ResumeUploadPage() {
                   <button
                     onClick={handleUploadAll}
                     disabled={isUploading || !consentConfirmed}
-                    className="px-4 py-1.5 rounded-lg text-sm font-semibold text-white transition-all shadow-sm hover:opacity-95 disabled:opacity-40 cursor-pointer"
-                    style={{
-                      background: "linear-gradient(135deg, #0D9488 0%, #0284C7 100%)",
-                    }}
+                    className="px-4 py-1.5 rounded-lg text-sm font-semibold text-white bg-[var(--accent-evidence)] hover:opacity-90 transition-all shadow-sm disabled:opacity-40 cursor-pointer"
                   >
                     {isUploading ? "Uploading..." : `Upload ${queue.filter((q) => q.status === "idle").length} Files`}
                   </button>
@@ -425,7 +442,22 @@ export default function ResumeUploadPage() {
                           Consent stamped: {res.consent_timestamp ? new Date(res.consent_timestamp).toLocaleDateString() : "Valid"}
                         </div>
                       </div>
-                      <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent-evidence)] shrink-0" />
+                      <div className="flex items-center gap-2 shrink-0">
+                        {erasingId === res.id ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--accent-danger)]" />
+                        ) : (
+                          <button
+                            onClick={() =>
+                              handleEraseResume(res.id, res.candidate_name || res.original_filename)
+                            }
+                            title="Erase candidate data (DPDP Right to Erasure)"
+                            className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent-danger)] hover:bg-[var(--accent-danger-soft)] transition-colors cursor-pointer"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent-evidence)] shrink-0" />
+                      </div>
                     </div>
                   ))}
                 </div>

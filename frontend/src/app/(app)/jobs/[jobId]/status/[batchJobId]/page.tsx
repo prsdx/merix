@@ -180,10 +180,7 @@ export default function BatchJobStatusPage() {
             {isFinished && (
               <Link
                 href={`/jobs/${jobId}/results`}
-                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-sm text-white transition-all shadow-md hover:opacity-95 active:scale-[0.98]"
-                style={{
-                  background: "linear-gradient(135deg, #0D9488 0%, #0284C7 100%)",
-                }}
+                className="inline-flex items-center gap-2 px-5 py-2 rounded-xl font-semibold text-sm text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] transition-all shadow-md active:scale-[0.98]"
               >
                 <span>View Ranked Shortlist</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -204,7 +201,7 @@ export default function BatchJobStatusPage() {
 
             <div className="w-full bg-[var(--bg-subtle)] h-3 rounded-full overflow-hidden p-0.5 border border-[var(--border-hairline)]">
               <div
-                className="bg-gradient-to-r from-[var(--accent-evidence)] to-sky-600 h-full rounded-full transition-all duration-500"
+                className="bg-gradient-to-r from-[var(--accent-evidence)] to-[var(--accent-gap)] h-full rounded-full transition-all duration-500"
                 style={{ width: `${percent}%` }}
               />
             </div>
@@ -219,8 +216,8 @@ export default function BatchJobStatusPage() {
 
           {/* Partial Failure Notice */}
           {failedCount > 0 && (
-            <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200 text-sm flex items-center gap-2.5">
-              <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+            <div className="p-3.5 rounded-xl bg-[var(--accent-gap-soft)] border border-[var(--accent-gap-border)] text-[var(--accent-gap)] text-sm flex items-center gap-2.5">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
               <span>
                 {failedCount} resume(s) could not be parsed (corrupt PDF or encrypted). The remaining {completed - failedCount} resumes were evaluated successfully.
               </span>
@@ -244,7 +241,7 @@ export default function BatchJobStatusPage() {
                       {res.status === "matched" ? (
                         <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent-evidence)] shrink-0" />
                       ) : (
-                        <AlertCircle className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400 shrink-0" />
+                        <AlertCircle className="w-3.5 h-3.5 text-[var(--accent-gap)] shrink-0" />
                       )}
                       <span className="text-[var(--text-primary)] truncate font-medium">
                         {res.candidate_name || `Resume #${i + 1}`}
@@ -254,27 +251,19 @@ export default function BatchJobStatusPage() {
                     <div className="flex items-center gap-3 shrink-0">
                       {res.status === "matched" && res.score !== undefined && (
                         <span
-                          className="px-2 py-0.5 rounded font-bold text-sm"
-                          style={{
-                            background:
-                              res.score >= 80
-                                ? "rgba(22,163,74,0.15)"
-                                : res.score >= 60
-                                ? "rgba(217,119,6,0.15)"
-                                : "rgba(234,88,12,0.15)",
-                            color:
-                              res.score >= 80
-                                ? "#16A34A"
-                                : res.score >= 60
-                                ? "#D97706"
-                                : "#EA580C",
-                          }}
+                          className={`px-2 py-0.5 rounded font-bold text-sm border ${
+                            res.score >= 80
+                              ? "bg-[var(--accent-evidence-soft)] text-[var(--accent-evidence)] border-[var(--accent-evidence-border)]"
+                              : res.score >= 60
+                              ? "bg-[var(--brand-soft)] text-[var(--brand-primary)] border-[var(--brand-border)]"
+                              : "bg-[var(--accent-gap-soft)] text-[var(--accent-gap)] border-[var(--accent-gap-border)]"
+                          }`}
                         >
                           Score: {Math.round(res.score)}/100
                         </span>
                       )}
                       {res.status === "failed" && (
-                        <span className="text-xs text-orange-600 dark:text-orange-400 truncate max-w-[160px]">
+                        <span className="text-xs text-[var(--accent-gap)] truncate max-w-[160px]">
                           {res.error || "Parsing failed"}
                         </span>
                       )}

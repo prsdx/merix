@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
+import { Job } from "@/lib/types";
 import { DPDPBadge } from "@/components/dpdp-badge";
 import {
   ArrowLeft,
@@ -14,6 +15,9 @@ import {
   Loader2,
   CheckCircle2,
   Wand2,
+  ListChecks,
+  UploadCloud,
+  PencilLine,
 } from "lucide-react";
 
 const SAMPLE_JD = `Role: Senior Backend Engineer (FastAPI & PostgreSQL)
@@ -45,6 +49,7 @@ export default function NewJobPage() {
   const [rawText, setRawText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [createdJob, setCreatedJob] = useState<Job | null>(null);
 
   React.useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -68,7 +73,14 @@ export default function NewJobPage() {
     setLoading(true);
     try {
       const job = await api.createJob(title.trim(), rawText.trim());
-      router.push(`/jobs/${job.id}/upload`);
+      // Fetch full job (with server-parsed rubric) for the review step
+      let full = job;
+      try {
+        full = await api.getJob(job.id);
+      } catch {
+        /* fall back to create response if refetch fails */
+      }
+      setCreatedJob(full);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to create job posting.";
       setError(msg);
@@ -102,6 +114,120 @@ export default function NewJobPage() {
           </div>
         )}
 
+        {/* ===== Rubric Review Step (after JD is parsed server-side) ===== */}
+        {createdJob && (
+          <div className="merix-card p-6 sm:p-8 rounded-3xl border border-[var(--border-hairline)] space-y-6 max-w-3xl mx-auto">
+            <div className="space-y-1.5">
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[var(--accent-evidence-soft)] text-[var(--accent-evidence)] text-xs font-mono font-bold uppercase tracking-wider">
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                Rubric Extracted — Review Before Screening
+              </div>
+              <h1 className="font-display text-2xl sm:text-3xl text-[var(--text-primary)] pt-1">
+                {createdJob.title}
+              </h1>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+                Merix parsed your JD once into this deterministic scoring rubric. Every candidate
+                will be evaluated against exactly this — no re-interpretation, no drift.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-mono uppercase tracking-wider text-[var(--text-muted)]">
+                  <span>Required Skills</span>
+                  <span className="text-[var(--brand-primary)] font-bold">70% weight</span>
+                </div>
+                {(createdJob.parsed?.required_skills || []).length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {(createdJob.parsed?.required_skills || []).map((sk) => (
+                      <span
+                        key={sk}
+                        className="px-2.5 py-1 rounded-md text-xs font-mono bg-[var(--brand-soft)] text-[var(--brand-primary)] border border-[var(--brand-border)]"
+                      >
+                        {sk}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-[var(--text-muted)] italic">
+                    None extracted — candidates will not be scored on required skills.
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs font-mono uppercase tracking-wider text-[var(--text-muted)]">
+                  <span>Preferred Qualifications</span>
+                  <span className="text-[var(--text-secondary)] font-bold">20% weight</span>
+                </div>
+                {(createdJob.parsed?.preferred_skills || []).length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5">
+                    {(createdJob.parsed?.preferred_skills || []).map((sk) => (
+                      <span
+                        key={sk}
+                        className="px-2.5 py-1 rounded-md text-xs font-mono bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-hairline)]"
+                      >
+                        {sk}
+                      </span>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-sm text-[var(--text-muted)] italic">None extracted.</div>
+                )}
+              </div>
+
+              <div className="pt-3 border-t border-[var(--border-hairline)] grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <div className="text-xs font-mono uppercase tracking-wider text-[var(--text-muted)] mb-1">
+                    Min Experience · 10%
+                  </div>
+                  <div className="font-semibold text-[var(--text-primary)]">
+                    {createdJob.parsed?.min_years_experience != null
+                      ? `${createdJob.parsed.min_years_experience}+ years`
+                      : "Not specified"}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-xs font-mono uppercase tracking-wider text-[var(--text-muted)] mb-1">
+                    Education
+                  </div>
+                  <div className="font-semibold text-[var(--text-primary)]">
+                    {createdJob.parsed?.education_level || "Not specified"}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => router.push(`/jobs/${createdJob.id}/upload`)}
+                className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] transition-colors cursor-pointer"
+              >
+                <UploadCloud className="w-4 h-4" />
+                <span>Rubric Looks Right — Upload Resumes</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setCreatedJob(null)}
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-semibold text-sm text-[var(--text-secondary)] bg-[var(--bg-subtle)] border border-[var(--border-hairline)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+              >
+                <PencilLine className="w-4 h-4" />
+                <span>Edit JD Instead</span>
+              </button>
+            </div>
+
+            <div className="flex items-start gap-2 text-xs font-mono text-[var(--text-muted)]">
+              <ListChecks className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[var(--accent-evidence)]" />
+              <span>
+                Note: the rubric is cached at creation time for determinism. Editing the JD creates
+                a fresh evaluation pipeline.
+              </span>
+            </div>
+          </div>
+        )}
+
+        {!createdJob && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Left Column: Form */}
           <div className="lg:col-span-7 space-y-6">
@@ -204,15 +330,9 @@ export default function NewJobPage() {
                     <span className="text-xs font-mono uppercase tracking-wider text-[var(--text-muted)]">
                       REQUIRED SKILLS (70% WEIGHT):
                     </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {["Python 3.11+", "FastAPI AsyncIO", "PostgreSQL", "pgvector", "Docker"].map((sk) => (
-                        <span
-                          key={sk}
-                          className="px-2 py-0.5 rounded text-xs font-mono bg-[var(--accent-evidence-soft)] text-[var(--accent-evidence)] border border-[var(--accent-evidence)]/25"
-                        >
-                          {sk}
-                        </span>
-                      ))}
+                    <div className="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-xs text-[var(--text-secondary)] font-mono leading-relaxed">
+                      Extracted from your JD on save — list required technologies and tools
+                      explicitly for best results.
                     </div>
                   </div>
 
@@ -220,21 +340,15 @@ export default function NewJobPage() {
                     <span className="text-xs font-mono uppercase tracking-wider text-[var(--text-muted)]">
                       PREFERRED QUALIFICATIONS (20% WEIGHT):
                     </span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {["Redis Caching", "LLM APIs (Groq/Gemini)", "Fintech/SaaS"].map((sk) => (
-                        <span
-                          key={sk}
-                          className="px-2 py-0.5 rounded text-xs font-mono bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-hairline)]"
-                        >
-                          {sk}
-                        </span>
-                      ))}
+                    <div className="p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-xs text-[var(--text-secondary)] font-mono leading-relaxed">
+                      Nice-to-haves under a &ldquo;Preferred&rdquo; heading are weighted separately
+                      from hard requirements.
                     </div>
                   </div>
 
                   <div className="pt-2 border-t border-[var(--border-hairline)] flex items-center justify-between text-xs font-mono text-[var(--text-muted)]">
-                    <span>EXPERIENCE: 3-5 Years (10%)</span>
-                    <span>EDUCATION: B.Tech/B.E.</span>
+                    <span>EXPERIENCE: 10%</span>
+                    <span>EDUCATION: from JD</span>
                   </div>
                 </div>
               ) : (
@@ -261,6 +375,7 @@ export default function NewJobPage() {
             </div>
           </div>
         </div>
+        )}
       </main>
     </div>
   );

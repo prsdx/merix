@@ -16,12 +16,54 @@ import {
   ArrowRight,
   Sparkles,
   Search,
-  Loader2,
   AlertCircle,
   Clock,
   UploadCloud,
   ListOrdered,
+  Play,
+  ChevronDown,
+  Loader2,
 } from "lucide-react";
+
+/* ---------- helpers ---------- */
+
+function timeAgo(iso: string): string {
+  const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (seconds < 60) return "just now";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString();
+}
+
+type PipelineState = "draft" | "ready" | "screened";
+
+function pipelineState(job: JobSummary): PipelineState {
+  if ((job.match_count || 0) > 0) return "screened";
+  if ((job.resume_count || 0) > 0) return "ready";
+  return "draft";
+}
+
+const STATE_META: Record<
+  PipelineState,
+  { label: string; cls: string }
+> = {
+  draft: {
+    label: "Draft",
+    cls: "bg-[var(--bg-subtle)] text-[var(--text-muted)] border-[var(--border-hairline)]",
+  },
+  ready: {
+    label: "Ready to Screen",
+    cls: "bg-[var(--brand-soft)] text-[var(--brand-primary)] border-[var(--brand-border)]",
+  },
+  screened: {
+    label: "Screened",
+    cls: "bg-[var(--accent-evidence-soft)] text-[var(--accent-evidence)] border-[var(--accent-evidence-border)]",
+  },
+};
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -31,6 +73,7 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortMode, setSortMode] = useState<"newest" | "candidates" | "evaluations">("newest");
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -57,14 +100,20 @@ export default function DashboardPage() {
     }
   };
 
-  const filteredJobs = jobs.filter((job) =>
-    job.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredJobs = jobs
+    .filter((job) => job.title.toLowerCase().includes(searchTerm.toLowerCase()))
+    .sort((a, b) => {
+      if (sortMode === "candidates") return (b.resume_count || 0) - (a.resume_count || 0);
+      if (sortMode === "evaluations") return (b.match_count || 0) - (a.match_count || 0);
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+
+  const readyJobs = jobs.filter((j) => pipelineState(j) === "ready").slice(0, 3);
 
   const totalResumes = jobs.reduce((acc, j) => acc + (j.resume_count || 0), 0);
   const totalMatches = jobs.reduce((acc, j) => acc + (j.match_count || 0), 0);
 
-  if (authLoading || (loading && jobs.length === 0)) {
+  if (authLoading) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-[var(--bg-canvas)]">
         <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-primary)] mb-3" />
@@ -147,9 +196,80 @@ export default function DashboardPage() {
                 className="w-full pl-10 pr-4 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--brand-primary)] transition-colors"
               />
             </div>
+
+            <div className="relative shrink-0">
+              <select
+                value={sortMode}
+                onChange={(e) =>
+                  setSortMode(e.target.value as "newest" | "candidates" | "evaluations")
+                }
+                className="appearance-none pl-4 pr-9 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-sm font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] focus:outline-none focus:border-[var(--brand-primary)] transition-colors cursor-pointer"
+                aria-label="Sort jobs"
+              >
+                <option value="newest">Newest first</option>
+                <option value="candidates">Most candidates</option>
+                <option value="evaluations">Most evaluations</option>
+              </select>
+              <ChevronDown className="w-4 h-4 text-[var(--text-muted)] absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
           </div>
 
-          {jobs.length === 0 ? (
+          {/* Resume where you left off */}
+          {!loading && readyJobs.length > 0 && (
+            <div className="merix-card p-4 border-l-4 border-l-[var(--brand-primary)] space-y-3">
+              <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-[var(--brand-primary)]">
+                <Play className="w-3.5 h-3.5" />
+                Resume where you left off
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                {readyJobs.map((job) => (
+                  <Link
+                    key={job.id}
+                    href={`/jobs/${job.id}/upload`}
+                    className="flex-1 flex items-center justify-between gap-2 p-3 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)] group hover:border-[var(--brand-border)] transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-[var(--text-primary)] truncate">
+                        {job.title}
+                      </div>
+                      <div className="text-xs font-mono text-[var(--text-muted)] mt-0.5">
+                        {job.resume_count} resumes waiting · not screened yet
+                      </div>
+                    </div>
+                    <span className="shrink-0 px-3 py-1.5 rounded-lg text-xs font-bold text-white bg-[var(--brand-primary)] group-hover:bg-[var(--brand-primary-hover)] transition-colors inline-flex items-center gap-1">
+                      Run Screening
+                      <ArrowRight className="w-3 h-3" />
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {loading && jobs.length === 0 ? (
+            /* Skeleton Loading State */
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {[1, 2, 3, 4].map((i) => (
+                <div
+                  key={i}
+                  className="merix-card p-6 space-y-4 animate-pulse"
+                  aria-hidden="true"
+                >
+                  <div className="h-5 w-2/3 rounded bg-[var(--bg-subtle)]" />
+                  <div className="h-3.5 w-1/3 rounded bg-[var(--bg-subtle)]" />
+                  <div className="flex gap-1.5">
+                    <div className="h-6 w-16 rounded-md bg-[var(--bg-subtle)]" />
+                    <div className="h-6 w-20 rounded-md bg-[var(--bg-subtle)]" />
+                    <div className="h-6 w-14 rounded-md bg-[var(--bg-subtle)]" />
+                  </div>
+                  <div className="pt-3 border-t border-[var(--border-hairline)] flex justify-between">
+                    <div className="h-8 w-24 rounded-lg bg-[var(--bg-subtle)]" />
+                    <div className="h-8 w-28 rounded-lg bg-[var(--bg-subtle)]" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : jobs.length === 0 ? (
             /* Empty State */
             <div className="p-12 text-center merix-card space-y-6">
               <div className="w-14 h-14 rounded-2xl bg-[var(--brand-soft)] border border-[var(--brand-border)] flex items-center justify-center text-[var(--brand-primary)] mx-auto">
@@ -180,47 +300,92 @@ export default function DashboardPage() {
           ) : (
             /* Jobs Grid */
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredJobs.map((job) => (
-                <div
-                  key={job.id}
-                  className="merix-card p-6 space-y-4 flex flex-col justify-between merix-card-hover"
-                >
-                  <div className="space-y-2">
-                    <div className="flex items-start justify-between gap-2">
-                      <h3 className="font-bold text-base text-[var(--text-primary)]">
-                        {job.title}
-                      </h3>
-                      <DPDPBadge variant="row" />
+              {filteredJobs.map((job) => {
+                const state = pipelineState(job);
+                const meta = STATE_META[state];
+                const skills = (job.parsed?.required_skills || []).slice(0, 4);
+                const extraSkills = (job.parsed?.required_skills || []).length - skills.length;
+
+                return (
+                  <div
+                    key={job.id}
+                    className="merix-card p-6 space-y-4 flex flex-col justify-between merix-card-hover"
+                  >
+                    <div className="space-y-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 space-y-1">
+                          <h3 className="font-bold text-base text-[var(--text-primary)] leading-snug">
+                            {job.title}
+                          </h3>
+                          <div className="flex items-center gap-1.5 text-xs font-mono text-[var(--text-muted)]">
+                            <Clock className="w-3 h-3" />
+                            {timeAgo(job.created_at)}
+                          </div>
+                        </div>
+                        <span
+                          className={`shrink-0 inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold border ${meta.cls}`}
+                        >
+                          {meta.label}
+                        </span>
+                      </div>
+
+                      {skills.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5">
+                          {skills.map((skill) => (
+                            <span
+                              key={skill}
+                              className="px-2 py-0.5 rounded-md bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-xs font-mono text-[var(--text-secondary)]"
+                            >
+                              {skill}
+                            </span>
+                          ))}
+                          {extraSkills > 0 && (
+                            <span className="px-2 py-0.5 text-xs font-mono text-[var(--text-muted)] self-center">
+                              +{extraSkills} more
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      <div className="flex items-center gap-3 text-sm font-mono text-[var(--text-muted)]">
+                        <span className="flex items-center gap-1">
+                          <Users className="w-3.5 h-3.5" />
+                          {job.resume_count || 0} Resumes
+                        </span>
+                        <span>•</span>
+                        <span>{job.match_count || 0} Evaluations</span>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-3 text-sm font-mono text-[var(--text-muted)]">
-                      <span className="flex items-center gap-1">
-                        <Users className="w-3.5 h-3.5" />
-                        {job.resume_count || 0} Resumes
-                      </span>
-                      <span>•</span>
-                      <span>{job.match_count || 0} Evaluations</span>
+                    <div className="pt-3 border-t border-[var(--border-hairline)] flex items-center justify-between gap-2">
+                      <Link
+                        href={`/jobs/${job.id}/upload`}
+                        className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                      >
+                        Upload Resumes
+                      </Link>
+
+                      <Link
+                        href={
+                          state === "screened"
+                            ? `/jobs/${job.id}/results`
+                            : `/jobs/${job.id}/upload`
+                        }
+                        className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg text-sm font-semibold text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] transition-colors"
+                      >
+                        <span>
+                          {state === "screened"
+                            ? "View Shortlist"
+                            : state === "ready"
+                              ? "Screen Now"
+                              : "Add Candidates"}
+                        </span>
+                        <ArrowRight className="w-3.5 h-3.5" />
+                      </Link>
                     </div>
                   </div>
-
-                  <div className="pt-3 border-t border-[var(--border-hairline)] flex items-center justify-between gap-2">
-                    <Link
-                      href={`/jobs/${job.id}/upload`}
-                      className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                    >
-                      Upload Resumes
-                    </Link>
-
-                    <Link
-                      href={`/jobs/${job.id}/results`}
-                      className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg text-sm font-semibold text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] transition-colors"
-                    >
-                      <span>View Shortlist</span>
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
