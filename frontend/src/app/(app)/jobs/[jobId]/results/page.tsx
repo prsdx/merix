@@ -70,7 +70,7 @@ export default function RankedResultsPage() {
   const filteredMatches = matches.filter((m) => {
     const query = searchTerm.toLowerCase();
     const nameMatch = (m.candidate_name || "").toLowerCase().includes(query);
-    const skillMatch = m.matched_skills.some((s) => s.toLowerCase().includes(query));
+    const skillMatch = m.matched_skills.some((s) => s.skill.toLowerCase().includes(query));
     return nameMatch || skillMatch;
   });
 
@@ -80,7 +80,7 @@ export default function RankedResultsPage() {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-[var(--bg-canvas)]">
         <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-primary)] mb-3" />
-        <span className="text-xs text-[var(--text-muted)] font-mono">
+        <span className="text-sm text-[var(--text-muted)] font-mono">
           Loading Ranked Shortlist...
         </span>
       </div>
@@ -96,7 +96,7 @@ export default function RankedResultsPage() {
           <div className="space-y-1">
             <Link
               href="/dashboard"
-              className="inline-flex items-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              className="inline-flex items-center gap-1.5 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               <span>Back to Pipeline</span>
@@ -107,7 +107,7 @@ export default function RankedResultsPage() {
               </h1>
               <DPDPBadge variant="row" />
             </div>
-            <p className="text-xs text-[var(--text-muted)] font-mono">
+            <p className="text-sm text-[var(--text-muted)] font-mono">
               Job ID: {jobId} • Evaluated with Deterministic 70/20/10 Formula
             </p>
           </div>
@@ -115,7 +115,7 @@ export default function RankedResultsPage() {
           <div className="flex items-center gap-3">
             <Link
               href={`/jobs/${jobId}/upload`}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-hairline)] hover:bg-[var(--bg-elevated)] transition-colors"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-hairline)] hover:bg-[var(--bg-elevated)] transition-colors"
             >
               <UploadCloud className="w-3.5 h-3.5" />
               <span>Add More Resumes</span>
@@ -123,7 +123,7 @@ export default function RankedResultsPage() {
             <a
               href={exportUrl}
               download
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] transition-all shadow-xs"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] transition-all shadow-xs"
             >
               <FileSpreadsheet className="w-3.5 h-3.5" />
               <span>Export CSV</span>
@@ -132,14 +132,14 @@ export default function RankedResultsPage() {
         </div>
 
         {/* Embedded Direct Trust Statement (Truffle Style) */}
-        <div className="p-3.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)] flex items-center justify-between gap-4 text-xs font-mono">
+        <div className="p-3.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)] flex items-center justify-between gap-4 text-sm font-mono">
           <div className="flex items-center gap-2 text-[var(--text-secondary)]">
             <CheckCircle2 className="w-4 h-4 text-[var(--accent-evidence)] shrink-0" />
             <span>
               <strong>Merix never auto-rejects.</strong> Every candidate reaches you with verbatim evidence so you make every advance call.
             </span>
           </div>
-          <div className="text-[11px] text-[var(--text-muted)] shrink-0 hidden md:block">
+          <div className="text-xs text-[var(--text-muted)] shrink-0 hidden md:block">
             DPDP Section 12 Audited
           </div>
         </div>
@@ -148,7 +148,7 @@ export default function RankedResultsPage() {
         <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 p-3 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] shadow-xs">
           {/* Score Threshold Filters */}
           <div className="flex items-center gap-1 overflow-x-auto pb-1 sm:pb-0">
-            <span className="text-[11px] font-mono text-[var(--text-muted)] mr-2 shrink-0">
+            <span className="text-xs font-mono text-[var(--text-muted)] mr-2 shrink-0">
               Filter:
             </span>
             {[
@@ -162,7 +162,7 @@ export default function RankedResultsPage() {
                 <button
                   key={f.label}
                   onClick={() => setMinScoreFilter(f.val)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-mono font-semibold transition-all shrink-0 cursor-pointer ${
+                  className={`px-3 py-1.5 rounded-lg text-sm font-mono font-semibold transition-all shrink-0 cursor-pointer ${
                     active
                       ? "bg-[var(--brand-primary)] text-white shadow-xs"
                       : "bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
@@ -182,7 +182,7 @@ export default function RankedResultsPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search candidate or skill..."
-              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--brand-primary)] transition-colors"
+              className="w-full pl-9 pr-3 py-1.5 rounded-lg bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--brand-primary)] transition-colors"
             />
           </div>
         </div>
@@ -191,16 +191,16 @@ export default function RankedResultsPage() {
         {loading ? (
           <div className="p-12 text-center merix-card space-y-3">
             <Loader2 className="w-6 h-6 animate-spin text-[var(--brand-primary)] mx-auto" />
-            <div className="text-xs text-[var(--text-muted)] font-mono">Filtering candidates...</div>
+            <div className="text-sm text-[var(--text-muted)] font-mono">Filtering candidates...</div>
           </div>
         ) : filteredMatches.length === 0 ? (
           <div className="p-12 text-center merix-card space-y-4">
             <FileText className="w-10 h-10 text-[var(--text-muted)] mx-auto opacity-50" />
             <div className="space-y-1">
-              <h3 className="text-sm font-bold text-[var(--text-primary)]">
+              <h3 className="text-base font-bold text-[var(--text-primary)]">
                 No candidates found matching this filter
               </h3>
-              <p className="text-xs text-[var(--text-muted)]">
+              <p className="text-sm text-[var(--text-muted)]">
                 Try resetting your score threshold or upload additional candidate resumes.
               </p>
             </div>
@@ -209,7 +209,7 @@ export default function RankedResultsPage() {
                 setMinScoreFilter(undefined);
                 setSearchTerm("");
               }}
-              className="px-4 py-2 rounded-xl text-xs font-semibold bg-[var(--brand-primary)] text-white"
+              className="px-4 py-2 rounded-xl text-sm font-semibold bg-[var(--brand-primary)] text-white"
             >
               Reset Filters
             </button>
@@ -217,7 +217,7 @@ export default function RankedResultsPage() {
         ) : (
           <div className="merix-card overflow-hidden divide-y divide-[var(--border-hairline)] shadow-xs">
             {/* Table Header */}
-            <div className="px-5 py-3 bg-[var(--bg-subtle)] grid grid-cols-12 text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
+            <div className="px-5 py-3 bg-[var(--bg-subtle)] grid grid-cols-12 text-xs font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
               <div className="col-span-1">Rank</div>
               <div className="col-span-4">Candidate</div>
               <div className="col-span-2 text-center">Fit Score</div>
@@ -244,16 +244,16 @@ export default function RankedResultsPage() {
                     className="px-5 py-4 grid grid-cols-12 items-center gap-2 cursor-pointer select-none"
                   >
                     {/* Rank */}
-                    <div className="col-span-1 font-mono text-xs font-bold text-[var(--text-muted)]">
+                    <div className="col-span-1 font-mono text-sm font-bold text-[var(--text-muted)]">
                       #{idx + 1}
                     </div>
 
                     {/* Candidate Identity */}
                     <div className="col-span-4 min-w-0 pr-2">
-                      <div className="font-bold text-xs text-[var(--text-primary)] truncate">
+                      <div className="font-bold text-sm text-[var(--text-primary)] truncate">
                         {m.candidate_name || "Applicant"}
                       </div>
-                      <div className="text-[10px] font-mono text-[var(--text-muted)] truncate mt-0.5">
+                      <div className="text-xs font-mono text-[var(--text-muted)] truncate mt-0.5">
                         ID: {m.resume_id.substring(0, 8)} • Click to inspect evidence
                       </div>
                     </div>
@@ -267,17 +267,17 @@ export default function RankedResultsPage() {
                     {/* Skills Chips */}
                     <div className="col-span-4 flex flex-wrap gap-1 pr-2">
                       {m.matched_skills.slice(0, 3).map((sk) => (
-                        <span key={sk} className="tag-evidence text-[10px]">
-                          ✓ {sk}
+                        <span key={sk.skill} className="tag-evidence text-[10px]">
+                          ✓ {sk.skill}
                         </span>
                       ))}
                       {m.missing_skills.slice(0, 1).map((sk) => (
-                        <span key={sk} className="tag-gap text-[10px]">
-                          ✕ {sk}
+                        <span key={sk.skill} className="tag-gap text-[10px]">
+                          ✗ {sk.skill}
                         </span>
                       ))}
                       {m.matched_skills.length > 3 && (
-                        <span className="tag-neutral text-[10px]">
+                        <span className="tag-neutral text-xs">
                           +{m.matched_skills.length - 3} more
                         </span>
                       )}
@@ -300,7 +300,7 @@ export default function RankedResultsPage() {
                         {/* Left: AI Rationale & Quote */}
                         <div className="md:col-span-8 space-y-3">
                           <div className="space-y-1">
-                            <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                            <div className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
                               Verbatim Monospace Citation from Candidate Resume:
                             </div>
                             <div className="forensic-citation">
@@ -309,18 +309,18 @@ export default function RankedResultsPage() {
                           </div>
 
                           <div className="space-y-1">
-                            <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
+                            <div className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
                               All Extracted Technical Competencies:
                             </div>
                             <div className="flex flex-wrap gap-1.5">
                               {m.matched_skills.map((sk) => (
-                                <span key={sk} className="tag-evidence">
-                                  ✓ {sk}
+                                <span key={sk.skill} className="tag-evidence">
+                                  ✓ {sk.skill}
                                 </span>
                               ))}
                               {m.missing_skills.map((sk) => (
-                                <span key={sk} className="tag-gap">
-                                  ✕ {sk} (Gap)
+                                <span key={sk.skill} className="tag-gap">
+                                  ✕ {sk.skill} (Gap)
                                 </span>
                               ))}
                             </div>
@@ -330,10 +330,10 @@ export default function RankedResultsPage() {
                         {/* Right: Actions & Dossier Link */}
                         <div className="md:col-span-4 p-4 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] space-y-3 flex flex-col justify-between">
                           <div className="space-y-1">
-                            <div className="text-[10px] font-mono uppercase text-[var(--text-muted)]">
+                            <div className="text-xs font-mono uppercase text-[var(--text-muted)]">
                               Evaluation Actions
                             </div>
-                            <div className="text-xs font-bold text-[var(--text-primary)]">
+                            <div className="text-sm font-bold text-[var(--text-primary)]">
                               Ready for Recruiter Decision
                             </div>
                           </div>
@@ -341,7 +341,7 @@ export default function RankedResultsPage() {
                           <div className="space-y-2">
                             <Link
                               href={`/jobs/${jobId}/candidates/${m.id}`}
-                              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-semibold bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-hover)] transition-colors"
+                              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-lg text-sm font-semibold bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-hover)] transition-colors"
                             >
                               <span>Open Candidate Dossier</span>
                               <ExternalLink className="w-3.5 h-3.5" />

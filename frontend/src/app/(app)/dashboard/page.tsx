@@ -68,7 +68,7 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center bg-[var(--bg-canvas)]">
         <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-primary)] mb-3" />
-        <span className="text-xs text-[var(--text-muted)] font-mono">
+        <span className="text-sm text-[var(--text-muted)] font-mono">
           Loading Recruitment Pipeline...
         </span>
       </div>
@@ -99,7 +99,7 @@ export default function DashboardPage() {
         {/* 3 Metric Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] space-y-1">
-            <div className="text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
+            <div className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">
               Active Job Postings
             </div>
             <div className="text-3xl font-mono font-bold text-[var(--text-primary)]">
@@ -108,7 +108,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] space-y-1">
-            <div className="text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
+            <div className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">
               Resumes Ingested
             </div>
             <div className="text-3xl font-mono font-bold text-[var(--brand-primary)]">
@@ -117,7 +117,7 @@ export default function DashboardPage() {
           </div>
 
           <div className="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] space-y-1">
-            <div className="text-[11px] font-mono text-[var(--text-muted)] uppercase tracking-wider">
+            <div className="text-xs font-mono text-[var(--text-muted)] uppercase tracking-wider">
               Evaluations with Verbatim Citations
             </div>
             <div className="text-3xl font-mono font-bold text-[var(--accent-evidence)]">
@@ -128,7 +128,7 @@ export default function DashboardPage() {
 
         {/* Error banner */}
         {error && (
-          <div className="p-4 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-xs text-[var(--accent-danger)] flex items-center gap-2">
+          <div className="p-4 rounded-xl bg-[var(--accent-danger-soft)] border border-[var(--accent-danger-border)] text-sm text-[var(--accent-danger)] flex items-center gap-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
           </div>
@@ -144,7 +144,7 @@ export default function DashboardPage() {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 placeholder="Search job roles..."
-                className="w-full pl-10 pr-4 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--brand-primary)] transition-colors"
+                className="w-full pl-10 pr-4 py-2 rounded-xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--brand-primary)] transition-colors"
               />
             </div>
           </div>
@@ -160,7 +160,7 @@ export default function DashboardPage() {
                 <h2 className="font-display text-2xl text-[var(--text-primary)]">
                   Your Hiring Pipeline Starts Here
                 </h2>
-                <p className="text-xs text-[var(--text-secondary)] leading-relaxed font-sans">
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed font-sans">
                   Post your first Job Description to set up your deterministic 70/20/10 scoring rubric, then batch drop candidate resumes to generate an auditable ranked shortlist.
                 </p>
               </div>
@@ -174,7 +174,7 @@ export default function DashboardPage() {
               </Link>
             </div>
           ) : filteredJobs.length === 0 ? (
-            <div className="p-8 text-center merix-card text-xs text-[var(--text-muted)]">
+            <div className="p-8 text-center merix-card text-sm text-[var(--text-muted)]">
               No jobs match &ldquo;{searchTerm}&rdquo;
             </div>
           ) : (
@@ -193,7 +193,7 @@ export default function DashboardPage() {
                       <DPDPBadge variant="row" />
                     </div>
 
-                    <div className="flex items-center gap-3 text-xs font-mono text-[var(--text-muted)]">
+                    <div className="flex items-center gap-3 text-sm font-mono text-[var(--text-muted)]">
                       <span className="flex items-center gap-1">
                         <Users className="w-3.5 h-3.5" />
                         {job.resume_count || 0} Resumes
@@ -206,14 +206,14 @@ export default function DashboardPage() {
                   <div className="pt-3 border-t border-[var(--border-hairline)] flex items-center justify-between gap-2">
                     <Link
                       href={`/jobs/${job.id}/upload`}
-                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                      className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                     >
                       Upload Resumes
                     </Link>
 
                     <Link
                       href={`/jobs/${job.id}/results`}
-                      className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] transition-colors"
+                      className="flex items-center gap-1 px-3.5 py-1.5 rounded-lg text-sm font-semibold text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] transition-colors"
                     >
                       <span>View Shortlist</span>
                       <ArrowRight className="w-3.5 h-3.5" />

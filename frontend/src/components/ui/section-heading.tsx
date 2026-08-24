@@ -24,7 +24,7 @@ export function SectionHeading({
       )}
     >
       {eyebrow && (
-        <span className="inline-block font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--brand-primary)] bg-[var(--brand-soft)] border border-[var(--brand-border)] rounded-md px-2.5 py-1">
+        <span className="inline-block font-mono text-xs font-semibold uppercase tracking-[0.18em] text-[var(--brand-primary)] bg-[var(--brand-soft)] border border-[var(--brand-border)] rounded-md px-2.5 py-1">
           {eyebrow}
         </span>
       )}
@@ -32,7 +32,7 @@ export function SectionHeading({
         {title}
       </h2>
       {subtitle && (
-        <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{subtitle}</p>
+        <p className="text-base text-[var(--text-secondary)] leading-relaxed">{subtitle}</p>
       )}
     </div>
   );
@@ -62,7 +62,7 @@ export function PageHeader({
           {title}
         </h1>
         {description && (
-          <p className="text-xs text-[var(--text-muted)] font-mono">{description}</p>
+          <p className="text-sm text-[var(--text-muted)] font-mono">{description}</p>
         )}
       </div>
       {actions && <div className="flex items-center gap-3 shrink-0">{actions}</div>}

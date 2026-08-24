@@ -39,13 +39,13 @@ export function ExplainabilityDemo() {
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-16">
       <div className="merix-card p-8 sm:p-10 border border-[var(--border-subtle)] space-y-8">
         <div className="max-w-2xl space-y-2">
-          <div className="text-[11px] font-mono font-bold uppercase tracking-widest text-[var(--accent-evidence)]">
+          <div className="text-xs font-mono font-bold uppercase tracking-widest text-[var(--accent-evidence)]">
             Deterministic Explainability
           </div>
           <h2 className="font-display text-2xl sm:text-3xl text-[var(--text-primary)]">
             Why this candidate was shortlisted — down to the exact sentence.
           </h2>
-          <p className="text-xs sm:text-sm text-[var(--text-secondary)]">
+          <p className="text-sm sm:text-base text-[var(--text-secondary)]">
             Unlike legacy ATS tools that output opaque match percentages, Merix cites the exact monospace sentence from the candidate&apos;s resume proving why each rubric requirement is satisfied.
           </p>
         </div>
@@ -53,7 +53,7 @@ export function ExplainabilityDemo() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Criteria Selection Tabs (Left 5 cols) */}
           <div className="lg:col-span-5 space-y-2.5">
-            <div className="text-[10px] font-mono uppercase tracking-wider text-[var(--text-muted)]">
+            <div className="text-xs font-mono uppercase tracking-wider text-[var(--text-muted)]">
               Click a matched criterion to inspect quote:
             </div>
             {EXPLAINABILITY_CRITERIA.map((crit) => {
@@ -68,8 +68,8 @@ export function ExplainabilityDemo() {
                       : "bg-[var(--bg-subtle)] border-transparent hover:border-[var(--border-hairline)]"
                   }`}
                 >
-                  <div className="font-bold text-xs text-[var(--text-primary)]">{crit.title}</div>
-                  <div className="text-[10px] font-mono text-[var(--accent-evidence)] mt-1 font-semibold">
+                  <div className="font-bold text-sm text-[var(--text-primary)]">{crit.title}</div>
+                  <div className="text-xs font-mono text-[var(--accent-evidence)] mt-1 font-semibold">
                     {crit.verdict}
                   </div>
                 </button>
@@ -80,18 +80,18 @@ export function ExplainabilityDemo() {
           {/* Evidence Drawer (Right 7 cols) */}
           <div className="lg:col-span-7 p-6 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)] space-y-4">
             <div className="space-y-1">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
+              <div className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
                 Extracted Resume Proof (Verbatim Grounding):
               </div>
-              <div className="forensic-citation text-xs leading-relaxed">
+              <div className="forensic-citation text-sm leading-relaxed">
                 {selectedCriteria.candidateQuote}
               </div>
             </div>
             <div className="space-y-1 pt-2 border-t border-[var(--border-hairline)]">
-              <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
+              <div className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
                 Recruiter Evaluation Context:
               </div>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">{selectedCriteria.context}</p>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{selectedCriteria.context}</p>
             </div>
           </div>
         </div>

@@ -89,14 +89,25 @@ export interface BatchJob {
   updated_at: string;
 }
 
+export interface MatchedSkill {
+  skill: string;
+  required: boolean;
+  evidence: string;
+}
+
+export interface MissingSkill {
+  skill: string;
+  required: boolean;
+}
+
 export interface MatchResult {
   id: string;
   job_id: string;
   resume_id: string;
   candidate_name?: string | null;
   score: number;
-  matched_skills: string[];
-  missing_skills: string[];
+  matched_skills: MatchedSkill[];
+  missing_skills: MissingSkill[];
   rationale: string;
   created_at: string;
 }

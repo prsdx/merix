@@ -32,7 +32,7 @@ export function FaqSection() {
   return (
     <section id="faq" className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-16 space-y-8 scroll-mt-20">
       <div className="space-y-3 text-center">
-        <div className="inline-block text-[11px] font-mono font-bold uppercase tracking-widest text-[var(--brand-primary)]">
+        <div className="inline-block text-xs font-mono font-bold uppercase tracking-widest text-[var(--brand-primary)]">
           FAQ
         </div>
         <h2 className="font-display text-3xl sm:text-4xl text-[var(--text-primary)]">
@@ -49,7 +49,7 @@ export function FaqSection() {
                 onClick={() => setOpenIndex(open ? null : idx)}
                 className="w-full px-5 py-4 flex items-center justify-between gap-4 text-left cursor-pointer hover:bg-[var(--bg-subtle)] transition-colors"
               >
-                <span className="text-sm font-bold text-[var(--text-primary)]">{faq.q}</span>
+                <span className="text-base font-bold text-[var(--text-primary)]">{faq.q}</span>
                 <ChevronDown
                   className={`w-4 h-4 shrink-0 text-[var(--text-muted)] transition-transform duration-200 ${
                     open ? "rotate-180" : ""
@@ -58,7 +58,7 @@ export function FaqSection() {
               </button>
               {open && (
                 <div className="px-5 pb-5 -mt-1">
-                  <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">{faq.a}</p>
+                  <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed">{faq.a}</p>
                 </div>
               )}
             </div>

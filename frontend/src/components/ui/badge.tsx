@@ -31,7 +31,7 @@ export function Badge({
     evidence: "tag-evidence",
     gap: "tag-gap",
     danger:
-      "font-mono text-[11px] font-bold px-2 py-0.5 rounded-md bg-[var(--accent-danger-soft)] text-[var(--accent-danger)] border border-[var(--accent-danger-border)]",
+      "font-mono text-xs font-bold px-2 py-0.5 rounded-md bg-[var(--accent-danger-soft)] text-[var(--accent-danger)] border border-[var(--accent-danger-border)]",
     neutral: "tag-neutral",
   };
   return (
