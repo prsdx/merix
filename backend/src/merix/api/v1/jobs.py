@@ -33,7 +33,7 @@ from merix.models.user import User
 from merix.schemas.batch_job import BatchJobCreate, BatchJobStatus
 from merix.schemas.job import JobCreate, JobFromURLCreate, JobResponse, JobSummaryResponse
 from merix.schemas.match import ResumeResponse
-from merix.services import consent, extraction, pipeline
+from merix.services import consent, extraction, pipeline, retention
 from merix.services import links as links_service
 from merix.services.batch import process_resume_background, run_batch_match_background
 from merix.services.jd_fetch import default_jd_fetcher as jd_fetcher
@@ -334,3 +334,29 @@ async def export_matches(
         media_type="text/csv",
         headers={"Content-Disposition": f'attachment; filename="shortlist_{job_id}.csv"'},
     )
+
+
+@router.delete("/{job_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_job(
+    job_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_scoped_db),
+) -> None:
+    """Delete a job posting (org-scoped).
+
+    Cascades at the database level to the job's resumes, match results,
+    and batch jobs. Audited as ``job_deleted`` for DPDP traceability.
+    """
+    job = await pipeline.get_job_or_404(db, job_id, user.org_id)
+    await retention.log_audit_event(
+        db,
+        org_id=user.org_id,
+        resume_id=None,
+        event_type="job_deleted",
+        actor_type="user",
+        actor_user_id=user.id,
+        event_metadata={"job_id": str(job.id), "job_title": job.title},
+    )
+    await db.delete(job)
+    await db.commit()
+    logger.info("job_deleted job_id=%s org_id=%s actor_user_id=%s", job.id, user.org_id, user.id)

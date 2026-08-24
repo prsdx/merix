@@ -257,6 +257,11 @@ export const api = {
     });
   },
 
+  // Job deletion (HR pipeline management)
+  async deleteJob(jobId: string): Promise<void> {
+    await request<void>(`/jobs/${jobId}`, { method: "DELETE" });
+  },
+
   // Audit Logs
   async listAuditLogs(limit?: number): Promise<AuditEvent[]> {
     const query = limit !== undefined ? `?limit=${limit}` : "";

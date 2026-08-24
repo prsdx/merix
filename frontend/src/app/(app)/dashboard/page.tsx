@@ -23,6 +23,7 @@ import {
   Play,
   ChevronDown,
   Loader2,
+  Trash2,
 } from "lucide-react";
 
 /* ---------- helpers ---------- */
@@ -74,6 +75,7 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortMode, setSortMode] = useState<"newest" | "candidates" | "evaluations">("newest");
+  const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -97,6 +99,24 @@ export default function DashboardPage() {
       setError(msg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDeleteJob = async (job: JobSummary) => {
+    const confirmed = window.confirm(
+      `Delete "${job.title}"? This permanently removes its ${job.resume_count || 0} resumes and ${job.match_count || 0} evaluations. This cannot be undone.`
+    );
+    if (!confirmed) return;
+
+    setDeletingJobId(job.id);
+    setError(null);
+    try {
+      await api.deleteJob(job.id);
+      await loadJobs();
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to delete job");
+    } finally {
+      setDeletingJobId(null);
     }
   };
 
@@ -358,12 +378,27 @@ export default function DashboardPage() {
                     </div>
 
                     <div className="pt-3 border-t border-[var(--border-hairline)] flex items-center justify-between gap-2">
-                      <Link
-                        href={`/jobs/${job.id}/upload`}
-                        className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
-                      >
-                        Upload Resumes
-                      </Link>
+                      <div className="flex items-center gap-2">
+                        <Link
+                          href={`/jobs/${job.id}/upload`}
+                          className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                        >
+                          Upload Resumes
+                        </Link>
+                        <button
+                          onClick={() => handleDeleteJob(job)}
+                          disabled={deletingJobId === job.id}
+                          aria-label={`Delete ${job.title}`}
+                          title="Delete job posting"
+                          className="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--accent-danger)] hover:bg-[var(--accent-danger-soft)] transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {deletingJobId === job.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </button>
+                      </div>
 
                       <Link
                         href={
