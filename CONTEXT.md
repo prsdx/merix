@@ -169,15 +169,22 @@ backend/
   - **All 9 Production Screens (Fully Integrated to Backend API)**:
     1. **Landing page (`/`)**: Asymmetric hero with live interactive deterministic match sandbox simulator, trust band with tier-1 Indian academic institutions, proof strip with animated counters, 3-pillar architectural zigzag, 5-dimension comparison table vs legacy keyword ATS, ROI efficiency calculator, testimonials with Indian campus placement roles, DPDP compliance FAQ, and closing CTA.
     2. **Sign up & Login (`/signup`, `/login`)**: Two-pane trust-forward layout with organization creation, Supabase GoTrue JWT session management, row-level security isolation context, and form validation.
-    3. **Dashboard (`/dashboard`)**: Active pipeline metrics with animated counters, search filter, job cards with DPDP row badges, resume/match counts, and 3-step guided empty state.
+    3. **Dashboard (`/dashboard`)**: Active pipeline metrics with animated counters, search filter, job cards with DPDP row badges, resume/match counts, per-job delete button (confirmation-gated `DELETE /api/jobs/{id}`), and 3-step guided empty state.
     4. **Post a Job (`/jobs/new`)**: Semantic JD parser form with live sample technical JD generator calling `POST /api/jobs` and live structured extraction preview.
     5. **Batch Resume Upload (`/jobs/[jobId]/upload`)**: Drag-and-drop batch PDF ingestion with prominent **DPDP Consent Gate Card** (explicit legal consent affirmation required before upload) calling `POST /api/jobs/{id}/resumes`.
     6. **Job Processing Status (`/jobs/[jobId]/status/[batchJobId]`)**: Real-time progress bar polling `GET /api/batch-jobs/{id}` (every 1.5s) with partial failure breakdown and itemized candidate stream.
-    7. **Ranked Shortlist (`/jobs/[jobId]/results`)**: Flagship candidate data table with radial `ScoreRing` centerpieces, verified skill tags, missing gap chips, score threshold filters (All, 80+, 70+, 60+), search, and direct CSV export via `GET /api/jobs/{id}/matches/export`.
+    7. **Ranked Shortlist (`/jobs/[jobId]/results`)**: Flagship candidate data table with radial `ScoreRing` centerpieces, verified skill tags, missing gap chips, score threshold filters (All, 80+, 70+, 60+), search across candidate name / matched skills / missing skills, bulk row selection with select-all and scoped "Export Selected" CSV, and direct full-shortlist CSV export via `GET /api/jobs/{id}/matches/export`. Score-filter and search state persist in URL query params (`?min_score=&q=`) so navigating to a dossier and back preserves them.
     8. **Candidate Detail Drill-down (`/jobs/[jobId]/candidates/[matchId]`)**: 70/20/10 weighted score breakdown bar chart, verbatim AI rationale, skill matrix with resume quotes, DPDP compliance stamp, and DPDP Candidate Right to Erasure modal (`DELETE /api/candidates/{id}`).
     9. **Settings & Compliance (`/settings`)**: Org profile, DPDP Retention Policy editor (GET/PATCH `/api/orgs/me`), live immutable audit log view (`GET /api/orgs/audit-logs`), and ATS Integration placeholders.
   - **Backend API additions**: `GET /api/jobs` (list all org jobs with resume/match counts) and `GET /api/orgs/audit-logs` (list audit events).
   - **Verification**: Next.js 15 production build passes with exit code 0 across all 9 static and dynamic routes. Backend test suite passing cleanly.
+
+- **Task 13**: Ranked Results bulk actions, search & URL-persisted filters; job deletion for HR
+  - **Bulk selection & scoped export** (`results/page.tsx`): checkbox per candidate row + header select-all (indeterminate when partial); bulk action bar with client-side "Export Selected" CSV (mirrors server export columns) and Clear Selection.
+  - **Search** extended to missing-skill text; composes with the min-score threshold filter.
+  - **URL state**: `min_score` + `q` query params via `useSearchParams()` + debounced `router.replace`; `<Suspense>` boundary added (Next 16 requirement).
+  - **Job deletion**: org-scoped `DELETE /api/jobs/{job_id}` (DB-level cascade to resumes/match_results/batch_jobs, DPDP audit event `job_deleted`) + confirmation-gated delete button on dashboard job cards.
+  - **Verification**: production builds pass (`next build` exit 0) after each step; `ruff check src/ tests/` clean. Integration tests require live Supabase credentials not present in this workspace — failures verified identical on the unmodified tree (baseline check); all unit tests pass.
 
 ---
 

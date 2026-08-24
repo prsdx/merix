@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useSyncExternalStore } from "react";
 import { useTheme } from "@/lib/theme-context";
 import { Sun, Moon } from "lucide-react";
 
@@ -8,13 +8,16 @@ interface ThemeToggleProps {
   className?: string;
 }
 
+const emptySubscribe = () => () => {};
+
 export function ThemeToggle({ className = "" }: ThemeToggleProps) {
   const { resolvedTheme, toggleTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Hydration-safe "mounted" check: false during SSR/first render, true after.
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 
   if (!mounted) {
     return (

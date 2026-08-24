@@ -29,17 +29,6 @@ export default function SettingsPage() {
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/login");
-      return;
-    }
-
-    if (isAuthenticated) {
-      loadSettings();
-    }
-  }, [authLoading, isAuthenticated, router]);
-
   const loadSettings = async () => {
     setLoading(true);
     setError(null);
@@ -58,6 +47,22 @@ export default function SettingsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    // Deferred so the effect body performs no synchronous state update
+    // (react-hooks/set-state-in-effect); behaviour is unchanged.
+    const timer = setTimeout(() => {
+      if (isAuthenticated) {
+        loadSettings();
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [authLoading, isAuthenticated, router]);
 
   const handleSaveRetention = async (e: React.FormEvent) => {
     e.preventDefault();

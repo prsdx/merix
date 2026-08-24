@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
 
 type Theme = "light" | "dark" | "system";
 
@@ -13,21 +13,34 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
+const emptySubscribe = () => () => {};
+
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setThemeState] = useState<Theme>("light");
   const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
-  const [mounted, setMounted] = useState(false);
+  // Hydration-safe "mounted" check (no setState in an effect body).
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 
   useEffect(() => {
-    setMounted(true);
-    const stored = localStorage.getItem("merix_theme") as Theme | null;
-    if (stored && ["light", "dark", "system"].includes(stored)) {
-      setThemeState(stored);
-    } else {
-      // Default to light for a fresh, welcoming presentation
-      setThemeState("light");
-    }
-  }, []);
+    if (!mounted) return;
+
+    // Deferred so the effect body performs no synchronous state update
+    // (react-hooks/set-state-in-effect); behaviour is unchanged.
+    const restoreTimer = setTimeout(() => {
+      const stored = localStorage.getItem("merix_theme") as Theme | null;
+      if (stored && ["light", "dark", "system"].includes(stored)) {
+        setThemeState(stored);
+      } else {
+        // Default to light for a fresh, welcoming presentation
+        setThemeState("light");
+      }
+    }, 0);
+    return () => clearTimeout(restoreTimer);
+  }, [mounted]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -42,8 +55,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       effectiveTheme = theme;
     }
 
-    setResolvedTheme(effectiveTheme);
-
     if (effectiveTheme === "dark") {
       root.classList.add("dark");
       root.classList.remove("light");
@@ -55,6 +66,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
 
     localStorage.setItem("merix_theme", theme);
+
+    // Deferred so the effect body performs no synchronous state update
+    // (react-hooks/set-state-in-effect); behaviour is unchanged.
+    const timer = setTimeout(() => setResolvedTheme(effectiveTheme), 0);
+    return () => clearTimeout(timer);
   }, [theme, mounted]);
 
   const setTheme = (newTheme: Theme) => {

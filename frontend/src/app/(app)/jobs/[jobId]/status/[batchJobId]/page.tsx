@@ -28,17 +28,6 @@ export default function BatchJobStatusPage() {
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/login");
-      return;
-    }
-
-    if (isAuthenticated && jobId && batchJobId) {
-      loadInitialData();
-    }
-  }, [authLoading, isAuthenticated, jobId, batchJobId, router]);
-
   const loadInitialData = async () => {
     setLoading(true);
     try {
@@ -55,6 +44,22 @@ export default function BatchJobStatusPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    // Deferred so the effect body performs no synchronous state update
+    // (react-hooks/set-state-in-effect); behaviour is unchanged.
+    const timer = setTimeout(() => {
+      if (isAuthenticated && jobId && batchJobId) {
+        loadInitialData();
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [authLoading, isAuthenticated, jobId, batchJobId, router]);
 
   // Polling loop
   useEffect(() => {

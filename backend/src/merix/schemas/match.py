@@ -2,8 +2,9 @@
 
 import uuid
 from datetime import datetime
+from enum import StrEnum
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ResumeResponse(BaseModel):
@@ -44,6 +45,22 @@ class MatchResponse(BaseModel):
     matched_skills: list[MatchedSkill]
     missing_skills: list[MissingSkill]
     rationale: str | None = None
+    status: str = "pending"
     created_at: datetime
 
     model_config = {"from_attributes": True}
+
+
+class MatchStatus(StrEnum):
+    """Recruiter disposition for a match result."""
+
+    PENDING = "pending"
+    SHORTLISTED = "shortlisted"
+    REJECTED = "rejected"
+
+
+class BulkMatchStatusUpdate(BaseModel):
+    """Bulk recruiter disposition update for a job's match results."""
+
+    match_ids: list[uuid.UUID] = Field(min_length=1)
+    status: MatchStatus

@@ -144,6 +144,7 @@ export interface MatchResult {
   matched_skills: MatchedSkill[];
   missing_skills: MissingSkill[];
   rationale: string;
+  status?: "pending" | "shortlisted" | "rejected";
   created_at: string;
 }
 

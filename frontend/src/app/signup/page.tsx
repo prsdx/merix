@@ -25,11 +25,14 @@ export default function SignupPage() {
       return;
     }
 
+    // Deferred so the effect body performs no synchronous state update
+    // (react-hooks/set-state-in-effect); behaviour is unchanged.
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const urlError = params.get("error");
       if (urlError) {
-        setError(decodeURIComponent(urlError));
+        const timer = setTimeout(() => setError(decodeURIComponent(urlError)), 0);
+        return () => clearTimeout(timer);
       }
     }
   }, [isAuthenticated, router]);

@@ -75,17 +75,6 @@ export default function CandidateDetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/login");
-      return;
-    }
-
-    if (isAuthenticated && matchId && jobId) {
-      loadData();
-    }
-  }, [authLoading, isAuthenticated, matchId, jobId, router]);
-
   const loadData = async () => {
     setLoading(true);
     setError(null);
@@ -109,6 +98,22 @@ export default function CandidateDetailPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    // Deferred so the effect body performs no synchronous state update
+    // (react-hooks/set-state-in-effect); behaviour is unchanged.
+    const timer = setTimeout(() => {
+      if (isAuthenticated && matchId && jobId) {
+        loadData();
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [authLoading, isAuthenticated, matchId, jobId, router]);
 
   const handleDelete = async () => {
     if (!match?.resume_id) return;

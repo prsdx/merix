@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { Job, MatchResult } from "@/lib/types";
@@ -21,11 +21,15 @@ import {
   CheckCircle2,
   ShieldCheck,
   ExternalLink,
+  X,
+  BookmarkCheck,
+  XCircle,
 } from "lucide-react";
 
-export default function RankedResultsPage() {
+function RankedResults() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const jobId = String(params.jobId);
   const { isAuthenticated, loading: authLoading } = useAuth();
 
@@ -34,20 +38,40 @@ export default function RankedResultsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [minScoreFilter, setMinScoreFilter] = useState<number | undefined>(undefined);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
+  /* ---- Filter/search state initialised from URL, persisted back to URL ---- */
+  const parseMinScore = (raw: string | null): number | undefined => {
+    if (raw === null || raw === "") return undefined;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : undefined;
+  };
 
+  const [minScoreFilter, setMinScoreFilter] = useState<number | undefined>(() =>
+    parseMinScore(searchParams.get("min_score"))
+  );
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get("q") ?? "");
+  const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
+  const [selectedMatchIds, setSelectedMatchIds] = useState<Set<string>>(new Set());
+  const [bulkStatusPending, setBulkStatusPending] = useState<"shortlisted" | "rejected" | null>(null);
+  const [bulkError, setBulkError] = useState<string | null>(null);
+
+  /* Mirror filter/search changes into the URL (replace, not push) so that
+     navigating to a candidate dossier and coming back restores this state.
+     Debounced so typing in the search box doesn't thrash the router. */
+  const skipInitialUrlSync = useRef(true);
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/login");
+    if (skipInitialUrlSync.current) {
+      skipInitialUrlSync.current = false;
       return;
     }
-
-    if (isAuthenticated && jobId) {
-      loadData();
-    }
-  }, [authLoading, isAuthenticated, jobId, minScoreFilter, router]);
+    const timer = setTimeout(() => {
+      const next = new URLSearchParams();
+      if (minScoreFilter !== undefined) next.set("min_score", String(minScoreFilter));
+      if (searchTerm) next.set("q", searchTerm);
+      const qs = next.toString();
+      router.replace(`/jobs/${jobId}/results${qs ? `?${qs}` : ""}`, { scroll: false });
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [minScoreFilter, searchTerm, jobId, router]);
 
   const loadData = async () => {
     setLoading(true);
@@ -67,14 +91,118 @@ export default function RankedResultsPage() {
     }
   };
 
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    // Deferred so the effect body performs no synchronous state update
+    // (react-hooks/set-state-in-effect); behaviour is unchanged.
+    const timer = setTimeout(() => {
+      if (isAuthenticated && jobId) {
+        loadData();
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [authLoading, isAuthenticated, jobId, minScoreFilter, router]);
+
   const filteredMatches = matches.filter((m) => {
     const query = searchTerm.toLowerCase();
     const nameMatch = (m.candidate_name || "").toLowerCase().includes(query);
     const skillMatch = m.matched_skills.some((s) => s.skill.toLowerCase().includes(query));
-    return nameMatch || skillMatch;
+    const gapMatch = m.missing_skills.some((s) => s.skill.toLowerCase().includes(query));
+    return nameMatch || skillMatch || gapMatch;
   });
 
   const exportUrl = api.getExportUrl(jobId, minScoreFilter);
+
+  /* ---- Bulk selection & selected-candidate CSV (client-side) ---- */
+  const selectAllRef = useRef<HTMLInputElement>(null);
+  const allVisibleSelected =
+    filteredMatches.length > 0 && filteredMatches.every((m) => selectedMatchIds.has(m.id));
+  const someVisibleSelected = filteredMatches.some((m) => selectedMatchIds.has(m.id));
+
+  useEffect(() => {
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someVisibleSelected && !allVisibleSelected;
+    }
+  }, [someVisibleSelected, allVisibleSelected]);
+
+  const toggleMatchSelection = (matchId: string) => {
+    setSelectedMatchIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(matchId)) {
+        next.delete(matchId);
+      } else {
+        next.add(matchId);
+      }
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    setSelectedMatchIds((prev) => {
+      const next = new Set(prev);
+      if (allVisibleSelected) {
+        filteredMatches.forEach((m) => next.delete(m.id));
+      } else {
+        filteredMatches.forEach((m) => next.add(m.id));
+      }
+      return next;
+    });
+  };
+
+  const exportSelectedCsv = () => {
+    // Mirrors the backend GET /jobs/{id}/matches/export column shape,
+    // scoped to just the currently selected candidates.
+    const selectedMatches = matches.filter((m) => selectedMatchIds.has(m.id));
+    if (selectedMatches.length === 0) return;
+
+    const escapeCell = (value: string | number | null | undefined) => {
+      const s = String(value ?? "");
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const rows: Array<Array<string | number>> = [
+      ["Candidate Name", "Score", "Matched Skills", "Missing Skills", "Rationale"],
+    ];
+    for (const m of selectedMatches) {
+      rows.push([
+        m.candidate_name || "Unknown",
+        m.score,
+        m.matched_skills.map((s) => s.skill).join(", "),
+        m.missing_skills.map((s) => s.skill).join(", "),
+        m.rationale,
+      ]);
+    }
+    const csv = rows.map((r) => r.map(escapeCell).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `shortlist_selected_${jobId}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  const applyBulkStatus = async (status: "shortlisted" | "rejected") => {
+    setBulkStatusPending(status);
+    setBulkError(null);
+    try {
+      await api.bulkUpdateMatchStatus(jobId, [...selectedMatchIds], status);
+      // Optimistic update — the persisted status now matches locally.
+      setMatches((prev) =>
+        prev.map((m) => (selectedMatchIds.has(m.id) ? { ...m, status } : m))
+      );
+      setSelectedMatchIds(new Set());
+    } catch (err: unknown) {
+      setBulkError(err instanceof Error ? err.message : "Failed to update candidates");
+    } finally {
+      setBulkStatusPending(null);
+    }
+  };
 
   /* ---- Cohort analytics (client-side, zero extra API calls) ---- */
   const sortedScores = [...matches].map((m) => m.score).sort((a, b) => a - b);
@@ -280,6 +408,64 @@ export default function RankedResultsPage() {
           </div>
         </div>
 
+        {/* Bulk Action Bar (appears while a selection is active) */}
+        {selectedMatchIds.size > 0 && (
+          <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3 p-3 rounded-2xl bg-[var(--bg-surface)] border border-[var(--brand-primary)] shadow-xs">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-[var(--brand-primary)] shrink-0" />
+              <span className="text-sm font-mono font-semibold text-[var(--text-primary)]">
+                {selectedMatchIds.size} candidate{selectedMatchIds.size === 1 ? "" : "s"} selected
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => applyBulkStatus("shortlisted")}
+                disabled={bulkStatusPending !== null}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-[var(--accent-evidence)] text-white hover:brightness-95 transition-all shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {bulkStatusPending === "shortlisted" ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <BookmarkCheck className="w-3.5 h-3.5" />
+                )}
+                <span>Shortlist Selected</span>
+              </button>
+              <button
+                onClick={() => applyBulkStatus("rejected")}
+                disabled={bulkStatusPending !== null}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-[var(--accent-danger)] text-white hover:brightness-95 transition-all shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {bulkStatusPending === "rejected" ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <XCircle className="w-3.5 h-3.5" />
+                )}
+                <span>Reject Selected</span>
+              </button>
+              <button
+                onClick={exportSelectedCsv}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] transition-all shadow-xs cursor-pointer"
+              >
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                <span>Export Selected</span>
+              </button>
+              <button
+                onClick={() => setSelectedMatchIds(new Set())}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border-hairline)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
+              >
+                <X className="w-3.5 h-3.5" />
+                <span>Clear Selection</span>
+              </button>
+            </div>
+            {bulkError && (
+              <div className="w-full sm:w-auto flex items-center gap-1.5 text-xs font-mono text-[var(--accent-danger)]">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{bulkError}</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Results Table with Truffle-Style "Why This Matters" Expandable Drawers */}
         {loading ? (
           <div className="p-12 text-center merix-card space-y-3">
@@ -311,10 +497,20 @@ export default function RankedResultsPage() {
           <div className="merix-card overflow-hidden divide-y divide-[var(--border-hairline)] shadow-xs">
             {/* Table Header */}
             <div className="px-5 py-3 bg-[var(--bg-subtle)] grid grid-cols-12 text-xs font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
+              <div className="col-span-1 flex items-center">
+                <input
+                  ref={selectAllRef}
+                  type="checkbox"
+                  checked={allVisibleSelected}
+                  onChange={toggleSelectAll}
+                  aria-label="Select all candidates"
+                  className="w-4 h-4 cursor-pointer accent-[var(--brand-primary)]"
+                />
+              </div>
               <div className="col-span-1">Rank</div>
               <div className="col-span-4">Candidate</div>
               <div className="col-span-2 text-center">Fit Score</div>
-              <div className="col-span-4">Matched &amp; Missing Competencies</div>
+              <div className="col-span-3">Matched &amp; Missing Competencies</div>
               <div className="col-span-1 text-right">Details</div>
             </div>
 
@@ -336,6 +532,18 @@ export default function RankedResultsPage() {
                     onClick={() => setExpandedMatchId(isExpanded ? null : m.id)}
                     className="px-5 py-4 grid grid-cols-12 items-center gap-2 cursor-pointer select-none"
                   >
+                    {/* Bulk Selection */}
+                    <div className="col-span-1 flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={selectedMatchIds.has(m.id)}
+                        onChange={() => toggleMatchSelection(m.id)}
+                        onClick={(e) => e.stopPropagation()}
+                        aria-label={`Select ${m.candidate_name || "candidate"}`}
+                        className="w-4 h-4 cursor-pointer accent-[var(--brand-primary)]"
+                      />
+                    </div>
+
                     {/* Rank */}
                     <div className="col-span-1 font-mono text-sm font-bold text-[var(--text-muted)]">
                       #{idx + 1}
@@ -345,6 +553,16 @@ export default function RankedResultsPage() {
                     <div className="col-span-4 min-w-0 pr-2">
                       <div className="font-bold text-sm text-[var(--text-primary)] truncate">
                         {m.candidate_name || "Applicant"}
+                        {m.status === "shortlisted" && (
+                          <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-[var(--accent-evidence-soft)] text-[var(--accent-evidence)] border-[var(--accent-evidence-border)] align-middle">
+                            Shortlisted
+                          </span>
+                        )}
+                        {m.status === "rejected" && (
+                          <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-[var(--accent-danger-soft)] text-[var(--accent-danger)] border-[var(--accent-danger-border)] align-middle">
+                            Rejected
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs font-mono text-[var(--text-muted)] truncate mt-0.5">
                         ID: {m.resume_id.substring(0, 8)} • Click to inspect evidence
@@ -358,7 +576,7 @@ export default function RankedResultsPage() {
                     </div>
 
                     {/* Skills Chips */}
-                    <div className="col-span-4 flex flex-wrap gap-1 pr-2">
+                    <div className="col-span-3 flex flex-wrap gap-1 pr-2">
                       {m.matched_skills.slice(0, 3).map((sk) => (
                         <span key={sk.skill} className="tag-evidence text-[10px]">
                           ✓ {sk.skill}
@@ -451,5 +669,21 @@ export default function RankedResultsPage() {
         )}
       </main>
     </div>
+  );
+}
+
+/* useSearchParams() requires a Suspense boundary under static prerendering. */
+export default function RankedResultsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex flex-col justify-center items-center bg-[var(--bg-canvas)]">
+          <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-primary)] mb-3" />
+          <span className="text-sm text-[var(--text-muted)] font-mono">Loading Ranked Shortlist...</span>
+        </div>
+      }
+    >
+      <RankedResults />
+    </Suspense>
   );
 }

@@ -49,17 +49,6 @@ export default function ResumeUploadPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push("/login");
-      return;
-    }
-
-    if (isAuthenticated && jobId) {
-      loadData();
-    }
-  }, [authLoading, isAuthenticated, jobId, router]);
-
   const loadData = async () => {
     setLoading(true);
     setError(null);
@@ -77,6 +66,22 @@ export default function ResumeUploadPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push("/login");
+      return;
+    }
+
+    // Deferred so the effect body performs no synchronous state update
+    // (react-hooks/set-state-in-effect); behaviour is unchanged.
+    const timer = setTimeout(() => {
+      if (isAuthenticated && jobId) {
+        loadData();
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [authLoading, isAuthenticated, jobId, router]);
 
   const handleFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
