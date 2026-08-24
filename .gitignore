@@ -1,4 +1,4 @@
-# Secrets and environment
+﻿# Secrets and environment
 .env
 .env.local
 .env.*.local
@@ -45,6 +45,13 @@ docs/interview.md
 
 # Scratch/debug outputs from manual & agent test sessions
 pytest_*.txt
+*_out.txt
+*_err.txt
+*.pid
+.git_msg_docs.txt
+cookies.txt
+*_body.json
+live_verify.py
 
 # Graphify regenerable output - keep only dated reports (graphify-out/<date>/)
 graphify-out/cache/
