@@ -7,7 +7,10 @@ services:
     branch: main
     rootDir: backend
     buildCommand: pip install uv && uv sync --frozen
-    startCommand: uv run uvicorn merix.main:app --host 0.0.0.0 --port $PORT
+    # Apply pending migrations before booting the app. Render Pre-Deploy Commands
+    # require a paid instance type; once the plan is upgraded, move this to:
+    #   preDeployCommand: uv run alembic upgrade head
+    startCommand: uv run alembic upgrade head && uv run uvicorn merix.main:app --host 0.0.0.0 --port $PORT
     healthCheckPath: /health
     envVars:
       - key: PYTHON_VERSION
