@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
 import { Job, MatchResult } from "@/lib/types";
@@ -24,9 +24,10 @@ import {
   X,
 } from "lucide-react";
 
-export default function RankedResultsPage() {
+function RankedResults() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const jobId = String(params.jobId);
   const { isAuthenticated, loading: authLoading } = useAuth();
 
@@ -35,10 +36,38 @@ export default function RankedResultsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [minScoreFilter, setMinScoreFilter] = useState<number | undefined>(undefined);
-  const [searchTerm, setSearchTerm] = useState("");
+  /* ---- Filter/search state initialised from URL, persisted back to URL ---- */
+  const parseMinScore = (raw: string | null): number | undefined => {
+    if (raw === null || raw === "") return undefined;
+    const n = Number(raw);
+    return Number.isFinite(n) ? n : undefined;
+  };
+
+  const [minScoreFilter, setMinScoreFilter] = useState<number | undefined>(() =>
+    parseMinScore(searchParams.get("min_score"))
+  );
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get("q") ?? "");
   const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
   const [selectedMatchIds, setSelectedMatchIds] = useState<Set<string>>(new Set());
+
+  /* Mirror filter/search changes into the URL (replace, not push) so that
+     navigating to a candidate dossier and coming back restores this state.
+     Debounced so typing in the search box doesn't thrash the router. */
+  const skipInitialUrlSync = useRef(true);
+  useEffect(() => {
+    if (skipInitialUrlSync.current) {
+      skipInitialUrlSync.current = false;
+      return;
+    }
+    const timer = setTimeout(() => {
+      const next = new URLSearchParams();
+      if (minScoreFilter !== undefined) next.set("min_score", String(minScoreFilter));
+      if (searchTerm) next.set("q", searchTerm);
+      const qs = next.toString();
+      router.replace(`/jobs/${jobId}/results${qs ? `?${qs}` : ""}`, { scroll: false });
+    }, 250);
+    return () => clearTimeout(timer);
+  }, [minScoreFilter, searchTerm, jobId, router]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -574,5 +603,21 @@ export default function RankedResultsPage() {
         )}
       </main>
     </div>
+  );
+}
+
+/* useSearchParams() requires a Suspense boundary under static prerendering. */
+export default function RankedResultsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex flex-col justify-center items-center bg-[var(--bg-canvas)]">
+          <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-primary)] mb-3" />
+          <span className="text-sm text-[var(--text-muted)] font-mono">Loading Ranked Shortlist...</span>
+        </div>
+      }
+    >
+      <RankedResults />
+    </Suspense>
   );
 }
