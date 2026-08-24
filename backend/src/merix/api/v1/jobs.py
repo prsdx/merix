@@ -19,7 +19,7 @@ from fastapi import (
     UploadFile,
     status,
 )
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from merix.clients.base import EmbeddingClient, LLMClient
@@ -32,7 +32,7 @@ from merix.models.resume import Resume
 from merix.models.user import User
 from merix.schemas.batch_job import BatchJobCreate, BatchJobStatus
 from merix.schemas.job import JobCreate, JobFromURLCreate, JobResponse, JobSummaryResponse
-from merix.schemas.match import ResumeResponse
+from merix.schemas.match import BulkMatchStatusUpdate, ResumeResponse
 from merix.services import consent, extraction, pipeline, retention
 from merix.services import links as links_service
 from merix.services.batch import process_resume_background, run_batch_match_background
@@ -301,6 +301,33 @@ async def list_matches(
     job = await pipeline.get_job_or_404(db, job_id, user.org_id)
     results = await pipeline.list_matches_for_job(db, job, min_score=min_score)
     return await _shortlist_payload(db, job, results)
+
+
+@router.patch("/{job_id}/matches/status")
+async def update_match_statuses(
+    job_id: uuid.UUID,
+    body: BulkMatchStatusUpdate,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_scoped_db),
+) -> dict:
+    """Bulk-update the recruiter disposition (pending/shortlisted/rejected)
+    for a set of a job's match results. Org scoping is enforced both by the
+    RLS-pinned session and by restricting to matches of this job."""
+    job = await pipeline.get_job_or_404(db, job_id, user.org_id)
+    result = await db.execute(
+        update(MatchResult)
+        .where(MatchResult.id.in_(body.match_ids), MatchResult.job_id == job.id)
+        .values(status=body.status.value)
+    )
+    await db.commit()
+    logger.info(
+        "match_status_updated job_id=%s count=%s status=%s actor_user_id=%s",
+        job.id,
+        result.rowcount,
+        body.status.value,
+        user.id,
+    )
+    return {"updated": result.rowcount, "status": body.status.value}
 
 
 @router.get("/{job_id}/matches/export")

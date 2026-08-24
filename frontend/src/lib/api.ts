@@ -233,6 +233,17 @@ export const api = {
     return request<MatchResult>(`/matches/${matchId}`);
   },
 
+  async bulkUpdateMatchStatus(
+    jobId: string,
+    matchIds: string[],
+    status: "pending" | "shortlisted" | "rejected"
+  ): Promise<{ updated: number }> {
+    return request<{ updated: number }>(`/jobs/${jobId}/matches/status`, {
+      method: "PATCH",
+      body: JSON.stringify({ match_ids: matchIds, status }),
+    });
+  },
+
   getExportUrl(jobId: string, minScore?: number): string {
     const token = getToken();
     let url = `${getApiBaseUrl()}/jobs/${jobId}/matches/export`;

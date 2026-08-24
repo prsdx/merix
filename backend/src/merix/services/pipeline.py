@@ -165,6 +165,7 @@ def to_match_response(match: MatchResult, resume: Resume | None) -> dict:
             "matched_skills": match.matched_skills,
             "missing_skills": match.missing_skills,
             "rationale": match.rationale,
+            "status": match.status,
             "created_at": match.created_at,
         }
     ).model_dump(mode="json")

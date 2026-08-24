@@ -22,6 +22,8 @@ import {
   ShieldCheck,
   ExternalLink,
   X,
+  BookmarkCheck,
+  XCircle,
 } from "lucide-react";
 
 function RankedResults() {
@@ -49,6 +51,8 @@ function RankedResults() {
   const [searchTerm, setSearchTerm] = useState(() => searchParams.get("q") ?? "");
   const [expandedMatchId, setExpandedMatchId] = useState<string | null>(null);
   const [selectedMatchIds, setSelectedMatchIds] = useState<Set<string>>(new Set());
+  const [bulkStatusPending, setBulkStatusPending] = useState<"shortlisted" | "rejected" | null>(null);
+  const [bulkError, setBulkError] = useState<string | null>(null);
 
   /* Mirror filter/search changes into the URL (replace, not push) so that
      navigating to a candidate dossier and coming back restores this state.
@@ -176,6 +180,23 @@ function RankedResults() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+  };
+
+  const applyBulkStatus = async (status: "shortlisted" | "rejected") => {
+    setBulkStatusPending(status);
+    setBulkError(null);
+    try {
+      await api.bulkUpdateMatchStatus(jobId, [...selectedMatchIds], status);
+      // Optimistic update — the persisted status now matches locally.
+      setMatches((prev) =>
+        prev.map((m) => (selectedMatchIds.has(m.id) ? { ...m, status } : m))
+      );
+      setSelectedMatchIds(new Set());
+    } catch (err: unknown) {
+      setBulkError(err instanceof Error ? err.message : "Failed to update candidates");
+    } finally {
+      setBulkStatusPending(null);
+    }
   };
 
   /* ---- Cohort analytics (client-side, zero extra API calls) ---- */
@@ -393,6 +414,30 @@ function RankedResults() {
             </div>
             <div className="flex items-center gap-2">
               <button
+                onClick={() => applyBulkStatus("shortlisted")}
+                disabled={bulkStatusPending !== null}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-[var(--accent-evidence)] text-white hover:brightness-95 transition-all shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {bulkStatusPending === "shortlisted" ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <BookmarkCheck className="w-3.5 h-3.5" />
+                )}
+                <span>Shortlist Selected</span>
+              </button>
+              <button
+                onClick={() => applyBulkStatus("rejected")}
+                disabled={bulkStatusPending !== null}
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-[var(--accent-danger)] text-white hover:brightness-95 transition-all shadow-xs cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {bulkStatusPending === "rejected" ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <XCircle className="w-3.5 h-3.5" />
+                )}
+                <span>Reject Selected</span>
+              </button>
+              <button
                 onClick={exportSelectedCsv}
                 className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] transition-all shadow-xs cursor-pointer"
               >
@@ -407,6 +452,12 @@ function RankedResults() {
                 <span>Clear Selection</span>
               </button>
             </div>
+            {bulkError && (
+              <div className="w-full sm:w-auto flex items-center gap-1.5 text-xs font-mono text-[var(--accent-danger)]">
+                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                <span>{bulkError}</span>
+              </div>
+            )}
           </div>
         )}
 
@@ -497,6 +548,16 @@ function RankedResults() {
                     <div className="col-span-4 min-w-0 pr-2">
                       <div className="font-bold text-sm text-[var(--text-primary)] truncate">
                         {m.candidate_name || "Applicant"}
+                        {m.status === "shortlisted" && (
+                          <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-[var(--accent-evidence-soft)] text-[var(--accent-evidence)] border-[var(--accent-evidence-border)] align-middle">
+                            Shortlisted
+                          </span>
+                        )}
+                        {m.status === "rejected" && (
+                          <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border bg-[var(--accent-danger-soft)] text-[var(--accent-danger)] border-[var(--accent-danger-border)] align-middle">
+                            Rejected
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs font-mono text-[var(--text-muted)] truncate mt-0.5">
                         ID: {m.resume_id.substring(0, 8)} • Click to inspect evidence

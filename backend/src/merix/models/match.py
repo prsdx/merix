@@ -3,7 +3,7 @@
 import uuid
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import Float, ForeignKey, Text, UniqueConstraint
+from sqlalchemy import Float, ForeignKey, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB, UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -59,6 +59,11 @@ class MatchResult(Base, TimestampMixin):
 
     # Short human-readable explanation of the score.
     rationale: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Recruiter disposition: pending | shortlisted | rejected.
+    status: Mapped[str] = mapped_column(
+        String(20), nullable=False, default="pending", server_default="pending"
+    )
 
     job: Mapped["JobDescription"] = relationship(back_populates="matches")
     resume: Mapped["Resume"] = relationship(back_populates="matches")
