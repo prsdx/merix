@@ -73,7 +73,8 @@ export default function RankedResultsPage() {
     const query = searchTerm.toLowerCase();
     const nameMatch = (m.candidate_name || "").toLowerCase().includes(query);
     const skillMatch = m.matched_skills.some((s) => s.skill.toLowerCase().includes(query));
-    return nameMatch || skillMatch;
+    const gapMatch = m.missing_skills.some((s) => s.skill.toLowerCase().includes(query));
+    return nameMatch || skillMatch || gapMatch;
   });
 
   const exportUrl = api.getExportUrl(jobId, minScoreFilter);
