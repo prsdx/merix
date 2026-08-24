@@ -47,6 +47,18 @@ class Settings(BaseSettings):
     # Example: "https://app.merix.dev,https://admin.merix.dev"
     ALLOWED_ORIGINS: str = "*"
 
+    # JD-from-URL fetching. Known career-board hosts (greenhouse.io, lever.co,
+    # ashbyhq.com) are always allowed; arbitrary domains additionally require
+    # this flag — SSRF surface stays closed by default.
+    JD_FETCH_ALLOW_ANY_DOMAIN: bool = False
+
+    # Link verification (authenticity layer): HEAD/GET liveness probes plus
+    # GitHub profile existence checks on resume links, stored as advisory
+    # flags in Resume.parsed["link_verification"]. Disable to skip network calls.
+    LINK_VERIFY_ENABLED: bool = True
+
+
+
     # Resolve .env relative to the backend/ dir (this file is at backend/src/merix/config.py),
     # so settings load correctly regardless of the process working directory.
     model_config = SettingsConfigDict(

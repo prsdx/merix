@@ -24,6 +24,7 @@ dependencies = [
     "email-validator>=2.3.0",
     "slowapi>=0.1.10",
     "google-genai>=2.19.0",
+    "trafilatura>=2.2.0",
 ]
 
 [dependency-groups]

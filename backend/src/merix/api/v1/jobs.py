@@ -6,6 +6,7 @@ so Postgres itself enforces isolation, and the pipeline's org filter keeps
 cross-org IDs indistinguishable from non-existent ones (404, no leak).
 """
 
+import logging
 import uuid
 
 from fastapi import (
@@ -22,7 +23,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from merix.clients.base import EmbeddingClient, LLMClient
-from merix.core.exceptions import FileTooLargeError
+from merix.core.exceptions import FileTooLargeError, NotFoundError
 from merix.dependencies import get_current_user, get_embedder, get_llm, get_scoped_db
 from merix.models.batch_job import BatchJob
 from merix.models.job import JobDescription
@@ -30,10 +31,14 @@ from merix.models.match import MatchResult
 from merix.models.resume import Resume
 from merix.models.user import User
 from merix.schemas.batch_job import BatchJobCreate, BatchJobStatus
-from merix.schemas.job import JobCreate, JobResponse, JobSummaryResponse
+from merix.schemas.job import JobCreate, JobFromURLCreate, JobResponse, JobSummaryResponse
 from merix.schemas.match import ResumeResponse
 from merix.services import consent, extraction, pipeline
+from merix.services import links as links_service
 from merix.services.batch import process_resume_background, run_batch_match_background
+from merix.services.jd_fetch import default_jd_fetcher as jd_fetcher
+
+logger = logging.getLogger("merix.api.jobs")
 
 router = APIRouter()
 
@@ -91,6 +96,26 @@ async def create_job(
     return await pipeline.create_job(db, llm, embedder, user.org_id, body.title, body.raw_text)
 
 
+@router.post("/from-url", response_model=JobResponse, status_code=status.HTTP_201_CREATED)
+async def create_job_from_url(
+    body: JobFromURLCreate,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_scoped_db),
+    llm: LLMClient = Depends(get_llm),
+    embedder: EmbeddingClient = Depends(get_embedder),
+) -> object:
+    """Create a job description by fetching a career-board posting URL.
+
+    The fetch is SSRF-guarded (public IPs only, board-domain allowlist by
+    default) and the page text replaces manual pasting. Registered BEFORE the
+    ``/{job_id}`` routes so "from-url" is never parsed as a job UUID.
+    """
+    fetched = await jd_fetcher.fetch(body.url)
+    title = (body.title or fetched["title"] or "Untitled role").strip()[:255]
+    logger.info("job_created_from_url org=%s url=%s title=%s", user.org_id, body.url, title)
+    return await pipeline.create_job(db, llm, embedder, user.org_id, title, fetched["text"][:50_000])
+
+
 @router.get("/{job_id}", response_model=JobResponse)
 async def get_job(
     job_id: uuid.UUID,
@@ -99,6 +124,21 @@ async def get_job(
 ) -> object:
     """Get a job description by id (caller's org only)."""
     return await pipeline.get_job_or_404(db, job_id, user.org_id)
+
+
+@router.get("/{job_id}/resumes/{resume_id}", response_model=ResumeResponse)
+async def get_job_resume(
+    job_id: uuid.UUID,
+    resume_id: uuid.UUID,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_scoped_db),
+) -> Resume:
+    """Get one resume (caller's org + job only; 404 otherwise — no existence leak)."""
+    await pipeline.get_job_or_404(db, job_id, user.org_id)
+    resume = await db.scalar(select(Resume).where(Resume.id == resume_id, Resume.job_id == job_id, Resume.org_id == user.org_id))
+    if resume is None:
+        raise NotFoundError(f"resume {resume_id} not found")
+    return resume
 
 
 @router.get("/{job_id}/resumes", response_model=list[ResumeResponse])
@@ -154,6 +194,8 @@ async def upload_resume(
     if len(data) > extraction.MAX_FILE_BYTES:
         raise FileTooLargeError(extraction.MAX_FILE_BYTES)
     text = extraction.extract_text_from_pdf(data)  # raises domain errors on reject
+    # Extract links BEFORE scrubbing destroys them; stored as structured data.
+    resume_links = links_service.collect_links(data)
     scrubbed = extraction.scrub_pii(text)
 
     batch_job = BatchJob(
@@ -179,7 +221,9 @@ async def upload_resume(
         candidate_name=candidate_name,
         llm=llm,
         embedder=embedder,
+        resume_links=resume_links,
     )
+
     return batch_job
 
 

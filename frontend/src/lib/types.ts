@@ -50,6 +50,36 @@ export interface JobSummary {
   } | null;
 }
 
+export interface ResumeLink {
+  url: string;
+  type: "linkedin" | "github" | "gitlab" | "bitbucket" | "portfolio" | "blog" | "other";
+}
+
+export interface TimelineSpan {
+  company: string;
+  title: string;
+  start_year: number;
+  end_year: number;
+  end_open: boolean;
+}
+
+export interface TimelineAnalysis {
+  total_experience_years: number;
+  spans: TimelineSpan[];
+  overlaps: string[][];
+  gaps: Array<{ after_year: number; months: number }>;
+  flags: string[];
+}
+
+export interface LinkVerification {
+  url: string;
+  status: "ok" | "dead" | "error" | "skipped" | "unknown" | "fabricated";
+  http_status?: number | null;
+  github_profile?: "ok" | "dead" | "unknown";
+  checked_at?: string | null;
+}
+
+
 export interface Resume {
   id: string;
   job_id: string;
@@ -66,8 +96,13 @@ export interface Resume {
     years_experience?: number;
     education?: string;
     work_history?: string[];
+    links?: ResumeLink[];
+    timeline_analysis?: TimelineAnalysis;
+    link_verification?: LinkVerification[];
+
   } | null;
 }
+
 
 export interface BatchJob {
   id: string;

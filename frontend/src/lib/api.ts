@@ -199,6 +199,10 @@ export const api = {
     return request<Resume[]>(`/jobs/${jobId}/resumes`);
   },
 
+  async getResume(jobId: string, resumeId: string): Promise<Resume> {
+    return request<Resume>(`/jobs/${jobId}/resumes/${resumeId}`);
+  },
+
   // Batch Matching
   async startBatchMatch(jobId: string, idempotencyKey?: string): Promise<BatchJob> {
     return request<BatchJob>(`/jobs/${jobId}/match`, {

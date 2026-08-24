@@ -13,6 +13,13 @@ class JobCreate(BaseModel):
     raw_text: str = Field(min_length=1, max_length=50_000)
 
 
+class JobFromURLCreate(BaseModel):
+    """Request to create a job description by fetching a posting URL."""
+
+    url: str = Field(min_length=8, max_length=2_048)
+    title: str | None = Field(default=None, min_length=1, max_length=255)  # derived from the page if omitted
+
+
 class JobResponse(BaseModel):
     """A job description as returned by the API."""
 

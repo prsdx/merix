@@ -69,8 +69,12 @@ Return JSON with exactly these keys:
   (at most 15 words — do not copy whole sentences)
 - "experience_years": number, total years of professional experience (0 if unclear)
 - "education": string, highest education ("" if not stated)
+- "timeline": list of work-history entries, each {{"company": string, "title": string,
+  "start": string, "end": string}} with dates exactly as written in the resume
+  (e.g. "Jan 2020", "2019", "Present"); empty list if no work history found
 
 Resume:
+
 ---
 {resume_text}
 ---

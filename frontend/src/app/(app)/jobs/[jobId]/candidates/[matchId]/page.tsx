@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
-import { Job, MatchResult } from "@/lib/types";
+import { Job, MatchResult, Resume, ResumeLink, LinkVerification } from "@/lib/types";
+
 import { DPDPBadge } from "@/components/dpdp-badge";
 import { ScoreRing } from "@/components/score-ring";
 import {
@@ -18,7 +19,44 @@ import {
   AlertTriangle,
   AlertCircle,
   Loader2,
+  Github,
+  Linkedin,
+  Globe,
+  Link2,
+  Clock,
 } from "lucide-react";
+
+function linkIcon(link: ResumeLink) {
+  switch (link.type) {
+    case "linkedin":
+      return Linkedin;
+    case "github":
+    case "gitlab":
+    case "bitbucket":
+      return Github;
+    case "portfolio":
+    case "blog":
+      return Globe;
+    default:
+      return Link2;
+  }
+}
+
+/** Short display label for a link URL (strips protocol/www). */
+function linkLabel(url: string): string {
+  return url.replace(/^https?:\/\/(www\.)?/, "");
+}
+
+const VERIFY_BADGE: Record<LinkVerification["status"], { color: string; label: string }> = {
+  ok: { color: "#16A34A", label: "Live" },
+  fabricated: { color: "#DC2626", label: "Not found — possibly fabricated" },
+  dead: { color: "#DC2626", label: "Dead link" },
+  error: { color: "#64748B", label: "Unreachable" },
+  unknown: { color: "#D97706", label: "Inconclusive" },
+  skipped: { color: "#64748B", label: "Not checked" },
+};
+
+
 
 export default function CandidateDetailPage() {
   const params = useParams();
@@ -29,7 +67,9 @@ export default function CandidateDetailPage() {
 
   const [job, setJob] = useState<Job | null>(null);
   const [match, setMatch] = useState<MatchResult | null>(null);
+  const [resume, setResume] = useState<Resume | null>(null);
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState<string | null>(null);
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -56,6 +96,12 @@ export default function CandidateDetailPage() {
       ]);
       setJob(jobData);
       setMatch(matchData);
+      // Links + timeline live on the resume's parsed payload; non-fatal if absent.
+      if (matchData.resume_id) {
+        const resumeData = await api.getResume(jobId, matchData.resume_id).catch(() => null);
+        setResume(resumeData);
+      }
+
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "Failed to load candidate evaluation";
       setError(msg);
@@ -193,6 +239,111 @@ export default function CandidateDetailPage() {
                 </div>
               </div>
             </div>
+
+            {/* Verified Links + Career Timeline (Evidence Graph) */}
+            {(resume?.parsed?.links?.length || resume?.parsed?.timeline_analysis?.spans?.length) ? (
+              <div className="merix-card p-6 rounded-3xl border border-[var(--border-hairline)] space-y-5">
+                <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-hairline)]">
+                  <Clock className="w-4 h-4 text-[var(--accent-evidence)]" />
+                  <h2 className="font-display text-base font-normal text-[var(--text-primary)]">
+                    Evidence Graph
+                  </h2>
+                </div>
+
+                {resume?.parsed?.timeline_analysis && resume.parsed.timeline_analysis.spans.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-mono uppercase tracking-wider text-[var(--text-muted)]">
+                        Career Timeline
+                      </span>
+                      <span className="text-xs font-mono font-bold text-[var(--accent-evidence)]">
+                        {resume.parsed.timeline_analysis.total_experience_years} yrs total
+                        (union of tenures)
+                      </span>
+                    </div>
+                    <div className="space-y-1.5">
+                      {resume.parsed.timeline_analysis.spans.map((span, i) => (
+                        <div
+                          key={`${span.company}-${i}`}
+                          className="flex items-center justify-between p-2.5 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--border-hairline)]"
+                        >
+                          <div className="min-w-0">
+                            <div className="text-sm font-semibold text-[var(--text-primary)] truncate">
+                              {span.title || span.company}
+                            </div>
+                            <div className="text-xs font-mono text-[var(--text-muted)] truncate">
+                              {span.title ? `${span.company} · ` : ""}
+                              {span.start_year} –{" "}
+                              {span.end_open ? "Present" : span.end_year}
+                            </div>
+                          </div>
+                          {span.end_open && (
+                            <span className="ml-2 shrink-0 px-2 py-0.5 rounded-full text-[10px] font-mono font-semibold bg-[var(--accent-evidence)]/10 text-[var(--accent-evidence)]">
+                              CURRENT
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {resume.parsed.timeline_analysis.overlaps.length > 0 && (
+                      <div className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-400 font-mono">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                        <span>
+                          Concurrent roles detected:{" "}
+                          {resume.parsed.timeline_analysis.overlaps.map((o) => o.join(" + ")).join("; ")}
+                        </span>
+                      </div>
+                    )}
+                    {resume.parsed.timeline_analysis.flags.length > 0 && (
+                      <div className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-400 font-mono">
+                        <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                        <span>Timeline flags: {resume.parsed.timeline_analysis.flags.join(", ")}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {resume?.parsed?.links && resume.parsed.links.length > 0 && (
+                  <div className="space-y-2">
+                    <span className="text-xs font-mono uppercase tracking-wider text-[var(--text-muted)]">
+                      Profile Links ({resume.parsed.links.length})
+                    </span>
+                    <div className="flex flex-wrap gap-2">
+                      {resume.parsed.links.map((link) => {
+                        const Icon = linkIcon(link);
+                        const verification = resume.parsed?.link_verification?.find((v) => v.url === link.url);
+                        const badge = verification ? VERIFY_BADGE[verification.status] : null;
+                        return (
+                          <a
+                            key={link.url}
+                            href={link.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={badge ? `Verification: ${badge.label}` : undefined}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--border-hairline)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--accent-evidence)] hover:border-[var(--accent-evidence)]/40 transition-colors max-w-[260px]"
+                          >
+                            <Icon className="w-3.5 h-3.5 shrink-0" />
+                            <span className="truncate">{linkLabel(link.url)}</span>
+                            {badge && (
+                              <span
+                                className="w-2 h-2 rounded-full shrink-0"
+                                style={{ backgroundColor: badge.color }}
+                                aria-label={badge.label}
+                              />
+                            )}
+                          </a>
+                        );
+                      })}
+                    </div>
+                    <p className="text-[11px] font-mono text-[var(--text-muted)] leading-relaxed">
+                      Extracted from resume hyperlinks &amp; text before PII scrubbing — the AI never saw these URLs.
+                      Dots: green live · red dead/unverified profile · grey not checked.
+                    </p>
+
+                  </div>
+                )}
+              </div>
+            ) : null}
 
             {/* DPDP Compliance Card */}
             <div className="merix-card p-6 rounded-3xl border border-[var(--border-hairline)] space-y-4">

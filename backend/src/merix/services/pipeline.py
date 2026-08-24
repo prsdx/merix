@@ -19,7 +19,7 @@ from merix.models.job import JobDescription
 from merix.models.match import MatchResult
 from merix.models.organisation import Organisation
 from merix.models.resume import Resume
-from merix.services import consent, matching
+from merix.services import consent, matching, timeline
 
 logger = logging.getLogger("merix.services.pipeline")
 
@@ -52,10 +52,21 @@ async def add_resume(
     original_filename: str,
     candidate_name: str | None = None,
     consent_given: bool = False,
+    links: list[dict[str, str]] | None = None,
 ) -> Resume:
-    """Add a resume to a job: validate consent, extract info, embed, persist."""
+    """Add a resume to a job: validate consent, extract info, embed, persist.
+
+    ``links`` are extracted pre-scrub by the upload endpoint (see
+    services.links) and stored inside ``parsed`` — the LLM never sees them.
+    """
     consent.require_consent(consent_given)
     parsed = await matching.extract_resume(llm, raw_text)
+    if links:
+        parsed["links"] = links
+    # Deterministic timeline analysis: never trust the LLM's arithmetic for
+    # tenure totals, overlaps, or gaps.
+    parsed["timeline_analysis"] = timeline.analyse_timeline(parsed.get("timeline"))
+
     embedding = await embedder.embed(raw_text)
     if not candidate_name:
         candidate_name = parsed.get("candidate_name")

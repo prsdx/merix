@@ -14,6 +14,7 @@ import logging
 import uuid
 
 from sqlalchemy import select
+from sqlalchemy.orm.attributes import flag_modified
 
 from merix.clients.base import EmbeddingClient, LLMClient
 from merix.clients.embeddings import get_embedding_client
@@ -24,6 +25,7 @@ from merix.models.batch_job import BatchJob
 from merix.models.job import JobDescription
 from merix.models.resume import Resume
 from merix.services import pipeline
+from merix.services.verify import verify_resume_links
 
 logger = logging.getLogger("merix.services.batch")
 
@@ -96,9 +98,7 @@ async def run_batch_match_background(
             # hides the outage behind a success state. Surface it as failed so
             # the frontend stops showing a green path to zero results.
             batch_job.status = "failed"
-            batch_job.error_message = (
-                f"All {len(resumes)} resume(s) failed processing — see batch_results for per-resume errors"
-            )
+            batch_job.error_message = f"All {len(resumes)} resume(s) failed processing — see batch_results for per-resume errors"
             logger.error("batch_match_all_failed job_id=%s resumes=%d", job_id, len(resumes))
         else:
             batch_job.status = "completed"
@@ -135,6 +135,7 @@ async def process_resume_background(
     candidate_name: str | None = None,
     llm: LLMClient | None = None,
     embedder: EmbeddingClient | None = None,
+    resume_links: list[dict[str, str]] | None = None,
 ) -> None:
     """Process one uploaded resume (LLM extraction + embedding) in the background.
 
@@ -177,10 +178,22 @@ async def process_resume_background(
             original_filename=original_filename,
             candidate_name=candidate_name,
             consent_given=True,  # validated synchronously by the endpoint
+            links=resume_links,
         )
 
         # Re-fetch inside this session because add_resume commits.
+        # Link verification is advisory: failures here must never fail the job.
+        if settings.LINK_VERIFY_ENABLED and resume.parsed and resume.parsed.get("links"):
+            try:
+                resume.parsed["link_verification"] = await verify_resume_links(resume.parsed["links"])
+                # In-place JSONB mutation: mark the column dirty explicitly.
+                flag_modified(resume, "parsed")
+            except Exception:
+                await session.rollback()
+                logger.exception("link_verification_failed job_id=%s", job_id)
+
         batch_job = await session.get(BatchJob, batch_job_id)
+
         batch_job.status = "completed"
         batch_job.completed_resumes = 1
         batch_job.batch_results = [{"resume_id": str(resume.id), "status": "completed", "error": None}]

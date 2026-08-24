@@ -33,7 +33,23 @@ Traditional ATS systems are black boxes: they reject resumes with no explanation
 
 **Frontend**: Next.js 15 (App Router) + TypeScript + Tailwind CSS + Framer Motion (in `frontend/`)
 
-**Status**: Tasks 1–11 complete. Tasks 1–9 (full production frontend wired to real FastAPI backend, unified design, all 9 screens verified live with 73 passing backend tests) plus **Task 11: Backend performance pass** — async engine connection pooling (env-gated QueuePool in production, NullPool retained in dev/test to avoid pytest-asyncio cross-event-loop issues), async single-resume upload via BatchJob infrastructure (202 + poll), and worker/health-check configuration review.
+**Status**: Tasks 1–11 complete. **Task 12 (link parsing) complete** — see below. Tasks 1–9 (full production frontend wired to real FastAPI backend, unified design, all 9 screens verified live with 73 passing backend tests) plus **Task 11: Backend performance pass** — async engine connection pooling (env-gated QueuePool in production, NullPool retained in dev/test to avoid pytest-asyncio cross-event-loop issues), async single-resume upload via BatchJob infrastructure (202 + poll), and worker/health-check configuration review.
+
+### Task 12: Links + Timeline + JD-from-URL + UI (Evidence Graph — Phases A–D)
+
+- `services/links.py` extracts LinkedIn/GitHub/portfolio links from resume PDFs (annotations + text layer), normalises and classifies them, and they persist in `Resume.parsed["links"]` — extracted **before** `scrub_pii`, so the LLM never sees URLs but recruiters get structured identity anchors.
+- `services/timeline.py` deterministically analyses the LLM-extracted work history (`parsed["timeline"]`) into tenure spans, union-based total experience, overlaps, and gaps (`parsed["timeline_analysis"]`) — experience facts no longer rest on the LLM's arithmetic.
+- `services/jd_fetch.py` + `POST /api/jobs/from-url`: create a job by pasting a career-board URL (greenhouse/lever/ashby always allowed; other domains behind `JD_FETCH_ALLOW_ANY_DOMAIN`). SSRF-guarded: public IPs only, manual redirect re-validation, size/time caps.
+- Candidate detail page renders an Evidence Graph card (career timeline + profile-link chips) via the new `GET /api/jobs/{job_id}/resumes/{resume_id}` endpoint.
+### Task 13: Link Verification (Evidence Graph — authenticity layer)
+
+- `services/verify.py` runs post-upload: liveness probes + GitHub existence checks on resume links → `parsed["link_verification"]` advisory flags (`ok / dead / fabricated / unknown / error / skipped`). Allowlist-only probing with the shared SSRF DNS guard; toggle via `LINK_VERIFY_ENABLED`. Recruiters see status dots on link chips. Flag-don't-reject throughout.
+- Remaining evidence-graph roadmap: corroboration scoring & evidence-weighted matching v2.
+
+
+
+
+
 
 
 

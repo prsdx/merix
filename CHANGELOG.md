@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Task 12: Link parsing — evidence anchors extracted before PII scrub**
+  - New `services/links.py`: extracts links from resume PDFs from two sources — hyperlink annotations (`page.get_links()`, captures real hrefs even when display text differs) and the text layer (catches scheme-less forms like `linkedin.com/in/jane`, `github.com/user/repo`).
+  - Normalisation: adds missing `https://`, lowercases scheme/host, strips tracking params (`utm_*`, `fbclid`, …), trims prose-swallowed trailing punctuation while preserving balanced-paren URLs, validates host shape. Classification: linkedin / github / gitlab / bitbucket / portfolio / blog / other.
+  - Pipeline wiring: `upload_resume` calls `collect_links()` **before** `scrub_pii` destroys the text; links flow through `process_resume_background` → `pipeline.add_resume` and persist in `Resume.parsed["links"]` as `[{"url", "type"}]` (JSONB, no migration). The LLM never sees the raw URLs.
+  - Never fails an upload: link extraction swallows internal errors and returns [].
+  - Tests: `tests/unit/test_links.py` (11 tests) covering normalisation, classification, dedupe, annotated-PDF extraction, and garbage-input safety.
+- **Task 12b: Timeline reconstruction — deterministic work-history analysis**
+  - `_RESUME_EXTRACT_PROMPT` now also returns `timeline`: raw work-history entries (`{company, title, start, end}`) with dates verbatim as written.
+  - New `services/timeline.py` (pure functions, no LLM): parses year values ("Jan 2019" → 2019; "Present" → current year; explicit year beats present-words; word-boundary matching so "unknown" ≠ "now"), builds tenure spans, computes total experience as a **union of tenures** (concurrent roles don't double-count), detects overlapping roles and employment gaps (≥6 months), and flags implausible ranges / unparseable dates instead of failing.
+  - Stored in `Resume.parsed["timeline_analysis"]` by `pipeline.add_resume` — the LLM's self-reported `experience_years` is no longer the only experience signal.
+  - Tests: `tests/unit/test_timeline.py` (9 tests).
+- **Task 12c: JD-from-URL ingestion with SSRF guards**
+  - New dependency `trafilatura` (HTML→text extraction).
+  - New `services/jd_fetch.py`: fetches a job-posting URL and extracts plain text + title. SSRF posture: http(s) only; every hop's hostname DNS-resolved and **all** resolved IPs must be public (loopback/private/link-local/reserved rejected); redirects followed manually (max 3) with re-validation per hop; 10s timeout; 1 MiB body cap. Domain policy: career-board hosts (`greenhouse.io`, `lever.co`, `ashbyhq.com`) always allowed, boundary-aware suffix matching (`notgreenhouse.io` is rejected); arbitrary domains gated behind `JD_FETCH_ALLOW_ANY_DOMAIN=true`.
+  - New endpoint `POST /api/jobs/from-url` (`JobFromURLCreate{url, title?}`) reusing `pipeline.create_job`; title derived from page metadata when omitted. Registered before `/{job_id}` routes so "from-url" never parses as a UUID.
+  - Tests: `tests/unit/test_jd_fetch.py` (9 tests) using `httpx.MockTransport` + stubbed DNS — no real network in CI.
+- **Task 12d: Evidence Graph surfaced in API + candidate UI**
+  - New org-scoped endpoint `GET /api/jobs/{job_id}/resumes/{resume_id}` (404 without existence leak, matching house pattern).
+  - Frontend: new `api.getResume()`; `Resume.parsed` typed with `links` (`ResumeLink`) and `timeline_analysis` (`TimelineAnalysis`).
+  - Candidate detail page gains an **Evidence Graph** card: career timeline (spans with CURRENT badge, union-based total experience, concurrent-role and timeline-flag warnings) plus profile-link chips with type icons (LinkedIn/GitHub/portfolio/blog/other), rendered in existing Chai design tokens. Card hidden when a resume has neither.
+- **Task 13: Link verification — authenticity layer (flag, don't reject)**
+  - New `services/verify.py`: after a resume is processed, links are liveness-checked (HEAD with GET fallback; 404/410 → `dead`, 403 bot-walls → `unknown`, network errors → `error`) and GitHub profile URLs get an existence check via `api.github.com/users/{u}` — API 404 marks the link **`fabricated`**. Non-allowlisted hosts are `skipped` entirely.
+  - SSRF posture: only allowlisted profile hosts are probed, and the DNS all-public-IPs guard from `jd_fetch` runs before every request. New setting `LINK_VERIFY_ENABLED` (default true) to switch off outbound checks.
+  - Results stored in `Resume.parsed["link_verification"]` via `flag_modified` (explicit JSONB dirty-marking); verification failures are logged and swallowed — never fail the upload job.
+  - Frontend: status dots on link chips (green live / red dead-or-fabricated / amber inconclusive / grey not checked) with tooltip explanations.
+  - Tests: `tests/unit/test_verify.py` (10 tests, mocked transport + stubbed DNS).
+
+
+
+
 ### Changed
 - **Task 11: Backend performance pass — connection pooling**
   - `db.py`: select pool class by `ENVIRONMENT` — `AsyncAdaptedQueuePool(pool_size=5, max_overflow=10, pool_pre_ping=True)` in **production**, NullPool otherwise.
