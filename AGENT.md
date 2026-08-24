@@ -24,7 +24,7 @@ This document is the persistent house-style guide for all AI-assisted developmen
 - **Backend**: Python 3.11+ with FastAPI (async), Uvicorn
 - **Database**: PostgreSQL with pgvector extension (via Supabase)
 - **ORM**: SQLAlchemy 2.0 (async) with asyncpg driver
-- **Migrations**: Alembic (applied manually to Supabase via `alembic upgrade head`)
+- **Migrations**: Alembic (applied automatically on every deploy — the Render start command runs `alembic upgrade head` before Uvicorn; see `render.yaml`)
 - **Validation**: Pydantic v2 + pydantic-settings
 - **Logging**: structlog (JSON in production, console in development)
 - **LLM/Embeddings**: Provider-agnostic client abstraction (see `src/merix/clients/`)
@@ -214,6 +214,14 @@ Do not mark any step as done just because the code was written or the file compi
 - Use the branch naming convention for each task's work (e.g. feature/<short-description>) — do not commit directly to main.
 - At each status update, state what was committed, not just what was built.
 - Retroactively: if there are uncommitted changes sitting from work already done, stop, review them, and commit them properly in logical chunks before continuing — don't fold old uncommitted work into the next new commit.
+
+---
+
+## Migration Discipline (standing rule)
+
+- Any Alembic migration added to the codebase must be applied to the actual production database as part of the same task that introduces it. "The migration file exists in the repo" is **not** the same as "done."
+- Before considering any schema-changing task complete, verify that `alembic current` matches `alembic heads` against production — not just the one column/table you touched.
+- In deploys, migrations must run before the app starts (`alembic upgrade head` chained into Render's start command, or as a Pre-Deploy Command once on a paid plan). Never ship model/code changes that assume a schema the deployed database doesn't have yet.
 
 ---
 
