@@ -39,7 +39,9 @@ async def test_vertical_slice_end_to_end(client, org_a):
     job_id = job["id"]
     assert job["parsed"]["required_skills"] == ["python", "sql"]
 
-    # 2. upload a resume PDF
+    # 2. upload a resume PDF (now async: 202 Accepted with BatchJobStatus;
+    #    extraction/embedding run in process_resume_background, which
+    #    TestClient executes before returning)
     pdf = make_pdf("Jane Doe. Built Python services and optimised SQL for 3 years.")
     r = client.post(
         f"/api/jobs/{job_id}/resumes",
@@ -47,12 +49,24 @@ async def test_vertical_slice_end_to_end(client, org_a):
         data={"candidate_name": "Jane Doe", "consent_given": "true"},
         headers=headers,
     )
-    assert r.status_code == 201, r.text
-    resume = r.json()
-    assert resume["candidate_name"] == "Jane Doe"
-    assert resume["consent_given"] is True
-    assert resume["consent_timestamp"] is not None
-    assert resume["retention_expires_at"] is not None
+    assert r.status_code == 202, r.text
+    body = r.json()
+    assert body["status"] in ("queued", "running", "completed")
+    assert body["total_resumes"] == 1
+
+    # Consent fields live on the persisted resume row now.
+    from sqlalchemy import select as sa_select
+
+    from merix.models.resume import Resume
+
+    async with scoped_session(org_id) as session:
+        resume_row = (
+            await session.scalars(sa_select(Resume).where(Resume.job_id == uuid.UUID(job_id)))
+        ).one()
+        assert resume_row.candidate_name == "Jane Doe"
+        assert resume_row.consent_given is True
+        assert resume_row.consent_timestamp is not None
+        assert resume_row.retention_expires_at is not None
 
     # 3. submit batch match (now async — returns 202 with BatchJobStatus)
     r = client.post(f"/api/jobs/{job_id}/match", headers=headers)

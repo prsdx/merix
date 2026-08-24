@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
-import { Job, Resume } from "@/lib/types";
+import { Job, Resume, BatchJob } from "@/lib/types";
 import { DPDPBadge } from "@/components/dpdp-badge";
 import {
   UploadCloud,
@@ -26,9 +26,8 @@ interface QueuedFile {
   id: string;
   file: File;
   candidateName: string;
-  status: "idle" | "uploading" | "success" | "error";
+  status: "idle" | "uploading" | "processing" | "success" | "error";
   errorMessage?: string;
-  uploadedResume?: Resume;
 }
 
 export default function ResumeUploadPage() {
@@ -108,6 +107,21 @@ export default function ResumeUploadPage() {
     setQueue((prev) => prev.filter((item) => item.id !== id));
   };
 
+  const pollBatchJob = async (batchJobId: string): Promise<BatchJob> => {
+    // Poll the Task 5 batch-job status endpoint until the upload settles.
+    // Extraction/embedding typically takes a few seconds; cap at ~3 minutes
+    // (the backend's stale-job timeout marks dead jobs failed at 10 min).
+    const maxAttempts = 120;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      const bj = await api.getBatchJobStatus(jobId, batchJobId);
+      if (bj.status === "completed" || bj.status === "failed") {
+        return bj;
+      }
+    }
+    return { id: batchJobId, status: "failed", error_message: "Processing timed out — check back later." } as BatchJob;
+  };
+
   const handleUploadAll = async () => {
     if (!consentConfirmed) {
       setError("You must confirm candidate consent under the DPDP Act before uploading.");
@@ -126,11 +140,27 @@ export default function ResumeUploadPage() {
       );
 
       try {
-        const uploaded = await api.uploadResume(jobId, item.file, item.candidateName, true);
+        // The upload returns 202 immediately (consent/size/PDF checks already
+        // ran server-side); extraction + embedding continue in the background.
+        const batchJob = await api.uploadResume(jobId, item.file, item.candidateName, true);
         setQueue((prev) =>
-          prev.map((q) => (q.id === item.id ? { ...q, status: "success", uploadedResume: uploaded } : q))
+          prev.map((q) => (q.id === item.id ? { ...q, status: "processing" } : q))
         );
-        setExistingResumes((prev) => [...prev, uploaded]);
+
+        const finished = await pollBatchJob(batchJob.id);
+
+        if (finished.status === "completed") {
+          setQueue((prev) => prev.map((q) => (q.id === item.id ? { ...q, status: "success" } : q)));
+          await loadData(); // refresh the persisted resume list from the API
+        } else {
+          setQueue((prev) =>
+            prev.map((q) =>
+              q.id === item.id
+                ? { ...q, status: "error", errorMessage: finished.error_message || "Resume processing failed" }
+                : q
+            )
+          );
+        }
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "Upload failed";
         setQueue((prev) =>
@@ -306,10 +336,10 @@ export default function ResumeUploadPage() {
                       </div>
 
                       <div className="flex items-center gap-3 shrink-0">
-                        {item.status === "uploading" && (
-                          <div className="flex items-center gap-1.5 text-sm text-[var(--accent-evidence)]  font-mono">
+                        {(item.status === "uploading" || item.status === "processing") && (
+                          <div className="flex items-center gap-1.5 text-sm text-[var(--accent-evidence)] font-mono">
                             <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                            <span>Uploading</span>
+                            <span>{item.status === "uploading" ? "Uploading" : "AI Processing"}</span>
                           </div>
                         )}
                         {item.status === "success" && (

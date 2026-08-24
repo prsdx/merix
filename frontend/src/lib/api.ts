@@ -177,7 +177,7 @@ export const api = {
     file: File,
     candidateName?: string,
     consentGiven: boolean = true
-  ): Promise<Resume> {
+  ): Promise<BatchJob> {
     const formData = new FormData();
     formData.append("file", file);
     if (candidateName) {
@@ -185,7 +185,11 @@ export const api = {
     }
     formData.append("consent_given", String(consentGiven));
 
-    return request<Resume>(`/jobs/${jobId}/resumes`, {
+    // Uploads are processed asynchronously: the endpoint validates consent,
+    // size cap, and PDF integrity synchronously (rejecting bad uploads
+    // immediately), then returns 202 Accepted with a BatchJobStatus whose
+    // status can be polled via getBatchJobStatus until completed/failed.
+    return request<BatchJob>(`/jobs/${jobId}/resumes`, {
       method: "POST",
       body: formData,
     });

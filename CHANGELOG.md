@@ -8,6 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Task 11: Backend performance pass — connection pooling**
+  - `db.py`: select pool class by `ENVIRONMENT` — `AsyncAdaptedQueuePool(pool_size=5, max_overflow=10, pool_pre_ping=True)` in **production**, NullPool otherwise.
+  - Root cause of 3–6s GETs: prior NullPool opened two fresh TLS connections to Supabase per request (auth lookup + scoped session) plus one per `/health` poll, each paying TCP+TLS+asyncpg handshake on a throttled free-tier container.
+  - RLS safe: `SET ROLE merix_app` connect-hook persists harmlessly (every connection wants merix_app); org GUC stays **transaction-local** (`set_config(..., true)` re-applied by `after_begin` on every transaction). NullPool stays for dev/test (cross-event-loop reuse breaks pooled conns under pytest-asyncio).
+  - Verified with `scripts/verify_pooled_rls.py`: 30 alternating-org rounds × 2 sessions under pooling, zero cross-org leak.
+- **Task 11: Resume upload is now asynchronous** (contract change)
+  - `POST /api/jobs/{id}/resumes` now validates synchronously (org-scoped 404, DPDP consent gate 400, size cap 413, PDF validation 422 — identical errors as before), persists a `BatchJob(total_resumes=1)`, and returns **202 Accepted** with its `BatchJobStatus`.
+  - Slow LLM extraction + embedding moved to `process_resume_background` in `services/batch.py`, reusing Task 5's BatchJob pattern (own RLS-pinned scoped session, rollback-safe failure marking). No schema changes; consent timestamping still server-side.
+  - Frontend upload flow polls `GET /api/batch-jobs/{id}` every 1.5s (queued → uploading → AI Processing → success/error) instead of blocking on the request.
+  - One uvicorn worker retained (Render free tier 512MB / 0.1 CPU): extra workers risk OOM and add no throughput at 0.1 CPU — latency cause was not worker count.
+  - `/health` every-5s polling originates externally (Render platform check / uptime keep-warm pinger); kept as-is — pooling makes each ping nearly free.
+
 - Task 10: Unified design system to canonical **"Graphify Precision"** palette across all 9 screens (single source of truth in `globals.css` design tokens — token names preserved, values swapped, zero downstream churn):
   - **Light mode**: White/Soft-Slate canvas (`#FFFFFF` / `#F8FAFC`), Cobalt Blue primary `#2563EB`, Teal evidence `#0D9488`, Amber gap `#D97706`, Red danger `#DC2626`, Slate ink text.
   - **Dark mode**: Obsidian canvas `#0A0E1A`, Bright Blue `#3B82F6`, Luminous Mint `#2DD4BF`, Rose danger `#F87171`.
