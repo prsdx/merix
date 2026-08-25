@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api } from "@/lib/api";
-import { Job, MatchResult, Resume, ResumeLink, LinkVerification } from "@/lib/types";
+import { Job, MatchResult, MatchNote, Resume, ResumeLink, LinkVerification } from "@/lib/types";
 
 import { DPDPBadge } from "@/components/dpdp-badge";
 import { ScoreRing } from "@/components/score-ring";
@@ -24,6 +24,8 @@ import {
   Globe,
   Link2,
   Clock,
+  MessageSquare,
+  Send,
 } from "lucide-react";
 
 function linkIcon(link: ResumeLink) {
@@ -56,6 +58,15 @@ const VERIFY_BADGE: Record<LinkVerification["status"], { color: string; label: s
   skipped: { color: "#64748B", label: "Not checked" },
 };
 
+/** Display label for a note author (email prefix; graceful for removed accounts). */
+function authorLabel(email: string | null): string {
+  return email ? email.split("@")[0] : "Former member";
+}
+
+function formatNoteTime(iso: string): string {
+  return new Date(iso).toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" });
+}
+
 
 
 export default function CandidateDetailPage() {
@@ -74,6 +85,13 @@ export default function CandidateDetailPage() {
 
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  /* ---- Team notes (org-visible collaboration on this match) ---- */
+  const [notes, setNotes] = useState<MatchNote[]>([]);
+  const [notesLoading, setNotesLoading] = useState(true);
+  const [newNoteBody, setNewNoteBody] = useState("");
+  const [noteSubmitting, setNoteSubmitting] = useState(false);
+  const [notesError, setNotesError] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -114,6 +132,49 @@ export default function CandidateDetailPage() {
     }, 0);
     return () => clearTimeout(timer);
   }, [authLoading, isAuthenticated, matchId, jobId, router, loadData]);
+
+  // Notes load independently of the main dossier payload (non-fatal).
+  // Deferred so the effect body performs no synchronous setState
+  // (react-hooks/set-state-in-effect); behaviour is unchanged.
+  useEffect(() => {
+    if (!isAuthenticated || !matchId) return;
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      if (cancelled) return;
+      setNotesLoading(true);
+      api
+        .listMatchNotes(matchId)
+        .then((data) => {
+          if (!cancelled) setNotes(data);
+        })
+        .catch(() => {
+          if (!cancelled) setNotesError("Failed to load team notes.");
+        })
+        .finally(() => {
+          if (!cancelled) setNotesLoading(false);
+        });
+    }, 0);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [isAuthenticated, matchId]);
+
+  const handleAddNote = async () => {
+    const body = newNoteBody.trim();
+    if (!body || noteSubmitting) return;
+    setNoteSubmitting(true);
+    setNotesError(null);
+    try {
+      const note = await api.createMatchNote(matchId, body);
+      setNotes((prev) => [note, ...prev]);
+      setNewNoteBody("");
+    } catch (err: unknown) {
+      setNotesError(err instanceof Error ? err.message : "Failed to add note");
+    } finally {
+      setNoteSubmitting(false);
+    }
+  };
 
   const handleDelete = async () => {
     if (!match?.resume_id) return;
@@ -291,7 +352,7 @@ export default function CandidateDetailPage() {
                       ))}
                     </div>
                     {resume.parsed.timeline_analysis.overlaps.length > 0 && (
-                      <div className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-400 font-mono">
+                      <div className="flex items-start gap-1.5 text-sm text-amber-700 dark:text-amber-400 font-mono leading-relaxed">
                         <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                         <span>
                           Concurrent roles detected:{" "}
@@ -300,7 +361,7 @@ export default function CandidateDetailPage() {
                       </div>
                     )}
                     {resume.parsed.timeline_analysis.flags.length > 0 && (
-                      <div className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-400 font-mono">
+                      <div className="flex items-start gap-1.5 text-sm text-amber-700 dark:text-amber-400 font-mono leading-relaxed">
                         <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                         <span>Timeline flags: {resume.parsed.timeline_analysis.flags.join(", ")}</span>
                       </div>
@@ -356,7 +417,7 @@ export default function CandidateDetailPage() {
                 <ShieldCheck className="w-4 h-4" />
                 <span>DPDP Act (2023) Compliance Record</span>
               </div>
-              <div className="text-xs text-[var(--text-secondary)] space-y-1.5 leading-relaxed font-mono">
+              <div className="reading-text space-y-1.5 font-mono">
                 <div>• PII Scrubbed before embedding extraction</div>
                 <div>• Explicit recruiter consent recorded</div>
                 <div>• Automatic 90-day retention purge scheduled</div>
@@ -370,7 +431,7 @@ export default function CandidateDetailPage() {
                 <Trash2 className="w-4 h-4 text-[var(--accent-danger)]" />
                 <span>Candidate Right to Erasure</span>
               </div>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              <p className="reading-text">
                 Under India DPDP Act Section 12, candidates may request complete erasure of personal data and match history.
               </p>
               <button
@@ -392,7 +453,7 @@ export default function CandidateDetailPage() {
                   AI Grounded Match Rationale
                 </h2>
               </div>
-              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+              <p className="reading-text">
                 {match?.rationale || "No detailed rationale generated."}
               </p>
             </div>
@@ -419,11 +480,11 @@ export default function CandidateDetailPage() {
                       <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                       <span>{skill.skill}</span>
                     </div>
-                    <div className="text-xs font-mono text-[var(--text-muted)]">
+                    <div className="text-sm font-mono text-[var(--text-muted)] leading-relaxed">
                       Verified from candidate career history
                     </div>
                     {skill.evidence && (
-                      <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg p-2 text-[10px] font-mono text-slate-600 dark:text-slate-400">
+                      <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg p-2.5 font-mono reading-text">
                         &ldquo;{skill.evidence}&rdquo;
                       </div>
                     )}
@@ -457,13 +518,98 @@ export default function CandidateDetailPage() {
                         <XCircle className="w-3.5 h-3.5 shrink-0" />
                         <span>{gap.skill}</span>
                       </div>
-                      <div className="text-xs font-mono text-[var(--text-muted)]">
+                      <div className="text-sm font-mono text-[var(--text-muted)] leading-relaxed">
                         No direct evidence cited in submitted resume
                       </div>
                     </div>
                   ))}
                 </div>
               )}
+            </div>
+
+            {/* Recruiter Notes (org-visible, timestamped, author-attributed) */}
+            <div className="merix-card p-6 sm:p-8 rounded-3xl border border-[var(--border-hairline)] space-y-4">
+              <div className="flex items-center justify-between gap-3 pb-3 border-b border-[var(--border-hairline)] flex-wrap">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="w-4 h-4 text-[var(--brand-primary)]" />
+                  <h3 className="font-display text-base font-normal text-[var(--text-primary)]">
+                    Team Notes ({notes.length})
+                  </h3>
+                </div>
+                <span className="text-xs font-mono uppercase tracking-wider text-[var(--text-muted)]">
+                  Visible to your organisation
+                </span>
+              </div>
+
+              {/* Composer */}
+              <div className="space-y-2">
+                <textarea
+                  value={newNoteBody}
+                  onChange={(e) => setNewNoteBody(e.target.value)}
+                  onKeyDown={(e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddNote();
+                    }
+                  }}
+                  rows={3}
+                  maxLength={5000}
+                  placeholder="Add an evaluation note for your team… (Ctrl+Enter to post)"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--brand-primary)] transition-colors resize-y"
+                />
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs font-mono text-[var(--text-muted)]">
+                    {newNoteBody.length} / 5000
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleAddNote}
+                    disabled={noteSubmitting || !newNoteBody.trim()}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-white bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-hover)] transition-all shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    {noteSubmitting ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Send className="w-3.5 h-3.5" />
+                    )}
+                    <span>{noteSubmitting ? "Posting…" : "Add Note"}</span>
+                  </button>
+                </div>
+                {notesError && (
+                  <p className="text-sm text-[var(--accent-danger)] font-mono">{notesError}</p>
+                )}
+              </div>
+
+              {/* Notes list (newest first, as returned by the API) */}
+              <div className="space-y-3">
+                {notesLoading ? (
+                  <div className="flex items-center gap-2 py-2">
+                    <Loader2 className="w-4 h-4 animate-spin text-[var(--text-muted)]" />
+                    <span className="text-xs font-mono text-[var(--text-muted)]">Loading notes…</span>
+                  </div>
+                ) : notes.length === 0 ? (
+                  <p className="reading-text">
+                    No notes yet. Record your evaluation rationale here so teammates don&apos;t re-review this candidate from scratch.
+                  </p>
+                ) : (
+                  notes.map((note) => (
+                    <div
+                      key={note.id}
+                      className="p-4 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--border-hairline)] space-y-1.5"
+                    >
+                      <div className="flex items-center justify-between gap-3 flex-wrap">
+                        <span className="text-sm font-semibold text-[var(--text-primary)]">
+                          {authorLabel(note.author_email)}
+                        </span>
+                        <span className="text-xs font-mono text-[var(--text-muted)]">
+                          {formatNoteTime(note.created_at)}
+                        </span>
+                      </div>
+                      <p className="reading-text whitespace-pre-wrap">{note.body}</p>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </div>
         </div>

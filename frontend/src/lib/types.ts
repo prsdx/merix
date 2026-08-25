@@ -155,6 +155,16 @@ export interface ShortlistResponse {
   results: MatchResult[];
 }
 
+export interface MatchNote {
+  id: string;
+  match_id: string;
+  author_id: string | null;
+  author_email: string | null;
+  body: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AuditEvent {
   id: string;
   event_type: string;

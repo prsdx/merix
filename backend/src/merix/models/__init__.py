@@ -5,6 +5,7 @@ from merix.models.base import Base, TimestampMixin
 from merix.models.batch_job import BatchJob
 from merix.models.job import EMBEDDING_DIM, JobDescription
 from merix.models.match import MatchResult
+from merix.models.match_note import MatchNote
 from merix.models.organisation import Organisation
 from merix.models.resume import Resume
 from merix.models.user import User
@@ -17,6 +18,7 @@ __all__ = [
     "JobDescription",
     "Resume",
     "MatchResult",
+    "MatchNote",
     "Organisation",
     "User",
     "AuditEvent",

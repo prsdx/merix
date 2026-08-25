@@ -7,6 +7,7 @@ import {
   Resume,
   BatchJob,
   MatchResult,
+  MatchNote,
   ShortlistResponse,
   AuditEvent,
 } from "./types";
@@ -231,6 +232,18 @@ export const api = {
     // jobId is kept in the signature for caller symmetry but is not in the path.
     void jobId;
     return request<MatchResult>(`/matches/${matchId}`);
+  },
+
+  // Recruiter notes on a match (org-visible, timestamped, author-attributed)
+  async listMatchNotes(matchId: string): Promise<MatchNote[]> {
+    return request<MatchNote[]>(`/matches/${matchId}/notes`);
+  },
+
+  async createMatchNote(matchId: string, body: string): Promise<MatchNote> {
+    return request<MatchNote>(`/matches/${matchId}/notes`, {
+      method: "POST",
+      body: JSON.stringify({ body }),
+    });
   },
 
   async bulkUpdateMatchStatus(

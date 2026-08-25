@@ -23,6 +23,16 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${inter.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Apply the persisted theme before first paint — without this, a
+            dark-mode user sees a white flash on every load because the
+            ThemeProvider only restores the preference after hydration. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("merix_theme");if(t==="dark"||(t==="system"&&window.matchMedia("(prefers-color-scheme: dark)").matches)){document.documentElement.classList.add("dark");document.documentElement.setAttribute("data-theme","dark")}else{document.documentElement.classList.add("light");document.documentElement.setAttribute("data-theme","light")}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body className="font-sans antialiased bg-[var(--bg-canvas)] text-[var(--text-primary)] min-h-screen relative selection:bg-[var(--accent-evidence)]/20 selection:text-[var(--text-primary)] dark:selection:bg-[var(--accent-evidence)]/30 dark:selection:text-[var(--text-primary)] transition-colors duration-200">
         <ThemeProvider>
           <AuthProvider>

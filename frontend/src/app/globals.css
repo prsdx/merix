@@ -117,6 +117,16 @@ body {
   max-width: 72ch;
 }
 
+/* ---- Mid-length reading blocks (rationales, skill descriptions, compliance copy) ----
+   Slightly larger than UI text at 15px with relaxed 1.7 leading for
+   long recruiting sessions. Metadata (labels, tags, timestamps) stays small. */
+.reading-text {
+  font-size: 15px;
+  line-height: 1.7;
+  letter-spacing: 0.01em;
+  color: var(--text-secondary);
+}
+
 /* ---- Typography classes ---- */
 .font-display {
   font-family: var(--font-sans), system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -151,10 +161,12 @@ body {
   transform: translateY(-2px);
 }
 
-/* ---- Monospace Forensic Evidence Quote ---- */
+/* ---- Monospace Forensic Evidence Quote ----
+   This is primary reading content (recruiters verify matches against it),
+   so it gets full reading size — not UI-metadata size. */
 .forensic-citation {
   font-family: "JetBrains Mono", "Fira Code", monospace;
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.6;
   background: var(--bg-subtle);
   border-left: 3px solid var(--accent-evidence);
