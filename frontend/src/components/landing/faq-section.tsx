@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 const FAQS = [
   {
@@ -56,11 +57,22 @@ export function FaqSection() {
                   }`}
                 />
               </button>
-              {open && (
-                <div className="px-5 pb-5 -mt-1">
-                  <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed">{faq.a}</p>
-                </div>
-              )}
+              <AnimatePresence initial={false}>
+                {open && (
+                  <motion.div
+                    key="answer"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.32, ease: [0.21, 0.47, 0.32, 0.98] }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-5 pb-5 -mt-1">
+                      <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed">{faq.a}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           );
         })}

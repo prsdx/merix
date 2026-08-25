@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { Reveal } from "./motion";
 
 const EXPLAINABILITY_CRITERIA = [
   {
@@ -38,6 +40,7 @@ export function ExplainabilityDemo() {
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-16">
       <div className="merix-card p-8 sm:p-10 border border-[var(--border-subtle)] space-y-8">
+        <Reveal>
         <div className="max-w-2xl space-y-2">
           <div className="text-xs font-mono font-bold uppercase tracking-widest text-[var(--accent-evidence)]">
             Deterministic Explainability
@@ -49,6 +52,7 @@ export function ExplainabilityDemo() {
             Unlike legacy ATS tools that output opaque match percentages, Merix cites the exact monospace sentence from the candidate&apos;s resume proving why each rubric requirement is satisfied.
           </p>
         </div>
+        </Reveal>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           {/* Criteria Selection Tabs (Left 5 cols) */}
@@ -78,7 +82,16 @@ export function ExplainabilityDemo() {
           </div>
 
           {/* Evidence Drawer (Right 7 cols) */}
-          <div className="lg:col-span-7 p-6 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)] space-y-4">
+          <div className="lg:col-span-7 p-6 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)]">
+            <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={selectedCriteria.id}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.32, ease: [0.21, 0.47, 0.32, 0.98] }}
+              className="space-y-4"
+            >
             <div className="space-y-1">
               <div className="text-xs font-mono font-bold uppercase tracking-wider text-[var(--text-muted)]">
                 Extracted Resume Proof (Verbatim Grounding):
@@ -93,6 +106,8 @@ export function ExplainabilityDemo() {
               </div>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{selectedCriteria.context}</p>
             </div>
+            </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>

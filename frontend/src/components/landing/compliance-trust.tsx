@@ -1,5 +1,8 @@
+"use client";
+
 import React from "react";
 import { ShieldCheck, Clock, Lock, Database } from "lucide-react";
+import { Stagger, StaggerItem, SpotlightCard, Marquee, Reveal } from "./motion";
 
 const COMPLIANCE_CARDS = [
   {
@@ -36,6 +39,7 @@ const INSTITUTIONS = [
 export function ComplianceTrust() {
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-16 space-y-12">
+      <Reveal>
       <div className="space-y-3 text-center max-w-2xl mx-auto">
         <div className="inline-block text-xs font-mono font-bold uppercase tracking-widest text-[var(--brand-primary)]">
           Regulatory Compliance
@@ -47,31 +51,38 @@ export function ComplianceTrust() {
           Automated compliance mechanisms protect your organization, candidate rights, and placement cell audit integrity.
         </p>
       </div>
+      </Reveal>
 
       {/* 4 Serious Compliance Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <Stagger className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5" gap={0.1}>
         {COMPLIANCE_CARDS.map((card) => (
-          <div key={card.title} className="p-5 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] space-y-3">
-            <card.icon className="w-6 h-6 text-[var(--accent-evidence)]" />
-            <h3 className="font-bold text-base text-[var(--text-primary)]">{card.title}</h3>
-            <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{card.body}</p>
-          </div>
+          <StaggerItem key={card.title} className="h-full">
+            <SpotlightCard className="p-5 space-y-3 h-full">
+              <card.icon className="w-6 h-6 text-[var(--accent-evidence)]" />
+              <h3 className="font-bold text-base text-[var(--text-primary)]">{card.title}</h3>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{card.body}</p>
+            </SpotlightCard>
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
 
       {/* Institution Wordmark Strip (Factorial Style) */}
       <div className="pt-6 border-t border-[var(--border-hairline)] text-center space-y-4">
         <div className="text-xs font-mono uppercase tracking-widest text-[var(--text-muted)]">
           Adopted across placement bureaus &amp; staffing pipelines
         </div>
-        <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-sm font-mono font-bold text-[var(--text-secondary)] opacity-70">
-          {INSTITUTIONS.map((name, idx) => (
-            <React.Fragment key={name}>
-              {idx > 0 && <span>•</span>}
-              <span>{name}</span>
-            </React.Fragment>
+        <Marquee
+          duration={30}
+          items={INSTITUTIONS.map((name) => (
+            <span
+              key={name}
+              className="flex items-center gap-x-10 text-sm font-mono font-bold text-[var(--text-secondary)] opacity-70 whitespace-nowrap"
+            >
+              {name}
+              <span aria-hidden="true" className="opacity-40">•</span>
+            </span>
           ))}
-        </div>
+        />
       </div>
     </section>
   );

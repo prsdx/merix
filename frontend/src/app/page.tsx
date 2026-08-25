@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { AppNavbar } from "@/components/app-navbar";
 import { HeroSection } from "@/components/landing/hero-section";
 import { HowItWorks } from "@/components/landing/how-it-works";
@@ -31,13 +32,29 @@ export default function LandingPage() {
       <TestimonialsCta />
 
       {/* Minimal Institutional Footer */}
-      <footer className="w-full border-t border-[var(--border-hairline)] py-8 bg-[var(--bg-subtle)] text-sm text-[var(--text-muted)] font-mono">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-[var(--text-primary)] font-sans">Merix</span>
-            <span>— AI Resume-to-JD Screening Instrument</span>
+      <footer className="w-full border-t border-[var(--border-hairline)] bg-[var(--bg-subtle)]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-6 text-sm text-[var(--text-muted)] font-mono">
+          <div className="flex flex-col items-center md:items-start gap-1.5">
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-[var(--text-primary)] font-sans">Merix</span>
+              <span>— AI Resume-to-JD Screening Instrument</span>
+            </div>
+            <div className="text-xs opacity-70">
+              Compliant with Digital Personal Data Protection Act, 2023
+            </div>
           </div>
-          <div>Compliant with Digital Personal Data Protection Act, 2023</div>
+
+          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs uppercase tracking-wider">
+            <a href="#how-it-works" className="hover:text-[var(--text-primary)] transition-colors">How It Works</a>
+            <a href="#faq" className="hover:text-[var(--text-primary)] transition-colors">FAQ</a>
+            <Link href="/login" className="hover:text-[var(--text-primary)] transition-colors">Sign In</Link>
+            <Link href="/signup" className="hover:text-[var(--brand-primary)] transition-colors">Get Started</Link>
+          </nav>
+
+          <div className="flex items-center gap-2 text-xs opacity-80">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-evidence)] animate-pulse" />
+            <span>All systems operational</span>
+          </div>
         </div>
       </footer>
     </div>

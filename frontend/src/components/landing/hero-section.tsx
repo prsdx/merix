@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import { CountUp } from "@/components/count-up";
 import { ScoreRing } from "@/components/score-ring";
+import { AnimatedHeadline, Reveal, SpotlightCard } from "./motion";
 
 const HERO_APPLICANTS = [
   {
@@ -79,46 +80,48 @@ export function HeroSection() {
             <span>Candidate Screening Instrument</span>
           </div>
 
-          <h1 className="font-display text-4xl sm:text-5xl lg:text-[54px] leading-[1.08] tracking-tight text-[var(--text-primary)]">
-            Stop skimming resumes.
-            <br />
-            <span className="gradient-text">
-              See the evidence behind every shortlist.
-            </span>
-          </h1>
+          <AnimatedHeadline
+            className="font-display text-4xl sm:text-5xl lg:text-[54px] leading-[1.08] tracking-tight text-[var(--text-primary)]"
+            lines={[
+              { text: "Stop skimming resumes." },
+              { text: "See the evidence behind every shortlist.", gradient: true },
+            ]}
+          />
 
-          <p className="text-base sm:text-base text-[var(--text-secondary)] leading-relaxed font-sans">
-            Merix screens 100 candidate resumes in 8 minutes against your exact 70/20/10 rubric.
-            AI surfaces verbatim quotes from each PDF — you make every advance call with total confidence.
-          </p>
+          <Reveal delay={0.55} y={18}>
+            <p className="text-base sm:text-base text-[var(--text-secondary)] leading-relaxed font-sans">
+              Merix screens 100 candidate resumes in 8 minutes against your exact 70/20/10 rubric.
+              AI surfaces verbatim quotes from each PDF — you make every advance call with total confidence.
+            </p>
 
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-            <Link
-              href="/signup"
-              className="btn-gradient flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm text-white cursor-pointer"
-            >
-              <span>Start Batch Screening Free</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
-            <a
-              href="#how-it-works"
-              className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl font-semibold text-sm text-[var(--text-primary)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-elevated)] border border-[var(--border-hairline)] transition-colors cursor-pointer"
-            >
-              <span>How It Works</span>
-            </a>
-          </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
+              <Link
+                href="/signup"
+                className="btn-gradient cta-halo flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm text-white cursor-pointer"
+              >
+                <span>Start Batch Screening Free</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+              <a
+                href="#how-it-works"
+                className="flex items-center justify-center gap-2 px-5 py-3.5 rounded-xl font-semibold text-sm text-[var(--text-primary)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-elevated)] border border-[var(--border-hairline)] transition-colors cursor-pointer"
+              >
+                <span>How It Works</span>
+              </a>
+            </div>
 
-          <div className="pt-2 flex items-start gap-2.5 text-sm text-[var(--text-muted)] font-mono">
-            <Check className="w-4 h-4 text-[var(--accent-evidence)] shrink-0 mt-0.5" />
-            <span>
-              <strong>Merix never auto-rejects.</strong> Every applicant reaches you with the evidence to decide.
-            </span>
-          </div>
+            <div className="pt-2 flex items-start gap-2.5 text-sm text-[var(--text-muted)] font-mono">
+              <Check className="w-4 h-4 text-[var(--accent-evidence)] shrink-0 mt-0.5" />
+              <span>
+                <strong>Merix never auto-rejects.</strong> Every applicant reaches you with the evidence to decide.
+              </span>
+            </div>
+          </Reveal>
         </div>
 
         {/* Right Column: EMBEDDED REAL PRODUCT UI (Truffle-Style Live Candidate Stage) */}
         <div className="lg:col-span-7">
-          <div className="merix-card card-glow overflow-hidden animate-float">
+          <SpotlightCard className="card-glow overflow-hidden animate-float">
             <div className="px-5 py-3.5 bg-[var(--bg-subtle)] border-b border-[var(--border-hairline)] flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2.5">
                 <div className="w-2.5 h-2.5 rounded-full bg-[var(--accent-evidence)]" />
@@ -231,11 +234,12 @@ export function HeroSection() {
                 </div>
               </div>
             </div>
-          </div>
+          </SpotlightCard>
         </div>
       </div>
 
       {/* Live Activity Ticker (Just below Hero - Truffle style) */}
+      <Reveal delay={0.15} y={20}>
       <div className="mt-12 p-4 rounded-2xl bg-[var(--bg-subtle)] border border-[var(--border-hairline)] grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
         <div className="space-y-0.5">
           <div className="text-xl sm:text-2xl font-mono font-bold text-[var(--text-primary)]">
@@ -260,6 +264,7 @@ export function HeroSection() {
           <div className="text-xs font-mono text-[var(--text-muted)]">Every applicant reaches human review</div>
         </div>
       </div>
+      </Reveal>
     </section>
   );
 }

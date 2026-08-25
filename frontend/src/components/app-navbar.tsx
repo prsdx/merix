@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -13,6 +13,14 @@ export function AppNavbar() {
   const { user, logout, isAuthenticated } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 12);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const handleLogout = () => {
     logout();
@@ -27,7 +35,9 @@ export function AppNavbar() {
 
   return (
     <header className="sticky top-3 z-50 w-full max-w-7xl mx-auto px-4 sm:px-6 mb-6">
-      <div className="flex items-center justify-between px-5 py-3 rounded-2xl bg-[var(--bg-surface)]/95 backdrop-blur-xl border border-[var(--border-hairline)] shadow-xs transition-all">
+      <div
+        className={`glass-nav ${scrolled ? "glass-nav-scrolled" : ""} flex items-center justify-between px-5 py-3 rounded-2xl`}
+      >
         {/* Brand with Bespoke Logo */}
         <div className="flex items-center gap-6">
           <Link

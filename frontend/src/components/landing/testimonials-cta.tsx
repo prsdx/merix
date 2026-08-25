@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { Stagger, StaggerItem, Reveal } from "./motion";
 
 const TESTIMONIALS = [
   {
@@ -30,25 +33,25 @@ const TESTIMONIALS = [
 export function TestimonialsCta() {
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-16 space-y-12">
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Stagger className="grid grid-cols-1 md:grid-cols-3 gap-6" gap={0.12}>
         {TESTIMONIALS.map((t) => (
-          <div
-            key={t.author}
-            className="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] space-y-4 flex flex-col justify-between"
-          >
-            <div className="space-y-2">
-              <div className={`text-2xl font-mono font-bold ${t.metricClass}`}>{t.metric}</div>
-              <div className="text-sm font-bold text-[var(--text-primary)]">{t.headline}</div>
-              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
+          <StaggerItem key={t.author} className="h-full">
+            <div className="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] space-y-4 flex flex-col justify-between h-full transition-all duration-300 hover:border-[var(--border-subtle)] hover:-translate-y-1 hover:shadow-[var(--card-shadow-hover)]">
+              <div className="space-y-2">
+                <div className={`text-2xl font-mono font-bold ${t.metricClass}`}>{t.metric}</div>
+                <div className="text-sm font-bold text-[var(--text-primary)]">{t.headline}</div>
+                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
+              </div>
+              <div className="pt-3 border-t border-[var(--border-hairline)] text-xs font-mono text-[var(--text-muted)]">
+                {t.author}
+              </div>
             </div>
-            <div className="pt-3 border-t border-[var(--border-hairline)] text-xs font-mono text-[var(--text-muted)]">
-              {t.author}
-            </div>
-          </div>
+          </StaggerItem>
         ))}
-      </div>
+      </Stagger>
 
       {/* Final High-Conversion Trust CTA */}
+      <Reveal y={32}>
       <div
         className="p-8 sm:p-12 rounded-3xl text-center space-y-6 shadow-2xl text-[var(--bg-canvas)]"
         style={{
@@ -84,6 +87,7 @@ export function TestimonialsCta() {
           India DPDP Act (2023) Protected • Row-Level Multi-Tenant Isolation
         </div>
       </div>
+      </Reveal>
     </section>
   );
 }

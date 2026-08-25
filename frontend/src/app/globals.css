@@ -17,9 +17,9 @@
   --bg-subtle: #EFE8D6;
   --bg-elevated: #E4DAC2;
 
-  --text-primary: #221E17;
-  --text-secondary: #55503E;
-  --text-muted: #8B8573;
+  --text-primary: #2B261C;
+  --text-secondary: #5D5744;
+  --text-muted: #8F8977;
 
   --border-hairline: rgba(34, 30, 23, 0.12);
   --border-subtle: rgba(34, 30, 23, 0.2);
@@ -55,7 +55,7 @@
   --bg-subtle: #2E2820;
   --bg-elevated: #3A2F21;
 
-  --text-primary: #ECE5D6;
+  --text-primary: #E7E0D0;
   --text-secondary: #B8AE99;
   --text-muted: #928A7B;
 
@@ -97,7 +97,24 @@ body {
   -moz-osx-font-smoothing: grayscale;
   min-height: 100vh;
   overflow-x: hidden;
+  /* Long-session reading comfort: relaxed default rhythm for any text that
+     doesn't set its own leading (Tailwind text-* utilities still win). */
+  font-size: 16px;
+  line-height: 1.6;
   transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* ---- Long-form reader (original JDs, rationales) ----
+   Recruiters stare at these for hours: slightly larger than UI text,
+   generous leading, capped measure, soft ink. */
+.jd-reader {
+  font-size: 15px;
+  line-height: 1.85;
+  letter-spacing: 0.01em;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-width: 72ch;
 }
 
 /* ---- Typography classes ---- */
@@ -298,4 +315,125 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-float, .orb-drift-a, .orb-drift-b { animation: none; }
+}
+
+/* ============================================================
+   Landing Revamp — Premium Motion & Polish Layer ("Merix Class")
+   Inspired by Linear / Aceternity patterns, hand-rolled.
+   ============================================================ */
+
+:root {
+  --spotlight-glow: rgba(240, 130, 78, 0.07);
+}
+
+.dark {
+  --spotlight-glow: rgba(240, 130, 78, 0.12);
+}
+
+/* ---- Spotlight card shell (cursor glow rendered by SpotlightCard) ---- */
+.spotlight-card {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-hairline);
+  box-shadow: var(--card-shadow);
+  border-radius: 16px;
+  transition: border-color 0.35s ease, transform 0.35s cubic-bezier(0.21, 0.47, 0.32, 0.98),
+    box-shadow 0.35s ease;
+}
+
+.spotlight-card:hover {
+  border-color: var(--border-subtle);
+  transform: translateY(-3px);
+  box-shadow: var(--card-shadow-hover);
+}
+
+/* ---- Glass navbar: intensifies on scroll (class toggled by JS) ---- */
+.glass-nav {
+  background: color-mix(in srgb, var(--bg-surface) 82%, transparent);
+  backdrop-filter: blur(14px) saturate(1.4);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4);
+  border: 1px solid var(--border-hairline);
+  transition: background 0.4s ease, box-shadow 0.4s ease, border-color 0.4s ease;
+}
+
+.glass-nav-scrolled {
+  background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
+  border-color: var(--border-subtle);
+  box-shadow: 0 8px 40px -12px rgba(20, 15, 8, 0.18);
+}
+
+.dark .glass-nav-scrolled {
+  box-shadow: 0 8px 40px -12px rgba(0, 0, 0, 0.55);
+}
+
+/* ---- Refined gradient text (softer, classier sweep) ---- */
+.gradient-text {
+  background-image: linear-gradient(
+    105deg,
+    var(--brand-primary) 5%,
+    var(--accent-gap) 55%,
+    var(--brand-primary) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: gradient-sheen 6s linear infinite;
+}
+
+@keyframes gradient-sheen {
+  to { background-position: 200% center; }
+}
+
+/* ---- Infinite marquee strip ---- */
+.marquee-mask {
+  mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 12%, black 88%, transparent);
+}
+
+.marquee-track {
+  will-change: transform;
+}
+
+.marquee-animate {
+  animation: marquee-scroll var(--marquee-duration, 34s) linear infinite;
+}
+
+.marquee-mask:hover .marquee-animate {
+  animation-play-state: paused;
+}
+
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marquee-animate { animation: none; }
+  .gradient-text { animation: none; }
+  .spotlight-card { transition: none; }
+  .spotlight-card:hover { transform: none; }
+}
+
+/* ---- Glow ring pulse for primary CTAs ---- */
+.cta-halo {
+  position: relative;
+}
+
+.cta-halo::after {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(120deg, var(--brand-primary), transparent 40%, var(--accent-gap));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+
+.cta-halo:hover::after {
+  opacity: 1;
 }
