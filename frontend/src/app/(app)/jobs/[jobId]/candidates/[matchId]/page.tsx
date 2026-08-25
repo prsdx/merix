@@ -291,7 +291,7 @@ export default function CandidateDetailPage() {
                       ))}
                     </div>
                     {resume.parsed.timeline_analysis.overlaps.length > 0 && (
-                      <div className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-400 font-mono">
+                      <div className="flex items-start gap-1.5 text-sm text-amber-700 dark:text-amber-400 font-mono leading-relaxed">
                         <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                         <span>
                           Concurrent roles detected:{" "}
@@ -300,7 +300,7 @@ export default function CandidateDetailPage() {
                       </div>
                     )}
                     {resume.parsed.timeline_analysis.flags.length > 0 && (
-                      <div className="flex items-start gap-1.5 text-xs text-amber-700 dark:text-amber-400 font-mono">
+                      <div className="flex items-start gap-1.5 text-sm text-amber-700 dark:text-amber-400 font-mono leading-relaxed">
                         <AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
                         <span>Timeline flags: {resume.parsed.timeline_analysis.flags.join(", ")}</span>
                       </div>
@@ -356,7 +356,7 @@ export default function CandidateDetailPage() {
                 <ShieldCheck className="w-4 h-4" />
                 <span>DPDP Act (2023) Compliance Record</span>
               </div>
-              <div className="text-xs text-[var(--text-secondary)] space-y-1.5 leading-relaxed font-mono">
+              <div className="reading-text space-y-1.5 font-mono">
                 <div>• PII Scrubbed before embedding extraction</div>
                 <div>• Explicit recruiter consent recorded</div>
                 <div>• Automatic 90-day retention purge scheduled</div>
@@ -370,7 +370,7 @@ export default function CandidateDetailPage() {
                 <Trash2 className="w-4 h-4 text-[var(--accent-danger)]" />
                 <span>Candidate Right to Erasure</span>
               </div>
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              <p className="reading-text">
                 Under India DPDP Act Section 12, candidates may request complete erasure of personal data and match history.
               </p>
               <button
@@ -392,7 +392,7 @@ export default function CandidateDetailPage() {
                   AI Grounded Match Rationale
                 </h2>
               </div>
-              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
+              <p className="reading-text">
                 {match?.rationale || "No detailed rationale generated."}
               </p>
             </div>
@@ -419,11 +419,11 @@ export default function CandidateDetailPage() {
                       <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
                       <span>{skill.skill}</span>
                     </div>
-                    <div className="text-xs font-mono text-[var(--text-muted)]">
+                    <div className="text-sm font-mono text-[var(--text-muted)] leading-relaxed">
                       Verified from candidate career history
                     </div>
                     {skill.evidence && (
-                      <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg p-2 text-[10px] font-mono text-slate-600 dark:text-slate-400">
+                      <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg p-2.5 font-mono reading-text">
                         &ldquo;{skill.evidence}&rdquo;
                       </div>
                     )}
@@ -457,7 +457,7 @@ export default function CandidateDetailPage() {
                         <XCircle className="w-3.5 h-3.5 shrink-0" />
                         <span>{gap.skill}</span>
                       </div>
-                      <div className="text-xs font-mono text-[var(--text-muted)]">
+                      <div className="text-sm font-mono text-[var(--text-muted)] leading-relaxed">
                         No direct evidence cited in submitted resume
                       </div>
                     </div>
