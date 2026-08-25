@@ -73,6 +73,26 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timer);
   }, [theme, mounted]);
 
+  // Live-follow OS preference changes while the user is on "system".
+  useEffect(() => {
+    if (!mounted || theme !== "system") return;
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const onChange = (e: MediaQueryListEvent) => {
+      const root = document.documentElement;
+      if (e.matches) {
+        root.classList.add("dark");
+        root.classList.remove("light");
+        root.setAttribute("data-theme", "dark");
+      } else {
+        root.classList.remove("dark");
+        root.classList.add("light");
+        root.setAttribute("data-theme", "light");
+      }
+    };
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  }, [theme, mounted]);
+
   const setTheme = (newTheme: Theme) => {
     setThemeState(newTheme);
   };

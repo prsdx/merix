@@ -26,6 +26,10 @@ import {
   XCircle,
 } from "lucide-react";
 
+/* ---- Results table density (persisted locally per browser) ---- */
+type Density = "comfortable" | "compact";
+const DENSITY_STORAGE_KEY = "merix_results_density";
+
 function RankedResults() {
   const params = useParams();
   const router = useRouter();
@@ -53,6 +57,30 @@ function RankedResults() {
   const [selectedMatchIds, setSelectedMatchIds] = useState<Set<string>>(new Set());
   const [bulkStatusPending, setBulkStatusPending] = useState<"shortlisted" | "rejected" | null>(null);
   const [bulkError, setBulkError] = useState<string | null>(null);
+
+  /* Restore the saved row-density preference once mounted.
+     Deferred so the effect body performs no synchronous setState
+     (react-hooks/set-state-in-effect); behaviour is unchanged. */
+  const [density, setDensity] = useState<Density>("comfortable");
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const stored = window.localStorage.getItem(DENSITY_STORAGE_KEY);
+      if (stored === "compact" || stored === "comfortable") {
+        setDensity(stored);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
+
+  const setDensityPref = (next: Density) => {
+    setDensity(next);
+    try {
+      window.localStorage.setItem(DENSITY_STORAGE_KEY, next);
+    } catch {
+      /* storage unavailable — preference just won't persist */
+    }
+  };
+  const rowPad = density === "compact" ? "py-1.5" : "py-4";
 
   /* Mirror filter/search changes into the URL (replace, not push) so that
      navigating to a candidate dossier and coming back restores this state.
@@ -262,6 +290,29 @@ function RankedResults() {
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Row-density toggle */}
+            <div
+              className="hidden sm:flex items-center rounded-xl border border-[var(--border-hairline)] overflow-hidden"
+              role="group"
+              aria-label="Table row density"
+            >
+              {(["comfortable", "compact"] as const).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => setDensityPref(d)}
+                  aria-pressed={density === d}
+                  title={d === "comfortable" ? "Comfortable rows" : "Compact rows"}
+                  className={`px-2.5 py-2 text-xs font-semibold font-mono transition-colors cursor-pointer ${
+                    density === d
+                      ? "bg-[var(--brand-primary)] text-white"
+                      : "bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-elevated)]"
+                  }`}
+                >
+                  {d === "comfortable" ? "Roomy" : "Compact"}
+                </button>
+              ))}
+            </div>
             <Link
               href={`/jobs/${jobId}/upload`}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-sm font-semibold bg-[var(--bg-subtle)] text-[var(--text-primary)] border border-[var(--border-hairline)] hover:bg-[var(--bg-elevated)] transition-colors"
@@ -530,7 +581,7 @@ function RankedResults() {
                   {/* Row Summary Bar */}
                   <div
                     onClick={() => setExpandedMatchId(isExpanded ? null : m.id)}
-                    className="px-5 py-4 grid grid-cols-12 items-center gap-2 cursor-pointer select-none"
+                    className={`px-5 ${rowPad} grid grid-cols-12 items-center gap-2 cursor-pointer select-none`}
                   >
                     {/* Bulk Selection */}
                     <div className="col-span-1 flex items-center">
