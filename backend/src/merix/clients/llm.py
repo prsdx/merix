@@ -58,8 +58,7 @@ class GroqLLMClient:
             # Truncation is the root cause of malformed-JSON extraction failures
             # and silently-clipped rationales; make it visible in every log.
             logger.warning(
-                "llm_response_truncated model=%s completion_tokens=%d "
-                "(hit max_tokens=%d — output was cut off mid-generation)",
+                "llm_response_truncated model=%s completion_tokens=%d (hit max_tokens=%d — output was cut off mid-generation)",
                 self._model,
                 result.completion_tokens,
                 max_tokens,

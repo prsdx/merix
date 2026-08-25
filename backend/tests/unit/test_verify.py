@@ -38,7 +38,6 @@ def test_non_verifiable_hosts_are_skipped():
     assert verify._host_verifiable("https://evil.example.com/x") is False
 
 
-
 # --- liveness ---
 
 

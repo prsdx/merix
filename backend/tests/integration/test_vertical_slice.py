@@ -60,9 +60,7 @@ async def test_vertical_slice_end_to_end(client, org_a):
     from merix.models.resume import Resume
 
     async with scoped_session(org_id) as session:
-        resume_row = (
-            await session.scalars(sa_select(Resume).where(Resume.job_id == uuid.UUID(job_id)))
-        ).one()
+        resume_row = (await session.scalars(sa_select(Resume).where(Resume.job_id == uuid.UUID(job_id)))).one()
         assert resume_row.candidate_name == "Jane Doe"
         assert resume_row.consent_given is True
         assert resume_row.consent_timestamp is not None
