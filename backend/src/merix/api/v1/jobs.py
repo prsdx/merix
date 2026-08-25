@@ -71,6 +71,13 @@ async def list_jobs(
     for j in jobs:
         r_count = (await db.scalar(select(func.count()).select_from(Resume).where(Resume.job_id == j.id))) or 0
         m_count = (await db.scalar(select(func.count()).select_from(MatchResult).where(MatchResult.job_id == j.id))) or 0
+        s_count = (
+            await db.scalar(
+                select(func.count())
+                .select_from(MatchResult)
+                .where(MatchResult.job_id == j.id, MatchResult.status == "shortlisted")
+            )
+        ) or 0
         summaries.append(
             JobSummaryResponse(
                 id=j.id,
@@ -78,6 +85,7 @@ async def list_jobs(
                 created_at=j.created_at,
                 resume_count=r_count,
                 match_count=m_count,
+                shortlisted_count=s_count,
                 parsed=j.parsed,
             )
         )
