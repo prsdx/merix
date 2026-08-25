@@ -18,6 +18,7 @@ import {
   ListChecks,
   UploadCloud,
   PencilLine,
+  FileText,
 } from "lucide-react";
 
 const SAMPLE_JD = `Role: Senior Backend Engineer (FastAPI & PostgreSQL)
@@ -198,7 +199,7 @@ export default function NewJobPage() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
               <button
                 type="button"
                 onClick={() => router.push(`/jobs/${createdJob.id}/upload`)}
@@ -216,6 +217,15 @@ export default function NewJobPage() {
                 <span>Edit JD Instead</span>
               </button>
             </div>
+
+            <Link
+              href={`/jobs/${createdJob.id}`}
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+              title="Re-open this job's details & original JD anytime"
+            >
+              <FileText className="w-4 h-4" />
+              <span>View Job Details &amp; Original JD (always available from the dashboard too)</span>
+            </Link>
 
             <div className="flex items-start gap-2 text-xs font-mono text-[var(--text-muted)]">
               <ListChecks className="w-3.5 h-3.5 shrink-0 mt-0.5 text-[var(--accent-evidence)]" />

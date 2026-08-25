@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 
 const FAQS = [
   {
@@ -33,7 +34,7 @@ export function FaqSection() {
     <section id="faq" className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-16 space-y-8 scroll-mt-20">
       <div className="space-y-3 text-center">
         <div className="inline-block text-xs font-mono font-bold uppercase tracking-widest text-[var(--brand-primary)]">
-          FAQ
+          FAQ · 04
         </div>
         <h2 className="font-display text-3xl sm:text-4xl text-[var(--text-primary)]">
           Questions recruiters ask before switching.
@@ -56,11 +57,22 @@ export function FaqSection() {
                   }`}
                 />
               </button>
-              {open && (
-                <div className="px-5 pb-5 -mt-1">
-                  <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed">{faq.a}</p>
-                </div>
-              )}
+              <AnimatePresence initial={false}>
+                {open && (
+                  <motion.div
+                    key="answer"
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.32, ease: [0.21, 0.47, 0.32, 0.98] }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-5 pb-5 -mt-1">
+                      <p className="text-sm sm:text-base text-[var(--text-secondary)] leading-relaxed">{faq.a}</p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           );
         })}

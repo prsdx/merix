@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Task 14: Job Details page (JD re-viewability), recruiter workspace upgrades, reading-friendly typography & snappier navigation**
+  - **Job Details page** (`/jobs/[jobId]`): new persistent page so recruiters can always re-open a posting after creation — shows the pipeline state badge, live stats (resumes / evaluations / shortlisted), the extracted scoring rubric (required 70% / preferred 20% / experience 10% / education), and the **full original JD text** in a comfortable reader panel with a one-click **Copy JD** button plus contextual actions (Add Candidates / Screen Now / View Shortlist). Counts are fetched best-effort so a stats failure never hides the JD.
+  - **Dashboard**: job titles are now clickable (→ job details); every card gains an explicit **View JD** action and a green **N Shortlisted** counter.
+  - **Post-JD success screen** (`/jobs/new`): adds a "View Job Details & Original JD" link after rubric review.
+  - **Backend**: `JobSummaryResponse` gains `shortlisted_count` (org-scoped `COUNT` of `match_results.status = 'shortlisted'` per job in `GET /api/jobs`).
+  - **Typography (long-session comfort)**: softened ink tokens (light `--text-primary` `#221E17 → #2B261C`, `--text-secondary` `#55503E → #5D5744`; dark `--text-primary` `#ECE5D6 → #E7E0D0`), body default `line-height: 1.6`, and new `.jd-reader` long-form style (15px / leading 1.85 / 72ch measure) used for the original JD panel.
+  - **Perceived performance ("click to response")**: added `(app)/loading.tsx` route-segment skeleton so every in-app navigation paints instantly instead of freezing on the previous page during data fetches; removed the dashboard's full-screen auth spinner gate so the workspace shell + skeletons render immediately while auth resolves.
 - **Task 13: Ranked Results bulk actions, search & URL-persisted filters (+ job deletion)**
   - **Bulk selection** (`/jobs/[jobId]/results`): per-row checkboxes and a header select-all (indeterminate state when partially selected). With an active selection a bulk action bar appears offering **Export Selected** — client-side CSV mirroring the server export's exact column shape (`Candidate Name, Score, Matched Skills, Missing Skills, Rationale`), scoped to just the selected candidates — plus **Clear Selection**. No backend change required for selection/export; checkbox clicks do not trigger the expandable evidence drawer.
   - **Search completeness**: the existing results search now also matches **missing-skill** text (previously name + matched skills only), composing with the min-score threshold filter as before.

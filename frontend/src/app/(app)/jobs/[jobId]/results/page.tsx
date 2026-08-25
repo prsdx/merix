@@ -1,6 +1,6 @@
 "use client";
 
-import React, { Suspense, useEffect, useRef, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -73,7 +73,7 @@ function RankedResults() {
     return () => clearTimeout(timer);
   }, [minScoreFilter, searchTerm, jobId, router]);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -89,7 +89,7 @@ function RankedResults() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [jobId, minScoreFilter]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -105,7 +105,7 @@ function RankedResults() {
       }
     }, 0);
     return () => clearTimeout(timer);
-  }, [authLoading, isAuthenticated, jobId, minScoreFilter, router]);
+  }, [authLoading, isAuthenticated, jobId, minScoreFilter, router, loadData]);
 
   const filteredMatches = matches.filter((m) => {
     const query = searchTerm.toLowerCase();

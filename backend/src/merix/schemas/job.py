@@ -40,4 +40,5 @@ class JobSummaryResponse(BaseModel):
     created_at: datetime
     resume_count: int = 0
     match_count: int = 0
+    shortlisted_count: int = 0
     parsed: dict | None = None

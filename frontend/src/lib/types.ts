@@ -41,6 +41,7 @@ export interface JobSummary {
   created_at: string;
   resume_count: number;
   match_count: number;
+  shortlisted_count?: number;
   parsed?: {
     required_skills?: string[];
     preferred_skills?: string[];

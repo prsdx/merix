@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -75,7 +75,7 @@ export default function CandidateDetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -97,7 +97,7 @@ export default function CandidateDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [jobId, matchId]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -113,7 +113,7 @@ export default function CandidateDetailPage() {
       }
     }, 0);
     return () => clearTimeout(timer);
-  }, [authLoading, isAuthenticated, matchId, jobId, router]);
+  }, [authLoading, isAuthenticated, matchId, jobId, router, loadData]);
 
   const handleDelete = async () => {
     if (!match?.resume_id) return;

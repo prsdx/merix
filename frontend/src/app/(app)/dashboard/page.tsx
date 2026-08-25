@@ -24,6 +24,7 @@ import {
   ChevronDown,
   Loader2,
   Trash2,
+  FileText,
 } from "lucide-react";
 
 /* ---------- helpers ---------- */
@@ -137,17 +138,6 @@ export default function DashboardPage() {
 
   const totalResumes = jobs.reduce((acc, j) => acc + (j.resume_count || 0), 0);
   const totalMatches = jobs.reduce((acc, j) => acc + (j.match_count || 0), 0);
-
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex flex-col justify-center items-center bg-[var(--bg-canvas)]">
-        <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-primary)] mb-3" />
-        <span className="text-sm text-[var(--text-muted)] font-mono">
-          Loading Recruitment Pipeline...
-        </span>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen pb-16 bg-[var(--bg-canvas)] text-[var(--text-primary)]">
@@ -339,9 +329,13 @@ export default function DashboardPage() {
                     <div className="space-y-2.5">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0 space-y-1">
-                          <h3 className="font-bold text-base text-[var(--text-primary)] leading-snug">
+                          <Link
+                            href={`/jobs/${job.id}`}
+                            className="font-bold text-base text-[var(--text-primary)] leading-snug hover:text-[var(--brand-primary)] transition-colors block"
+                            title="View job details & JD"
+                          >
                             {job.title}
-                          </h3>
+                          </Link>
                           <div className="flex items-center gap-1.5 text-xs font-mono text-[var(--text-muted)]">
                             <Clock className="w-3 h-3" />
                             {timeAgo(job.created_at)}
@@ -372,18 +366,30 @@ export default function DashboardPage() {
                         </div>
                       )}
 
-                      <div className="flex items-center gap-3 text-sm font-mono text-[var(--text-muted)]">
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-sm font-mono text-[var(--text-muted)]">
                         <span className="flex items-center gap-1">
                           <Users className="w-3.5 h-3.5" />
                           {job.resume_count || 0} Resumes
                         </span>
                         <span>•</span>
                         <span>{job.match_count || 0} Evaluations</span>
+                        <span>•</span>
+                        <span className="text-[var(--accent-evidence)]">
+                          {job.shortlisted_count || 0} Shortlisted
+                        </span>
                       </div>
                     </div>
 
                     <div className="pt-3 border-t border-[var(--border-hairline)] flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
+                        <Link
+                          href={`/jobs/${job.id}`}
+                          className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                          title="View the original JD & scoring rubric"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>View JD</span>
+                        </Link>
                         <Link
                           href={`/jobs/${job.id}/upload`}
                           className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-[var(--bg-subtle)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"

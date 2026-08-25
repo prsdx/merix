@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -49,7 +49,7 @@ export default function ResumeUploadPage() {
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -65,7 +65,7 @@ export default function ResumeUploadPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [jobId]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -81,7 +81,7 @@ export default function ResumeUploadPage() {
       }
     }, 0);
     return () => clearTimeout(timer);
-  }, [authLoading, isAuthenticated, jobId, router]);
+  }, [authLoading, isAuthenticated, jobId, router, loadData]);
 
   const handleFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
