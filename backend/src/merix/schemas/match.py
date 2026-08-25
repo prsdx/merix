@@ -64,3 +64,23 @@ class BulkMatchStatusUpdate(BaseModel):
 
     match_ids: list[uuid.UUID] = Field(min_length=1)
     status: MatchStatus
+
+
+class MatchNoteCreate(BaseModel):
+    """Request body for adding a recruiter note to a match."""
+
+    body: str = Field(min_length=1, max_length=5000)
+
+
+class MatchNoteResponse(BaseModel):
+    """A timestamped, author-attributed recruiter note on a match."""
+
+    id: uuid.UUID
+    match_id: uuid.UUID
+    author_id: uuid.UUID | None = None
+    author_email: str | None = None
+    body: str
+    created_at: datetime
+    updated_at: datetime
+
+    model_config = {"from_attributes": True}
