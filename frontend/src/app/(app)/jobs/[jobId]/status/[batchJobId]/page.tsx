@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
@@ -28,7 +28,7 @@ export default function BatchJobStatusPage() {
   const [error, setError] = useState<string | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
 
-  const loadInitialData = async () => {
+  const loadInitialData = useCallback(async () => {
     setLoading(true);
     try {
       const [jobData, batchData] = await Promise.all([
@@ -43,7 +43,7 @@ export default function BatchJobStatusPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [jobId, batchJobId]);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -59,7 +59,7 @@ export default function BatchJobStatusPage() {
       }
     }, 0);
     return () => clearTimeout(timer);
-  }, [authLoading, isAuthenticated, jobId, batchJobId, router]);
+  }, [authLoading, isAuthenticated, jobId, batchJobId, router, loadInitialData]);
 
   // Polling loop
   useEffect(() => {
@@ -82,7 +82,7 @@ export default function BatchJobStatusPage() {
     }, 1500);
 
     return () => clearInterval(interval);
-  }, [isAuthenticated, batchJobId]);
+  }, [isAuthenticated, batchJobId, jobId]);
 
   // Redirect countdown
   useEffect(() => {
