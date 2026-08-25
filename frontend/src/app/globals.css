@@ -437,3 +437,21 @@ body {
 .cta-halo:hover::after {
   opacity: 1;
 }
+
+/* ---- Cinematic hero light beams ---- */
+@keyframes beam-sweep-a {
+  0%, 100% { transform: translateX(-70px) scaleY(1); opacity: 0.8; }
+  50% { transform: translateX(90px) scaleY(1.08); opacity: 1; }
+}
+
+@keyframes beam-sweep-b {
+  0%, 100% { transform: translateX(60px) scaleY(1); opacity: 0.7; }
+  50% { transform: translateX(-80px) scaleY(1.06); opacity: 1; }
+}
+
+.beam-sweep-a { animation: beam-sweep-a 16s ease-in-out infinite; }
+.beam-sweep-b { animation: beam-sweep-b 21s ease-in-out infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .beam-sweep-a, .beam-sweep-b { animation: none; }
+}
