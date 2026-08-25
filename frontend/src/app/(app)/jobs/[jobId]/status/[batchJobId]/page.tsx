@@ -83,7 +83,7 @@ export default function BatchJobStatusPage() {
     }, 1500);
 
     return () => clearInterval(interval);
-  }, [isAuthenticated, batchJobId, jobId]);
+  }, [isAuthenticated, batchJobId, jobId, router]);
 
 
   if (authLoading || (loading && !batchJob)) {
