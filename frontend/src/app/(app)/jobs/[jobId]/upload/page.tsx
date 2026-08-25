@@ -30,6 +30,11 @@ interface QueuedFile {
   errorMessage?: string;
 }
 
+// How many resume uploads are in flight at once. Bounded so we don't
+// hammer the backend (each upload triggers background LLM work) while
+// still cutting wall-clock time versus a strict serial queue.
+const UPLOAD_CONCURRENCY = 3;
+
 export default function ResumeUploadPage() {
   const params = useParams();
   const router = useRouter();
@@ -128,6 +133,40 @@ export default function ResumeUploadPage() {
     return { id: batchJobId, status: "failed", error_message: "Processing timed out — check back later." } as BatchJob;
   };
 
+  const processItem = async (item: QueuedFile) => {
+    setQueue((prev) =>
+      prev.map((q) => (q.id === item.id ? { ...q, status: "uploading", errorMessage: undefined } : q))
+    );
+
+    try {
+      // The upload returns 202 immediately (consent/size/PDF checks already
+      // ran server-side); extraction + embedding continue in the background.
+      const batchJob = await api.uploadResume(jobId, item.file, item.candidateName, true);
+      setQueue((prev) =>
+        prev.map((q) => (q.id === item.id ? { ...q, status: "processing" } : q))
+      );
+
+      const finished = await pollBatchJob(batchJob.id);
+
+      if (finished.status === "completed") {
+        setQueue((prev) => prev.map((q) => (q.id === item.id ? { ...q, status: "success" } : q)));
+      } else {
+        setQueue((prev) =>
+          prev.map((q) =>
+            q.id === item.id
+              ? { ...q, status: "error", errorMessage: finished.error_message || "Resume processing failed" }
+              : q
+          )
+        );
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Upload failed";
+      setQueue((prev) =>
+        prev.map((q) => (q.id === item.id ? { ...q, status: "error", errorMessage: msg } : q))
+      );
+    }
+  };
+
   const handleUploadAll = async () => {
     if (!consentConfirmed) {
       setError("You must confirm candidate consent under the DPDP Act before uploading.");
@@ -140,41 +179,25 @@ export default function ResumeUploadPage() {
     setIsUploading(true);
     setError(null);
 
-    for (const item of idleItems) {
-      setQueue((prev) =>
-        prev.map((q) => (q.id === item.id ? { ...q, status: "uploading", errorMessage: undefined } : q))
-      );
-
-      try {
-        // The upload returns 202 immediately (consent/size/PDF checks already
-        // ran server-side); extraction + embedding continue in the background.
-        const batchJob = await api.uploadResume(jobId, item.file, item.candidateName, true);
-        setQueue((prev) =>
-          prev.map((q) => (q.id === item.id ? { ...q, status: "processing" } : q))
-        );
-
-        const finished = await pollBatchJob(batchJob.id);
-
-        if (finished.status === "completed") {
-          setQueue((prev) => prev.map((q) => (q.id === item.id ? { ...q, status: "success" } : q)));
-          await loadData(); // refresh the persisted resume list from the API
-        } else {
-          setQueue((prev) =>
-            prev.map((q) =>
-              q.id === item.id
-                ? { ...q, status: "error", errorMessage: finished.error_message || "Resume processing failed" }
-                : q
-            )
-          );
+    // Worker-pool pattern: UPLOAD_CONCURRENCY files upload/process in parallel,
+    // each keeping its own live per-row status. Previously files were fully
+    // serialized (upload → poll-to-completion → next file), which turned a
+    // 20-resume queue into minutes of avoidable wall time; the resume list is
+    // also refreshed ONCE after the batch settles instead of after every file.
+    let cursor = 0;
+    const workers = Array.from(
+      { length: Math.min(UPLOAD_CONCURRENCY, idleItems.length) },
+      async () => {
+        while (cursor < idleItems.length) {
+          const item = idleItems[cursor];
+          cursor += 1;
+          await processItem(item);
         }
-      } catch (err: unknown) {
-        const msg = err instanceof Error ? err.message : "Upload failed";
-        setQueue((prev) =>
-          prev.map((q) => (q.id === item.id ? { ...q, status: "error", errorMessage: msg } : q))
-        );
       }
-    }
+    );
+    await Promise.all(workers);
 
+    await loadData(); // single refresh of the persisted resume list
     setIsUploading(false);
   };
 

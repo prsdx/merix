@@ -42,6 +42,13 @@ class Settings(BaseSettings):
 
     # Retention is per-org (organisations.retention_days, default 90) since Task 3.
 
+    # Batch-match concurrency: how many resumes get their LLM work (first-sight
+    # extraction + rationale) generated in parallel inside a background batch
+    # match. Bounded below provider rate limits (Groq throttles aggressively on
+    # free tier); DB persistence stays sequential regardless — AsyncSession is
+    # not safe for concurrent use.
+    MATCH_CONCURRENCY: int = 4
+
     # Comma-separated list of allowed CORS origins. Default: "*" in
     # development (convenient), but must be set explicitly in production.
     # Example: "https://app.merix.dev,https://admin.merix.dev"

@@ -6,6 +6,7 @@ so Postgres itself enforces isolation, and the pipeline's org filter keeps
 cross-org IDs indistinguishable from non-existent ones (404, no leak).
 """
 
+import asyncio
 import logging
 import uuid
 
@@ -34,7 +35,6 @@ from merix.schemas.batch_job import BatchJobCreate, BatchJobStatus
 from merix.schemas.job import JobCreate, JobFromURLCreate, JobResponse, JobSummaryResponse
 from merix.schemas.match import BulkMatchStatusUpdate, ResumeResponse
 from merix.services import consent, extraction, pipeline, retention
-from merix.services import links as links_service
 from merix.services.batch import process_resume_background, run_batch_match_background
 from merix.services.jd_fetch import default_jd_fetcher as jd_fetcher
 
@@ -45,11 +45,15 @@ router = APIRouter()
 
 async def _shortlist_payload(db: AsyncSession, job, results) -> dict:
     """Serialise ranked match results with their resumes' candidate names."""
-    resumes = {r.id: r for r in (await db.scalars(select(Resume).where(Resume.job_id == job.id))).all()}
+    # Column-limited fetch: only id + name are needed. Selecting full rows
+    # would hydrate raw_text (up to 20k chars) and the 768-dim embedding
+    # vector for every candidate on every shortlist view.
+    rows = await db.execute(select(Resume.id, Resume.candidate_name).where(Resume.job_id == job.id))
+    names = {resume_id: name for resume_id, name in rows.all()}
     return {
         "job_id": str(job.id),
         "count": len(results),
-        "results": [pipeline.to_match_response(r, resumes.get(r.resume_id)) for r in results],
+        "results": [pipeline.to_match_response(r, names.get(r.resume_id)) for r in results],
     }
 
 
@@ -67,17 +71,30 @@ async def list_jobs(
         ).all()
     )
 
+    # Aggregate counts in ONE grouped query per table instead of two scalar
+    # counts per job (the old loop issued 2N+1 round trips to Postgres, each
+    # paying network latency to Supabase — a multi-second dashboard with ~25
+    # jobs). Both tables carry the denormalised org_id, so the aggregates are
+    # filtered under the same RLS-pinned org context as everything else.
+    resume_rows = await db.execute(
+        select(Resume.job_id, func.count()).where(Resume.org_id == user.org_id).group_by(Resume.job_id)
+    )
+    resume_counts = {job_id: count for job_id, count in resume_rows.all()}
+
+    match_rows = await db.execute(
+        select(MatchResult.job_id, func.count()).where(MatchResult.org_id == user.org_id).group_by(MatchResult.job_id)
+    )
+    match_counts = {job_id: count for job_id, count in match_rows.all()}
+
     summaries = []
     for j in jobs:
-        r_count = (await db.scalar(select(func.count()).select_from(Resume).where(Resume.job_id == j.id))) or 0
-        m_count = (await db.scalar(select(func.count()).select_from(MatchResult).where(MatchResult.job_id == j.id))) or 0
         summaries.append(
             JobSummaryResponse(
                 id=j.id,
                 title=j.title,
                 created_at=j.created_at,
-                resume_count=r_count,
-                match_count=m_count,
+                resume_count=resume_counts.get(j.id, 0),
+                match_count=match_counts.get(j.id, 0),
                 parsed=j.parsed,
             )
         )
@@ -180,10 +197,12 @@ async def upload_resume(
     Fast checks happen synchronously so bad uploads are rejected immediately
     with the same errors as before: job must exist in the caller's org (404),
     DPDP consent must be given (400), file within size cap (413), valid
-    parseable PDF (422). The slow LLM extraction + embedding then run in a
-    background task using Task 5's BatchJob infrastructure; returns 202
-    Accepted with the BatchJobStatus — poll ``GET /api/batch-jobs/{id}``
-    for completion.
+    parseable PDF (422). Parsing itself is CPU-bound (PyMuPDF) and runs in a
+    worker thread via asyncio.to_thread so the event loop — and therefore all
+    other concurrent requests — stays responsive during uploads. The slow LLM
+    extraction + embedding then run in a background task using Task 5's
+    BatchJob infrastructure; returns 202 Accepted with the BatchJobStatus —
+    poll ``GET /api/batch-jobs/{id}`` for completion.
     """
     await pipeline.get_job_or_404(db, job_id, user.org_id)
     # DPDP gate: reject missing consent immediately instead of 202-then-fail.
@@ -193,10 +212,10 @@ async def upload_resume(
     data = await file.read(extraction.MAX_FILE_BYTES + 1)
     if len(data) > extraction.MAX_FILE_BYTES:
         raise FileTooLargeError(extraction.MAX_FILE_BYTES)
-    text = extraction.extract_text_from_pdf(data)  # raises domain errors on reject
-    # Extract links BEFORE scrubbing destroys them; stored as structured data.
-    resume_links = links_service.collect_links(data)
-    scrubbed = extraction.scrub_pii(text)
+    # One PyMuPDF pass yields both the scrubbed text (links already lifted out)
+    # and the structured links. Threaded off the loop; raises the same domain
+    # errors synchronously, so 422/413 semantics are unchanged.
+    scrubbed, resume_links = await asyncio.to_thread(extraction.extract_resume_payload, data)
 
     batch_job = BatchJob(
         org_id=user.org_id,
@@ -345,15 +364,19 @@ async def export_matches(
 
     job = await pipeline.get_job_or_404(db, job_id, user.org_id)
     results = await pipeline.list_matches_for_job(db, job, min_score=min_score)
-    resumes = {r.id: r for r in (await db.scalars(select(Resume).where(Resume.job_id == job.id))).all()}
+    # Column-limited fetch (see _shortlist_payload): names only, never the
+    # raw_text/embedding payloads.
+    rows = await db.execute(select(Resume.id, Resume.candidate_name).where(Resume.job_id == job.id))
+    names = {resume_id: name for resume_id, name in rows.all()}
 
     output = io.StringIO()
     writer = csv.writer(output)
     writer.writerow(["Candidate Name", "Score", "Matched Skills", "Missing Skills", "Rationale"])
 
     for match in results:
-        resume = resumes.get(match.resume_id)
-        name = resume.candidate_name if resume else "Unknown"
+        # Same semantics as before: a missing resume row exports as "Unknown";
+        # a present-but-unnamed one exports as empty.
+        name = names[match.resume_id] if match.resume_id in names else "Unknown"
         writer.writerow([name, match.score, ", ".join(match.matched_skills), ", ".join(match.missing_skills), match.rationale])
 
     return Response(

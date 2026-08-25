@@ -49,8 +49,12 @@ def _truncate_head_tail(text: str, max_chars: int = MAX_EXTRACTED_CHARS) -> str:
     return text[:half] + "\n...\n" + text[-half:]
 
 
-def extract_text_from_pdf(data: bytes) -> str:
-    """Extract clean text from PDF bytes. Raises a domain error on rejection."""
+def _open_pdf(data: bytes) -> "pymupdf.Document":
+    """Validate and open a PDF document. Caller owns the returned doc (must close).
+
+    Raises the same domain errors as before so every entry point rejects
+    bad uploads identically.
+    """
     validate_pdf(data)
 
     try:
@@ -58,16 +62,19 @@ def extract_text_from_pdf(data: bytes) -> str:
     except Exception as exc:  # corrupt / malformed
         raise UnparseableFileError(f"Could not open PDF: {exc}") from exc
 
-    try:
-        if doc.needs_pass or doc.is_encrypted:
-            raise UnparseableFileError("PDF is encrypted/password-protected.")
-        if doc.page_count > MAX_PAGES:
-            raise UnparseableFileError(f"PDF has too many pages ({doc.page_count}; max {MAX_PAGES}).")
-
-        pages = [page.get_text("text") for page in doc]
-    finally:
+    if doc.needs_pass or doc.is_encrypted:
         doc.close()
+        raise UnparseableFileError("PDF is encrypted/password-protected.")
+    if doc.page_count > MAX_PAGES:
+        page_count = doc.page_count
+        doc.close()
+        raise UnparseableFileError(f"PDF has too many pages ({page_count}; max {MAX_PAGES}).")
+    return doc
 
+
+def _pages_text(doc: "pymupdf.Document") -> str:
+    """Concatenate page texts, normalise whitespace, enforce the text floor."""
+    pages = [page.get_text("text") for page in doc]
     text = "\n".join(pages)
     # Normalise whitespace but preserve line structure.
     text = re.sub(r"[ \t]+", " ", text)
@@ -77,6 +84,43 @@ def extract_text_from_pdf(data: bytes) -> str:
         raise UnparseableFileError("PDF has little or no extractable text (likely a scanned image). OCR is not supported in v1.")
 
     return _truncate_head_tail(text)
+
+
+def extract_text_from_pdf(data: bytes) -> str:
+    """Extract clean text from PDF bytes. Raises a domain error on rejection."""
+    doc = _open_pdf(data)
+    try:
+        return _pages_text(doc)
+    finally:
+        doc.close()
+
+
+def extract_resume_payload(data: bytes) -> tuple[str, list[dict[str, str]]]:
+    """Single-pass resume parsing: scrubbed text AND links from ONE PyMuPDF parse.
+
+    The upload route previously paid two full document parses per file
+    (``extract_text_from_pdf`` then ``collect_links`` each opened the PDF).
+    Returns ``(scrubbed_text, links)`` and raises exactly the same domain
+    errors as ``extract_text_from_pdf``, so callers reject bad uploads
+    identically.
+
+    This is CPU-bound (PyMuPDF): async call sites must run it via
+    ``asyncio.to_thread`` so the event loop stays responsive during uploads.
+    """
+    # Lazy import: services.links imports constants from this module, so a
+    # module-level import here would be circular.
+    from merix.services import links as links_service
+
+    doc = _open_pdf(data)
+    try:
+        text = _pages_text(doc)
+        # Links come from annotations + the same text layer, pre-scrub, so
+        # they survive as structured data while the LLM sees PII-free text.
+        resume_links = links_service.collect_links_from_doc(doc)
+    finally:
+        doc.close()
+
+    return scrub_pii(text), resume_links
 
 
 # --- Best-effort PII scrubbing (pre-LLM). ---

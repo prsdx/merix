@@ -7,6 +7,7 @@ fakes.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import uuid
 
@@ -60,14 +61,19 @@ async def add_resume(
     services.links) and stored inside ``parsed`` — the LLM never sees them.
     """
     consent.require_consent(consent_given)
-    parsed = await matching.extract_resume(llm, raw_text)
+    # Extraction (LLM) and embedding (provider API) are independent calls over
+    # the same text: run them concurrently so a resume upload pays one
+    # provider round-trip of latency instead of two back-to-back ones.
+    parsed, embedding = await asyncio.gather(
+        matching.extract_resume(llm, raw_text),
+        embedder.embed(raw_text),
+    )
     if links:
         parsed["links"] = links
     # Deterministic timeline analysis: never trust the LLM's arithmetic for
     # tenure totals, overlaps, or gaps.
     parsed["timeline_analysis"] = timeline.analyse_timeline(parsed.get("timeline"))
 
-    embedding = await embedder.embed(raw_text)
     if not candidate_name:
         candidate_name = parsed.get("candidate_name")
     resume = Resume(
@@ -151,8 +157,8 @@ async def get_match_or_404(db: AsyncSession, match_id, org_id: uuid.UUID) -> Mat
     return match
 
 
-def to_match_response(match: MatchResult, resume: Resume | None) -> dict:
-    """Serialise a MatchResult (+ its resume's candidate name) to a dict."""
+def to_match_response(match: MatchResult, candidate_name: str | None) -> dict:
+    """Serialise a MatchResult (+ candidate name) to a dict."""
     from merix.schemas.match import MatchResponse
 
     return MatchResponse.model_validate(
@@ -160,7 +166,7 @@ def to_match_response(match: MatchResult, resume: Resume | None) -> dict:
             "id": match.id,
             "job_id": match.job_id,
             "resume_id": match.resume_id,
-            "candidate_name": resume.candidate_name if resume else None,
+            "candidate_name": candidate_name,
             "score": match.score,
             "matched_skills": match.matched_skills,
             "missing_skills": match.missing_skills,

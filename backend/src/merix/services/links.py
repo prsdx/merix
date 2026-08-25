@@ -112,30 +112,62 @@ def classify_link(url: str) -> str:
     return "other"
 
 
+def _iter_raw_urls(doc: pymupdf.Document):
+    """Yield raw URL strings from an OPEN document: annotations first, then
+    each page's text layer. Never raises: link extraction must never fail
+    an upload that already passed validation."""
+    for page in doc:
+        try:
+            for link in page.get_links():
+                uri = link.get("uri")
+                if uri:
+                    yield uri
+            for match in _TEXT_URL_RE.finditer(page.get_text("text")):
+                yield match.group(0)
+        except Exception:
+            logger.warning("link_extraction_page_failed", exc_info=True)
+
+
+def _open_pdf_safely(data: bytes) -> pymupdf.Document | None:
+    """Open a PDF for link scanning; returns None instead of raising."""
+    try:
+        return pymupdf.open(stream=data[:MAX_FILE_BYTES], filetype="pdf")
+    except Exception:
+        logger.warning("link_extraction_open_failed", exc_info=True)
+        return None
+
+
 def extract_raw_urls(data: bytes) -> list[str]:
     """Collect raw URL strings from PDF annotations and the text layer.
 
     Never raises: link extraction must never fail an upload that already
     passed validation. Returns [] on any internal error.
     """
-    urls: list[str] = []
-    try:
-        doc = pymupdf.open(stream=data[:MAX_FILE_BYTES], filetype="pdf")
-    except Exception:
-        logger.warning("link_extraction_open_failed", exc_info=True)
+    doc = _open_pdf_safely(data)
+    if doc is None:
         return []
     try:
-        for page in doc:
-            for link in page.get_links():
-                uri = link.get("uri")
-                if uri:
-                    urls.append(uri)
-            urls.extend(m.group(0) for m in _TEXT_URL_RE.finditer(page.get_text("text")))
-    except Exception:
-        logger.warning("link_extraction_page_failed", exc_info=True)
+        return list(_iter_raw_urls(doc))
     finally:
         doc.close()
-    return urls
+
+
+def collect_links_from_doc(doc: pymupdf.Document) -> list[dict[str, str]]:
+    """Extract, normalise, dedupe, and classify links from an OPEN document.
+
+    Companion to ``extraction.extract_resume_payload``'s single-pass parse:
+    lets the upload path reuse the document it already opened instead of
+    paying a second full PyMuPDF parse per file.
+    """
+    seen: set[str] = set()
+    results: list[dict[str, str]] = []
+    for raw in _iter_raw_urls(doc):
+        normalized = normalize_link(raw)
+        if normalized is None or normalized in seen:
+            continue
+        seen.add(normalized)
+        results.append({"url": normalized, "type": classify_link(normalized)})
+    return results
 
 
 def collect_links(data: bytes) -> list[dict[str, str]]:
@@ -144,12 +176,10 @@ def collect_links(data: bytes) -> list[dict[str, str]]:
     Returns a list of ``{"url": ..., "type": ...}`` dicts, annotation-first
     (annotation hrefs are the most authoritative), insertion order preserved.
     """
-    seen: set[str] = set()
-    results: list[dict[str, str]] = []
-    for raw in extract_raw_urls(data):
-        normalized = normalize_link(raw)
-        if normalized is None or normalized in seen:
-            continue
-        seen.add(normalized)
-        results.append({"url": normalized, "type": classify_link(normalized)})
-    return results
+    doc = _open_pdf_safely(data)
+    if doc is None:
+        return []
+    try:
+        return collect_links_from_doc(doc)
+    finally:
+        doc.close()

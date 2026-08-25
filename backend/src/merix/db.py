@@ -1,5 +1,6 @@
 """Database engine and session setup."""
 
+import sys
 import uuid
 from collections.abc import AsyncGenerator
 
@@ -9,18 +10,33 @@ from sqlalchemy.pool import NullPool
 
 from merix.config import settings
 
-# Production uses SQLAlchemy's async queue pool: connections are established once
-# and reused across requests, eliminating the TCP+TLS+asyncpg handshake that
-# NullPool paid on every request (measured 3-6s on simple GETs against Supabase).
-# pool_pre_ping guards against server-side idle disconnects.
-#
-# Development/tests keep NullPool: pytest-asyncio runs each test in a fresh event
-# loop, and pooled asyncpg connections bound to a dead loop raise on reuse.
-# RLS correctness is unaffected by pooling either way: SET ROLE merix_app applies
-# for the life of every connection (the connect hook), and the org context GUC is
-# transaction-local via set_config(..., true), re-applied by scoped_session's
-# after_begin hook on every transaction regardless of which connection serves it.
-if settings.ENVIRONMENT == "production":
+
+def connection_pool_enabled(*, under_pytest: bool | None = None) -> bool:
+    """Whether the async engine should maintain a connection pool.
+
+    Pooled QueuePool connections are established once and reused across
+    requests, eliminating the TCP+TLS+asyncpg handshake NullPool pays on
+    every checkout (measured 3-6s per simple GET against Supabase).
+
+    Gating rule: pool EVERYWHERE except under pytest. pytest-asyncio runs
+    each test in a fresh event loop, and pooled asyncpg connections bound
+    to a dead loop raise on reuse. This is a property of the test runner,
+    not of the deployment, so we detect pytest directly — the previous
+    ``ENVIRONMENT == "production"`` check meant any deploy that forgot the
+    env var silently ran NullPool and paid the handshake on every request.
+
+    RLS correctness is unaffected by pooling either way: SET ROLE merix_app
+    applies for the life of every connection (the connect hook), and the org
+    context GUC is transaction-local via set_config(..., true), re-applied by
+    scoped_session's after_begin hook on every transaction regardless of
+    which connection serves it.
+    """
+    if under_pytest is None:
+        under_pytest = "pytest" in sys.modules
+    return not under_pytest
+
+
+if connection_pool_enabled():
     engine = create_async_engine(
         settings.DATABASE_URL,
         echo=settings.DEBUG,

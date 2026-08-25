@@ -64,3 +64,32 @@ def test_scrub_pii_redacts_email_phone_url():
     assert "jane@example.com" not in out
     assert "9876543210" not in out
     assert "linkedin.com" not in out
+
+
+# --- extract_resume_payload (single-pass text + links) ---
+
+
+def test_extract_resume_payload_returns_text_and_links():
+    doc = pymupdf.open()
+    page = doc.new_page()
+    page.insert_text((72, 72), "Jane Doe, Python developer with 5 years of experience in SQL. github.com/jane")
+    page.insert_link({"kind": pymupdf.LINK_URI, "from": pymupdf.Rect(72, 60, 200, 76), "uri": "https://github.com/jane"})
+    data = doc.tobytes()
+    doc.close()
+
+    scrubbed, resume_links = extraction.extract_resume_payload(data)
+
+    assert "Jane Doe" in scrubbed
+    # Scheme'd URLs are lifted out pre-scrub, so scrub_pii redacts them.
+    assert "https://github.com/jane" not in scrubbed
+    urls = [link["url"] for link in resume_links]
+    assert "https://github.com/jane" in urls
+    # Deduped across annotation + text layer.
+    assert urls.count("https://github.com/jane") == 1
+
+
+def test_extract_resume_payload_rejects_bad_uploads_identically():
+    with pytest.raises(UnsupportedFileTypeError):
+        extraction.extract_resume_payload(b"this is not a pdf at all")
+    with pytest.raises(UnparseableFileError):
+        extraction.extract_resume_payload(b"%PDF-corrupted-bytes-not-a-real-doc")
