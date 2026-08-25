@@ -34,7 +34,7 @@ export function FaqSection() {
     <section id="faq" className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-16 space-y-8 scroll-mt-20">
       <div className="space-y-3 text-center">
         <div className="inline-block text-xs font-mono font-bold uppercase tracking-widest text-[var(--brand-primary)]">
-          FAQ
+          FAQ · 04
         </div>
         <h2 className="font-display text-3xl sm:text-4xl text-[var(--text-primary)]">
           Questions recruiters ask before switching.

@@ -10,10 +10,13 @@ import { BentoGrid } from "@/components/landing/bento-grid";
 import { ComparisonTable } from "@/components/landing/comparison-table";
 import { FaqSection } from "@/components/landing/faq-section";
 import { TestimonialsCta } from "@/components/landing/testimonials-cta";
+import { ScrollProgress } from "@/components/landing/scroll-progress";
+import { FloatingCta } from "@/components/landing/floating-cta";
 
 export default function LandingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-[var(--bg-canvas)] text-[var(--text-primary)] transition-colors">
+      <ScrollProgress />
       {/* Top Banner Notice */}
       <div className="w-full bg-[var(--text-primary)] text-[var(--bg-canvas)] text-xs font-mono py-2 px-4 text-center border-b border-[var(--border-hairline)] flex items-center justify-center gap-2">
         <span className="w-2 h-2 rounded-full bg-[var(--accent-evidence)] animate-pulse" />
@@ -32,7 +35,11 @@ export default function LandingPage() {
       <BentoGrid />
       <ComparisonTable />
       <FaqSection />
-      <TestimonialsCta />
+      {/* relative wrapper anchors FloatingCta's footer sentinel */}
+      <div className="relative">
+        <TestimonialsCta />
+        <FloatingCta />
+      </div>
 
       {/* Institutional Footer */}
       <footer className="w-full border-t border-[var(--border-hairline)] bg-[var(--bg-subtle)]">

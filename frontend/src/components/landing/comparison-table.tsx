@@ -38,7 +38,7 @@ export function ComparisonTable() {
       <Reveal>
         <div className="space-y-3 text-center max-w-2xl mx-auto">
           <div className="inline-block text-xs font-mono font-bold uppercase tracking-widest text-[var(--brand-primary)]">
-            Why Teams Switch
+            Why Switch · 03
           </div>
           <h2 className="font-display text-3xl sm:text-4xl text-[var(--text-primary)]">
             The difference between filtering and knowing.

@@ -172,7 +172,7 @@ export function PipelineStory() {
 
             <Reveal>
               <div className="inline-block text-xs font-mono font-bold uppercase tracking-widest text-[var(--brand-primary)]">
-                The Pipeline
+                The Pipeline · 01
               </div>
               <h2 className="font-display text-3xl sm:text-4xl text-[var(--text-primary)] mt-3 leading-tight">
                 From raw pile to defensible shortlist.

@@ -6,7 +6,7 @@
  */
 
 import React, { useCallback, useRef, useState } from "react";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { motion, useReducedMotion, useSpring, type Variants } from "framer-motion";
 
 const EASE = [0.21, 0.47, 0.32, 0.98] as const;
 
@@ -197,16 +197,18 @@ export function SpotlightCard({ children, className = "", size = 420 }: Spotligh
 export function Marquee({
   items,
   duration = 34,
+  reverse = false,
 }: {
   items: React.ReactNode[];
   duration?: number;
+  reverse?: boolean;
 }) {
   const reduce = useReducedMotion();
   const row = [...items, ...items];
   return (
     <div className="marquee-mask relative w-full overflow-hidden">
       <div
-        className={`marquee-track flex w-max items-center gap-x-10 ${reduce ? "" : "marquee-animate"}`}
+        className={`marquee-track flex w-max items-center gap-x-10 ${reduce ? "" : "marquee-animate"} ${reverse ? "marquee-reverse" : ""}`}
         style={
           reduce ? undefined : ({ "--marquee-duration": `${duration}s` } as React.CSSProperties)
         }
@@ -218,5 +220,50 @@ export function Marquee({
         ))}
       </div>
     </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Magnetic — button leans toward the cursor within its bounds         */
+/* ------------------------------------------------------------------ */
+
+interface MagneticProps {
+  children: React.ReactNode;
+  className?: string;
+  /** Fraction of cursor offset applied as translation */
+  strength?: number;
+}
+
+export function Magnetic({ children, className = "", strength = 0.3 }: MagneticProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const reduce = useReducedMotion();
+  const [finePointer] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches,
+  );
+  const x = useSpring(0, { stiffness: 200, damping: 16, mass: 0.4 });
+  const y = useSpring(0, { stiffness: 200, damping: 16, mass: 0.4 });
+
+  if (reduce || !finePointer) {
+    return <div className={`inline-block ${className}`}>{children}</div>;
+  }
+
+  return (
+    <motion.div
+      ref={ref}
+      className={`inline-block ${className}`}
+      style={{ x, y }}
+      onMouseMove={(e) => {
+        if (!ref.current) return;
+        const rect = ref.current.getBoundingClientRect();
+        x.set((e.clientX - (rect.left + rect.width / 2)) * strength);
+        y.set((e.clientY - (rect.top + rect.height / 2)) * strength * 0.8);
+      }}
+      onMouseLeave={() => {
+        x.set(0);
+        y.set(0);
+      }}
+    >
+      {children}
+    </motion.div>
   );
 }

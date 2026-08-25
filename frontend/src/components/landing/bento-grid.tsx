@@ -11,7 +11,7 @@ export function BentoGrid() {
       <Stagger className="space-y-4 text-center max-w-2xl mx-auto" gap={0.12}>
         <StaggerItem>
           <div className="inline-block text-xs font-mono font-bold uppercase tracking-widest text-[var(--brand-primary)]">
-            The Instrument
+            Capabilities · 02
           </div>
         </StaggerItem>
         <StaggerItem>

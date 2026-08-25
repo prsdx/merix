@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Stagger, StaggerItem, Reveal } from "./motion";
+import { Reveal, Marquee, Magnetic } from "./motion";
 
 const TESTIMONIALS = [
   {
@@ -28,27 +28,56 @@ const TESTIMONIALS = [
       "Every consent timestamp and 90-day auto-purge is logged. Enterprise clients approved our vendor security immediately.",
     author: "Siddharth Rao • Engineering Director, Hyderabad",
   },
+  {
+    metric: "92% consensus",
+    metricClass: "text-[var(--brand-primary)]",
+    headline: "Committee alignment on first review",
+    quote:
+      "Our placement committee stopped arguing about rankings — the citations settle debates before they start.",
+    author: "Dr. Meera Iyer • Placement Dean, Chennai",
+  },
+  {
+    metric: "0 compliance flags",
+    metricClass: "text-[var(--accent-evidence)]",
+    headline: "Clean enterprise vendor onboarding",
+    quote:
+      "Security review took one afternoon. Consent logs and purge policies were already audit-ready.",
+    author: "Karan Malhotra • HR Head, Gurugram",
+  },
+  {
+    metric: "6× throughput",
+    metricClass: "text-[var(--text-primary)]",
+    headline: "Same team, six times the drives",
+    quote:
+      "We scaled from 3 campus drives per season to 18 without hiring a single extra coordinator.",
+    author: "Fatima Sheikh • Ops Lead, Hyderabad",
+  },
 ];
 
 export function TestimonialsCta() {
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-16 space-y-12">
-      <Stagger className="grid grid-cols-1 md:grid-cols-3 gap-6" gap={0.12}>
-        {TESTIMONIALS.map((t) => (
-          <StaggerItem key={t.author} className="h-full">
-            <div className="p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] space-y-4 flex flex-col justify-between h-full transition-all duration-300 hover:border-[var(--border-subtle)] hover:-translate-y-1 hover:shadow-[var(--card-shadow-hover)]">
-              <div className="space-y-2">
-                <div className={`text-2xl font-mono font-bold ${t.metricClass}`}>{t.metric}</div>
-                <div className="text-sm font-bold text-[var(--text-primary)]">{t.headline}</div>
-                <p className="text-sm text-[var(--text-secondary)] leading-relaxed">&ldquo;{t.quote}&rdquo;</p>
-              </div>
-              <div className="pt-3 border-t border-[var(--border-hairline)] text-xs font-mono text-[var(--text-muted)]">
+      {/* Infinite moving testimonial cards */}
+      <Reveal y={24}>
+        <Marquee
+          duration={52}
+          items={TESTIMONIALS.map((t) => (
+            <div
+              key={t.author}
+              className="w-[330px] sm:w-[380px] p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] space-y-3 flex flex-col hover:border-[var(--border-subtle)] transition-colors"
+            >
+              <div className={`text-xl font-mono font-bold ${t.metricClass}`}>{t.metric}</div>
+              <div className="text-sm font-bold text-[var(--text-primary)]">{t.headline}</div>
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed flex-1">
+                &ldquo;{t.quote}&rdquo;
+              </p>
+              <div className="pt-2 border-t border-[var(--border-hairline)] text-xs font-mono text-[var(--text-muted)]">
                 {t.author}
               </div>
             </div>
-          </StaggerItem>
-        ))}
-      </Stagger>
+          ))}
+        />
+      </Reveal>
 
       {/* Final High-Conversion Trust CTA */}
       <Reveal y={32}>
@@ -69,12 +98,14 @@ export function TestimonialsCta() {
         </div>
 
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-          <Link
-            href="/signup"
-            className="px-6 py-3.5 rounded-xl font-semibold text-sm text-[var(--text-primary)] bg-[var(--bg-canvas)] hover:bg-[var(--bg-elevated)] transition-transform hover:scale-[1.02] cursor-pointer"
-          >
-            Create Free Organisation Account
-          </Link>
+          <Magnetic strength={0.25}>
+            <Link
+              href="/signup"
+              className="px-6 py-3.5 rounded-xl font-semibold text-sm text-[var(--text-primary)] bg-[var(--bg-canvas)] hover:bg-[var(--bg-elevated)] transition-transform cursor-pointer block"
+            >
+              Create Free Organisation Account
+            </Link>
+          </Magnetic>
           <Link
             href="/login"
             className="px-5 py-3.5 rounded-xl font-semibold text-sm text-[var(--bg-canvas)] border border-[var(--border-subtle)] hover:bg-[var(--bg-canvas)]/10 transition-colors cursor-pointer"

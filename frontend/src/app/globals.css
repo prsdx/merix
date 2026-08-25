@@ -402,6 +402,10 @@ body {
   animation-play-state: paused;
 }
 
+.marquee-reverse {
+  animation-direction: reverse;
+}
+
 @keyframes marquee-scroll {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); }

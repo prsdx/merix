@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
-import { AnimatedHeadline, Reveal, Marquee } from "./motion";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { AnimatedHeadline, Reveal, Marquee, Magnetic } from "./motion";
 import { HeroDemoCard } from "./hero-demo-card";
 
 const INSTITUTIONS = [
@@ -22,10 +23,33 @@ const TRUST_CHIPS = [
 ];
 
 export function HeroSection() {
+  const [finePointer] = useState(
+    () => typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches,
+  );
+
+  // Mouse-parallax: backdrop drifts gently opposite to cursor
+  const mx = useMotionValue(0);
+  const my = useMotionValue(0);
+  const px = useSpring(useTransform(mx, [-0.5, 0.5], [18, -18]), { stiffness: 55, damping: 20 });
+  const py = useSpring(useTransform(my, [-0.5, 0.5], [12, -12]), { stiffness: 55, damping: 20 });
+
   return (
-    <section className="relative w-full overflow-hidden">
+    <section
+      id="hero"
+      className="relative w-full overflow-hidden"
+      onMouseMove={(e) => {
+        if (!finePointer) return;
+        mx.set(e.clientX / window.innerWidth - 0.5);
+        my.set(e.clientY / window.innerHeight - 0.5);
+      }}
+      onMouseLeave={() => {
+        mx.set(0);
+        my.set(0);
+      }}
+    >
       {/* Cinematic beam backdrop */}
       <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <motion.div className="absolute inset-0" style={{ x: px, y: py }}>
         <div
           className="absolute inset-0 opacity-[0.05] dark:opacity-[0.03]"
           style={{
@@ -39,6 +63,7 @@ export function HeroSection() {
         />
         <div className="beam-sweep-a absolute -top-48 left-[18%] w-[420px] h-[130%] bg-gradient-to-b from-[var(--brand-primary)]/15 to-transparent blur-3xl" />
         <div className="beam-sweep-b absolute -top-48 right-[15%] w-[360px] h-[130%] bg-gradient-to-b from-[var(--accent-gap)]/10 to-transparent blur-3xl" />
+        </motion.div>
       </div>
 
       {/* Centered cinematic content */}
@@ -67,13 +92,15 @@ export function HeroSection() {
 
         <Reveal delay={0.85} y={18}>
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
-            <Link
-              href="/signup"
-              className="btn-gradient cta-halo flex items-center justify-center gap-2 px-7 py-4 rounded-xl font-semibold text-sm text-white cursor-pointer"
-            >
-              <span>Start Batch Screening Free</span>
-              <ArrowRight className="w-4 h-4" />
-            </Link>
+            <Magnetic strength={0.25}>
+              <Link
+                href="/signup"
+                className="btn-gradient cta-halo flex items-center justify-center gap-2 px-7 py-4 rounded-xl font-semibold text-sm text-white cursor-pointer"
+              >
+                <span>Start Batch Screening Free</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </Magnetic>
             <a
               href="#how-it-works"
               className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-sm text-[var(--text-primary)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-elevated)] border border-[var(--border-hairline)] transition-colors cursor-pointer"
@@ -108,18 +135,25 @@ export function HeroSection() {
         <p className="text-center text-xs font-mono uppercase tracking-widest text-[var(--text-muted)]">
           Adopted across placement bureaus &amp; staffing pipelines
         </p>
-        <Marquee
-          duration={30}
-          items={INSTITUTIONS.map((name) => (
-            <span
-              key={name}
-              className="flex items-center gap-x-10 text-sm font-mono font-bold text-[var(--text-secondary)] opacity-60 whitespace-nowrap"
-            >
-              {name}
-              <span aria-hidden="true" className="opacity-40">•</span>
-            </span>
-          ))}
-        />
+        <div className="relative">
+          {/* Warm shimmer band that brightens names passing center */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 w-1/3 bg-gradient-to-r from-transparent via-[var(--brand-primary)]/[0.08] to-transparent z-10"
+          />
+          <Marquee
+            duration={30}
+            items={INSTITUTIONS.map((name) => (
+              <span
+                key={name}
+                className="flex items-center gap-x-10 text-sm font-mono font-bold text-[var(--text-secondary)] opacity-60 whitespace-nowrap"
+              >
+                {name}
+                <span aria-hidden="true" className="opacity-40">•</span>
+              </span>
+            ))}
+          />
+        </div>
       </div>
     </section>
   );
