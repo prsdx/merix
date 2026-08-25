@@ -28,7 +28,7 @@ from merix.core.exceptions import (
 )
 from merix.core.logging import configure_logging
 from merix.core.rate_limit import limiter
-from merix.db import AsyncSessionLocal
+from merix.db import AsyncSessionLocal, engine
 from merix.models.batch_job import BatchJob
 
 logger = logging.getLogger("merix.main")
@@ -66,6 +66,14 @@ async def _cleanup_stale_batch_jobs() -> None:
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Startup and shutdown logic."""
     configure_logging()
+    # Make the effective pooling mode visible on every boot: if this ever
+    # logs NullPool outside a test run, requests pay a fresh TCP+TLS+auth
+    # handshake to Postgres each time (3-6s against Supabase).
+    logger.info(
+        "startup: db_pool=%s environment=%s",
+        type(engine.pool).__name__,
+        settings.ENVIRONMENT,
+    )
     await _cleanup_stale_batch_jobs()
     yield
 

@@ -13,6 +13,7 @@ SSRF posture (link URLs come from untrusted resumes):
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from datetime import UTC, datetime
@@ -26,6 +27,9 @@ from merix.services.jd_fetch import _assert_public_host
 logger = logging.getLogger("merix.services.verify")
 
 VERIFY_TIMEOUT_SECONDS = 5.0
+# Bound concurrent probes: profile hosts (LinkedIn especially) throttle
+# aggressive probing from one IP. Order of results still follows input order.
+VERIFY_PROBE_CONCURRENCY = 4
 
 # Hosts eligible for liveness checking (boundary-aware suffix match).
 VERIFIABLE_HOST_SUFFIXES = (
@@ -103,20 +107,24 @@ async def check_github_user(client: httpx.AsyncClient, username: str) -> str | N
 async def verify_resume_links(links: list[dict[str, str]], client: httpx.AsyncClient | None = None) -> list[dict]:
     """Verify all links on a resume. Returns results safe for parsed JSONB.
 
-    Inject ``client`` (MockTransport) in tests; a fresh real client otherwise.
+    Probes run with bounded concurrency (httpx.AsyncClient is safe for
+    concurrent requests); results keep input order regardless of completion
+    order. Inject ``client`` (MockTransport) in tests; a fresh real client
+    otherwise.
     """
-    results: list[dict] = []
     if client is not None:
         owned = False
     else:
         client = httpx.AsyncClient(timeout=VERIFY_TIMEOUT_SECONDS)
         owned = True
-    try:
-        for link in links:
-            url = link.get("url", "")
-            if not url or not _host_verifiable(url):
-                results.append({"url": url, "status": "skipped", "http_status": None, "checked_at": None})
-                continue
+
+    semaphore = asyncio.Semaphore(VERIFY_PROBE_CONCURRENCY)
+
+    async def verify_one(link: dict[str, str]) -> dict:
+        url = link.get("url", "")
+        if not url or not _host_verifiable(url):
+            return {"url": url, "status": "skipped", "http_status": None, "checked_at": None}
+        async with semaphore:
             result = await check_liveness(client, url)
             username = _github_username(url)
             if username is not None:
@@ -126,8 +134,10 @@ async def verify_resume_links(links: list[dict[str, str]], client: httpx.AsyncCl
                 if result["github_profile"] == "dead":
                     result["status"] = "fabricated"
                     result.pop("http_status", None)  # page probe status is noise now
-            results.append(result)
+            return result
+
+    try:
+        return list(await asyncio.gather(*(verify_one(link) for link in links)))
     finally:
         if owned:
             await client.aclose()
-    return results

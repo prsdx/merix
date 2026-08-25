@@ -26,7 +26,6 @@ export default function BatchJobStatusPage() {
   const [batchJob, setBatchJob] = useState<BatchJob | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [countdown, setCountdown] = useState<number | null>(null);
 
   const loadInitialData = useCallback(async () => {
     setLoading(true);
@@ -71,8 +70,10 @@ export default function BatchJobStatusPage() {
         setBatchJob(latest);
 
         if (latest.status === "completed") {
+          // Navigate straight to the ranked shortlist — the old 3-second
+          // artificial countdown added perceived latency to every match run.
           clearInterval(interval);
-          setCountdown(3);
+          router.push(`/jobs/${jobId}/results`);
         } else if (latest.status === "failed") {
           clearInterval(interval);
         }
@@ -84,20 +85,6 @@ export default function BatchJobStatusPage() {
     return () => clearInterval(interval);
   }, [isAuthenticated, batchJobId, jobId]);
 
-  // Redirect countdown
-  useEffect(() => {
-    if (countdown === null) return;
-    if (countdown <= 0) {
-      router.push(`/jobs/${jobId}/results`);
-      return;
-    }
-
-    const timer = setTimeout(() => {
-      setCountdown((prev) => (prev !== null ? prev - 1 : null));
-    }, 1000);
-
-    return () => clearTimeout(timer);
-  }, [countdown, jobId, router]);
 
   if (authLoading || (loading && !batchJob)) {
     return (
@@ -213,9 +200,7 @@ export default function BatchJobStatusPage() {
 
             <div className="flex justify-between text-sm font-mono text-[var(--text-muted)]">
               <span>{completed} of {total} candidate resumes processed</span>
-              {isFinished && countdown !== null && (
-                <span className="text-[var(--accent-evidence)]  font-semibold">Redirecting in {countdown}s...</span>
-              )}
+              {isFinished && <span className="text-[var(--accent-evidence)]  font-semibold">Opening ranked shortlist…</span>}
             </div>
           </div>
 

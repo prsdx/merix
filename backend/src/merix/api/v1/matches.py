@@ -6,6 +6,7 @@ Authenticated and org-scoped like the rest of the API.
 import uuid
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from merix.dependencies import get_current_user, get_scoped_db
@@ -24,5 +25,8 @@ async def get_match(
 ) -> dict:
     """Get a single match result with full explainability."""
     match = await pipeline.get_match_or_404(db, match_id, user.org_id)
-    resume = await db.get(Resume, match.resume_id)
-    return pipeline.to_match_response(match, resume)
+    # Column-limited fetch: only the candidate name is needed here, not the
+    # resume's raw_text or embedding vector.
+    row = await db.execute(select(Resume.candidate_name).where(Resume.id == match.resume_id))
+    candidate_name = row.scalar_one_or_none()
+    return pipeline.to_match_response(match, candidate_name)

@@ -10,6 +10,7 @@ run_match_for_resume is idempotent (upserts), so re-running a
 completed job is safe.
 """
 
+import asyncio
 import logging
 import uuid
 
@@ -23,8 +24,9 @@ from merix.config import settings
 from merix.db import scoped_session
 from merix.models.batch_job import BatchJob
 from merix.models.job import JobDescription
+from merix.models.match import MatchResult
 from merix.models.resume import Resume
-from merix.services import pipeline
+from merix.services import matching, pipeline
 from merix.services.verify import verify_resume_links
 
 logger = logging.getLogger("merix.services.batch")
@@ -39,11 +41,28 @@ async def run_batch_match_background(
     """Run match for every resume on a job and record results on the BatchJob.
 
     Creates a fresh scoped session (RLS-pinned to *org_id*). Uses provided llm client or creates a new one.
+
+    Concurrency model: resumes are processed in chunks of
+    ``settings.MATCH_CONCURRENCY``. Within a chunk the LLM-bound work
+    (first-sight extraction + rationale generation) runs in parallel — these
+    are independent network round-trips. DB reads/writes stay strictly
+    sequential on this single scoped session (AsyncSession is not safe for
+    concurrent use), so each chunk commits its MatchResults and progress
+    update together.
     """
 
     session = scoped_session(org_id)
     if llm is None:
         llm = get_llm_client(api_key=settings.LLM_API_KEY, model=settings.LLM_MODEL)
+
+    async def match_llm_work(resume: Resume):
+        """LLM-only portion for one resume. No DB access — safe in parallel."""
+        parsed = resume.parsed
+        if parsed is None:
+            parsed = await matching.extract_resume(llm, resume.raw_text)
+        comp = matching.compute_match(job.parsed, parsed)
+        rationale = await matching.generate_rationale(llm, job.parsed, parsed, comp)
+        return parsed, comp, rationale
 
     try:
         batch_job = await session.get(BatchJob, batch_job_id)
@@ -58,15 +77,51 @@ async def run_batch_match_background(
         if job is None:
             raise ValueError(f"Job {job_id} not found")
 
+        # JD parse once up front (was previously re-checked per resume).
+        if job.parsed is None:
+            job.parsed = await matching.extract_jd(llm, job.raw_text)
+
         resumes = (await session.scalars(select(Resume).where(Resume.job_id == job_id))).all()
 
         batch_results: list[dict] = []
         completed = 0
         succeeded = 0
+        chunk_size = max(1, settings.MATCH_CONCURRENCY)
 
-        for resume in resumes:
-            try:
-                await pipeline.run_match_for_resume(session, llm, job, resume)
+        for start in range(0, len(resumes), chunk_size):
+            chunk = resumes[start : start + chunk_size]
+            outcomes = await asyncio.gather(
+                *(match_llm_work(resume) for resume in chunk),
+                return_exceptions=True,
+            )
+
+            for resume, outcome in zip(chunk, outcomes):
+                completed += 1
+                if isinstance(outcome, BaseException):
+                    logger.error("match_failed resume_id=%s error=%r", resume.id, outcome)
+                    batch_results.append(
+                        {
+                            "resume_id": str(resume.id),
+                            "status": "failed",
+                            "error": str(outcome),
+                        }
+                    )
+                    continue
+
+                parsed, comp, rationale = outcome
+                # Persist first-sight extraction alongside the match result
+                # (same effect as run_match_for_resume's in-place mutation).
+                resume.parsed = parsed
+                existing = await session.scalar(
+                    select(MatchResult).where(MatchResult.job_id == job.id, MatchResult.resume_id == resume.id)
+                )
+                if existing is None:
+                    existing = MatchResult(org_id=job.org_id, job_id=job.id, resume_id=resume.id)
+                    session.add(existing)
+                existing.score = comp.score
+                existing.matched_skills = comp.matched_skills
+                existing.missing_skills = comp.missing_skills
+                existing.rationale = rationale
                 succeeded += 1
                 batch_results.append(
                     {
@@ -75,18 +130,13 @@ async def run_batch_match_background(
                         "error": None,
                     }
                 )
-            except Exception as exc:
-                logger.exception("match_failed resume_id=%s", resume.id)
-                batch_results.append(
-                    {
-                        "resume_id": str(resume.id),
-                        "status": "failed",
-                        "error": str(exc),
-                    }
-                )
 
-            completed += 1
-            # Re-fetch inside the loop because run_match_for_resume commits.
+            # Persist the chunk + publish incremental progress in one commit
+            # (was two commits per resume).
+            await session.commit()
+            # Re-fetch because the commit above expires nothing (expire_on_commit=False),
+            # but keep the same re-fetch discipline as before so a concurrent
+            # retention sweep can't resurrect stale column values.
             batch_job = await session.get(BatchJob, batch_job_id)
             batch_job.completed_resumes = completed
             batch_job.batch_results = batch_results
