@@ -57,8 +57,6 @@ class Settings(BaseSettings):
     # flags in Resume.parsed["link_verification"]. Disable to skip network calls.
     LINK_VERIFY_ENABLED: bool = True
 
-
-
     # Resolve .env relative to the backend/ dir (this file is at backend/src/merix/config.py),
     # so settings load correctly regardless of the process working directory.
     model_config = SettingsConfigDict(

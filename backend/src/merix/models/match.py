@@ -61,9 +61,7 @@ class MatchResult(Base, TimestampMixin):
     rationale: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Recruiter disposition: pending | shortlisted | rejected.
-    status: Mapped[str] = mapped_column(
-        String(20), nullable=False, default="pending", server_default="pending"
-    )
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending", server_default="pending")
 
     job: Mapped["JobDescription"] = relationship(back_populates="matches")
     resume: Mapped["Resume"] = relationship(back_populates="matches")
