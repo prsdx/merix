@@ -72,8 +72,8 @@ async def test_compute_match_no_required_skills_is_full_coverage():
 # --- JSON parsing tolerance ---
 
 
-def test_parse_json_strips_markdown_fences():
-    assert matching._parse_json('```json\n{"a": 1}\n```') == {"a": 1}
+# (_parse_json fence-stripping is now pinned in tests/unit/test_llm_guard.py,
+# where the parsing lives since all calls route through core.llm_guard.)
 
 
 # --- LLM extraction (fake) ---
@@ -151,7 +151,7 @@ async def test_long_resume_gets_full_token_budget():
 async def test_extract_resume_truncated_json_raises_domain_error():
     """Truncated LLM output must raise ExtractionError, not leak JSONDecodeError."""
     llm = FakeLLM(resume_json='{"skills": [{"skill": "Python", "evidence": "built serv')
-    with pytest.raises(matching.ExtractionError, match="Resume extraction failed"):
+    with pytest.raises(ExtractionError, match="resume_extraction"):
         await matching.extract_resume(llm, "Arjun Sharma - Python developer")
 
 
@@ -169,14 +169,16 @@ async def test_extract_resume_truncated_json_is_retryable_not_jsondecode():
 @pytest.mark.asyncio
 async def test_extract_jd_malformed_json_raises_domain_error():
     llm = FakeLLM(jd_json='{"required_skills": ["Go", ')
-    with pytest.raises(ExtractionError, match="Job description extraction failed"):
+    with pytest.raises(ExtractionError, match="jd_extraction"):
         await matching.extract_jd(llm, "We need a Go engineer")
 
 
-# --- rationale budget & truncation visibility ---
+# --- rationale budget & truncation handling ---
 # generate_rationale returns plain text, so a too-small max_tokens never
 # crashes anything — it silently clips the explanation mid-sentence. These
-# tests pin the budget and the warning that makes truncation observable.
+# tests pin the budget and the guard behaviour: a capped rationale retries
+# once at a doubled budget and only surfaces as ExtractionError if still
+# truncated (never served silently).
 
 
 @pytest.mark.asyncio
@@ -195,8 +197,9 @@ async def test_generate_rationale_gets_full_token_budget():
 
 
 @pytest.mark.asyncio
-async def test_generate_rationale_warns_when_truncated(caplog):
-    """A length-capped rationale must be logged, not served silently."""
+async def test_generate_rationale_retries_then_raises_when_still_truncated(caplog):
+    """A length-capped rationale must never be served silently: the guard
+    retries at a doubled budget and raises the typed error if still capped."""
 
     class TruncatingLLM(FakeLLM):
         async def generate(self, prompt, *, system=None, temperature=0.0, max_tokens=1024):
@@ -207,15 +210,15 @@ async def test_generate_rationale_warns_when_truncated(caplog):
                 finish_reason="length",
             )
 
-    with caplog.at_level(logging.WARNING, logger="merix.services.matching"):
-        out = await matching.generate_rationale(
-            TruncatingLLM(),
-            {},
-            {},
-            matching.MatchComputation(score=50.0),
-        )
-    assert any("rationale_truncated" in record.getMessage() for record in caplog.records)
-    assert out.startswith("Strong match")
+    with caplog.at_level(logging.ERROR, logger="merix.core.llm_guard"):
+        with pytest.raises(ExtractionError, match="rationale_generation"):
+            await matching.generate_rationale(
+                TruncatingLLM(),
+                {},
+                {},
+                matching.MatchComputation(score=50.0),
+            )
+    assert any("llm_response_invalid" in r.getMessage() and "call=rationale_generation" in r.getMessage() for r in caplog.records)
 
 
 def test_llmresult_truncated_flag():

@@ -11,9 +11,10 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
+from merix.clients.llm import get_llm_client  # noqa: E402
 from merix.config import settings  # noqa: E402
 from merix.core.exceptions import ExtractionError  # noqa: E402
-from merix.clients.llm import get_llm_client  # noqa: E402
+from merix.core.llm_guard import _parse_json  # noqa: E402
 from merix.services import matching  # noqa: E402
 
 
@@ -62,7 +63,7 @@ async def main() -> int:
         print("FAIL: response still hit the cap — budget needs raising")
         return 1
     try:
-        parsed = matching._parse_json(result.text)
+        parsed = _parse_json(result.text)
     except Exception as exc:
         print(f"FAIL: parse error after budget raise: {exc}\nraw head: {result.text[:300]!r}")
         return 1
