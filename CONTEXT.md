@@ -216,6 +216,13 @@ backend/
   - **Job deletion**: org-scoped `DELETE /api/jobs/{job_id}` (DB-level cascade to resumes/match_results/batch_jobs, DPDP audit event `job_deleted`) + confirmation-gated delete button on dashboard job cards.
   - **Verification**: production builds pass (`next build` exit 0) after each step; `ruff check src/ tests/` clean. Integration tests require live Supabase credentials not present in this workspace — failures verified identical on the unmodified tree (baseline check); all unit tests pass.
 
+- **Task 15**: Semantic adjacent-skill matching (exact-first, additive fallback)
+  - `matching.compute_match()` keeps its exact normalized comparison as the first, fastest path — unchanged and pinned by the original unit tests. When an embedder is provided, JD skills that missed exactly fall back to **per-skill embedding cosine similarity** against unconsumed resume skills; ≥ `ADJACENT_SIMILARITY_THRESHOLD` (**0.80**) classifies as "adjacent" instead of missing. One-to-one greedy assignment; adjacent credit = cosine (fractional coverage, never > exact).
+  - **Cost**: ≤1 `embed_batch` call per match computation + bounded process-local cache keyed by normalized skill string (`_SKILL_EMBEDDING_CACHE`). Embedder failures degrade to exact-only (`semantic_fallback_embed_failed` log).
+  - **Data**: no migration — JSONB `matched_skills` entries gain `match_type`/`similar_to`/`similarity`; absent keys read as exact (legacy-safe). Production verified `alembic current == heads` (`c41f9a7de208`). Both call sites (`pipeline.run_match_for_resume`, `batch.run_batch_match_background`) thread the embedder through.
+  - **UI**: blue `.tag-adjacent` pill (new `--accent-adjacent*` tokens) renders `≈ skill (N% similar)` on results rows/drawer; candidate-detail cards show an Adjacent badge + "not a verbatim keyword match" note; rationale labels adjacent skills; both CSV exports annotate. Exact=green, adjacent=blue, gap=gold.
+  - **Verification**: 82 unit tests pass (9 new semantic-path tests in `tests/unit/test_matching_semantic.py` incl. threshold boundaries via scripted vectors, batching/dedupe, cache hits, graceful degradation); `FakeEmbedder` rewritten to hash-seeded dissimilar vectors (constant vectors would make every pair cosine 1.0). Live check vs `gemini-embedding-001`: Postgres↔PostgreSQL 0.840 and Kubernetes↔K8s 0.876 surface as adjacent; unrelated pairs stay missing. `next build` exit 0.
+
 ---
 
 ## What's Next - Task 10: Vercel Deployment & Final Pitch-Readiness Pass

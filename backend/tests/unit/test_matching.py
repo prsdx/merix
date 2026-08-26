@@ -29,7 +29,7 @@ class FakeLLM:
 # --- compute_match (deterministic) ---
 
 
-def test_compute_match_full_match():
+async def test_compute_match_full_match():
     jd = {"required_skills": ["Python", "SQL"], "preferred_skills": ["AWS"], "min_experience_years": 3}
     res = {
         "skills": [
@@ -39,34 +39,34 @@ def test_compute_match_full_match():
         ],
         "experience_years": 4,
     }
-    mc = matching.compute_match(jd, res)
+    mc = await matching.compute_match(jd, res)
     assert mc.score == 100.0
     assert len(mc.matched_skills) == 3
     assert mc.missing_skills == []
 
 
-def test_compute_match_partial():
+async def test_compute_match_partial():
     jd = {"required_skills": ["Python", "SQL", "Docker"], "preferred_skills": [], "min_experience_years": 5}
     res = {"skills": [{"skill": "Python", "evidence": "x"}], "experience_years": 2}
-    mc = matching.compute_match(jd, res)
+    mc = await matching.compute_match(jd, res)
     # required coverage 1/3, preferred 1.0 (none), experience 2/5
     expected = round(100 * (0.70 * (1 / 3) + 0.20 * 1.0 + 0.10 * 0.4), 1)
     assert mc.score == expected
     assert {m["skill"] for m in mc.missing_skills} == {"sql", "docker"}
 
 
-def test_compute_match_case_insensitive_and_evidence():
+async def test_compute_match_case_insensitive_and_evidence():
     jd = {"required_skills": ["python"], "preferred_skills": [], "min_experience_years": 0}
     res = {"skills": [{"skill": "PYTHON", "evidence": "10 yrs Python"}], "experience_years": 10}
-    mc = matching.compute_match(jd, res)
+    mc = await matching.compute_match(jd, res)
     assert mc.score == 100.0
     assert mc.matched_skills[0]["evidence"] == "10 yrs Python"
 
 
-def test_compute_match_no_required_skills_is_full_coverage():
+async def test_compute_match_no_required_skills_is_full_coverage():
     jd = {"required_skills": [], "preferred_skills": [], "min_experience_years": 0}
     res = {"skills": [], "experience_years": 0}
-    assert matching.compute_match(jd, res).score == 100.0
+    assert (await matching.compute_match(jd, res)).score == 100.0
 
 
 # --- JSON parsing tolerance ---

@@ -35,6 +35,11 @@
   --accent-evidence-soft: #E7F3E7;
   --accent-evidence-border: #BBDFC7;
 
+  /* Blue — semantic "adjacent skill" matches (between green=exact and gold=gap) */
+  --accent-adjacent: #4C8DE0;
+  --accent-adjacent-soft: #E8F0FB;
+  --accent-adjacent-border: #B7CFEF;
+
   --accent-gap: #D8A928;          /* Gold */
   --accent-gap-soft: #FBF0D9;
   --accent-gap-border: #EBD28B;
@@ -72,6 +77,11 @@
   --accent-evidence: #4FB374;     /* Green */
   --accent-evidence-soft: rgba(79, 179, 116, 0.14);
   --accent-evidence-border: rgba(79, 179, 116, 0.32);
+
+  /* Blue — semantic "adjacent skill" matches (between green=exact and gold=gap) */
+  --accent-adjacent: #6BA3E8;
+  --accent-adjacent-soft: rgba(107, 163, 232, 0.14);
+  --accent-adjacent-border: rgba(107, 163, 232, 0.32);
 
   --accent-gap: #D8B638;          /* Gold */
   --accent-gap-soft: rgba(216, 182, 56, 0.13);
@@ -196,6 +206,19 @@ body {
   background: var(--accent-gap-soft);
   color: var(--accent-gap);
   border: 1px solid var(--accent-gap-border);
+}
+
+/* Semantic "adjacent skill" match — same pill recipe as tag-evidence/tag-gap,
+   blue sits between green (exact) and gold (gap) on the certainty spectrum. */
+.tag-adjacent {
+  font-family: "JetBrains Mono", monospace;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--accent-adjacent-soft);
+  color: var(--accent-adjacent);
+  border: 1px solid var(--accent-adjacent-border);
 }
 
 .tag-neutral {

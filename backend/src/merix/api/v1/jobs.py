@@ -266,6 +266,7 @@ async def match_job(
     user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_scoped_db),
     llm: LLMClient = Depends(get_llm),
+    embedder: EmbeddingClient = Depends(get_embedder),
 ) -> BatchJob:
     """Submit a batch match job for all resumes on a job description.
 
@@ -305,13 +306,14 @@ async def match_job(
     await db.refresh(batch_job)
 
     # Enqueue the real work. The background task creates its own session
-    # but we pass the llm client so it can be mocked in tests.
+    # but we pass the clients so they can be mocked in tests.
     background_tasks.add_task(
         run_batch_match_background,
         org_id=user.org_id,
         job_id=job_id,
         batch_job_id=batch_job.id,
         llm=llm,
+        embedder=embedder,
     )
 
     return batch_job
@@ -385,7 +387,26 @@ async def export_matches(
         # Same semantics as before: a missing resume row exports as "Unknown";
         # a present-but-unnamed one exports as empty.
         name = names[match.resume_id] if match.resume_id in names else "Unknown"
-        writer.writerow([name, match.score, ", ".join(match.matched_skills), ", ".join(match.missing_skills), match.rationale])
+
+        # matched_skills/missing_skills are lists of {skill, ...} dicts; label
+        # semantic adjacent matches explicitly so exported shortlists stay
+        # transparent about what is verbatim vs embedding-similar.
+        def fmt(entry: dict) -> str:
+            if isinstance(entry, str):
+                return entry
+            if entry.get("match_type") == "adjacent":
+                return f"{entry['skill']} (~{round(float(entry.get('similarity', 0)) * 100)}% similar)"
+            return str(entry["skill"])
+
+        writer.writerow(
+            [
+                name,
+                match.score,
+                ", ".join(fmt(s) for s in match.matched_skills),
+                ", ".join(fmt(s) for s in match.missing_skills),
+                match.rationale,
+            ]
+        )
 
     return Response(
         content=output.getvalue(),

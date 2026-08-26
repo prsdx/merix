@@ -15,9 +15,10 @@ from __future__ import annotations
 
 import json
 import logging
+import math
 from dataclasses import dataclass, field
 
-from merix.clients.base import LLMClient, LLMResult
+from merix.clients.base import EmbeddingClient, LLMClient, LLMResult
 from merix.core.exceptions import ExtractionError
 
 logger = logging.getLogger("merix.services.matching")
@@ -26,6 +27,24 @@ logger = logging.getLogger("merix.services.matching")
 W_REQUIRED = 0.70
 W_PREFERRED = 0.20
 W_EXPERIENCE = 0.10
+
+# Adjacent-skill semantic fallback: cosine similarity at or above this value
+# reclassifies an unmatched JD skill as an "adjacent match" instead of a gap.
+# Rationale for 0.80: short skill-string embeddings have an inflated baseline —
+# unrelated technical terms typically land at 0.4-0.6, adjacent-but-different
+# terms (Postgres/PostgreSQL, K8s/Kubernetes) around 0.78-0.92, synonyms >0.9.
+# 0.80 keeps precision while catching the miss-class the product targets.
+# Starting value — recalibrate once a labelled evaluation set exists (PRD §5).
+ADJACENT_SIMILARITY_THRESHOLD = 0.80
+
+# Process-local cache: normalised skill string -> embedding vector. Skill
+# strings repeat heavily across candidates and JDs, so after warmup most
+# lookups are cache hits and each match computation costs at most one
+# embed_batch call. Bounded crudely: on overflow the cache resets rather than
+# growing unboundedly inside a long-lived worker (10k distinct skills is far
+# beyond any real job's vocabulary).
+_SKILL_EMBEDDING_CACHE: dict[str, list[float]] = {}
+_SKILL_EMBEDDING_CACHE_MAX = 10_000
 
 # Completion-token budgets per call type. Resume extraction emits one
 # {skill, evidence} object per skill, so long resumes need real headroom
@@ -173,8 +192,126 @@ async def extract_resume(llm: LLMClient, resume_text: str) -> dict:
         raise ExtractionError("Resume extraction failed, please retry") from None
 
 
-def compute_match(jd_parsed: dict, resume_parsed: dict) -> MatchComputation:
-    """Deterministically compare parsed JD vs parsed resume -> explainable result."""
+def _cosine_similarity(a: list[float], b: list[float]) -> float:
+    """Cosine similarity between two equal-length vectors (pure Python; 768-dim)."""
+    dot = 0.0
+    norm_a = 0.0
+    norm_b = 0.0
+    for x, y in zip(a, b):
+        dot += x * y
+        norm_a += x * x
+        norm_b += y * y
+    if norm_a == 0.0 or norm_b == 0.0:
+        return 0.0
+    return dot / math.sqrt(norm_a * norm_b)
+
+
+async def _skill_embeddings(embedder: EmbeddingClient, strings: set[str]) -> dict[str, list[float]]:
+    """Embedding vectors for normalised skill strings, cached process-locally.
+
+    Issues at most one embed_batch call per invocation for the cache misses.
+    """
+    todo = sorted(s for s in strings if s not in _SKILL_EMBEDDING_CACHE)
+    if todo:
+        vectors = await embedder.embed_batch(todo)
+        if len(vectors) != len(todo):
+            raise ValueError(f"embed_batch returned {len(vectors)} vectors for {len(todo)} inputs")
+        if len(_SKILL_EMBEDDING_CACHE) + len(todo) > _SKILL_EMBEDDING_CACHE_MAX:
+            _SKILL_EMBEDDING_CACHE.clear()
+        _SKILL_EMBEDDING_CACHE.update(zip(todo, vectors))
+    return {s: _SKILL_EMBEDDING_CACHE[s] for s in strings}
+
+
+async def _apply_adjacent_matches(
+    embedder: EmbeddingClient,
+    missing: list[dict],
+    matched: list[dict],
+    resume_by_norm: dict[str, dict],
+    consumed: set[str],
+) -> tuple[float, float]:
+    """Semantic fallback pass: promote near-matching skills from missing to matched.
+
+    Greedy one-to-one assignment: each unmatched JD skill is paired with the
+    single most-similar unconsumed resume skill (highest similarity first), and
+    each resume skill satisfies at most one JD requirement. Returns the
+    fractional coverage credit earned (required_credit, preferred_credit); an
+    adjacent pair contributes its cosine similarity instead of a full count.
+
+    Mutates ``missing``/``matched`` in place.
+    """
+    remaining = [s for s in resume_by_norm if s not in consumed]
+    if not remaining or not missing:
+        return 0.0, 0.0
+
+    try:
+        vectors = await _skill_embeddings(embedder, {m["skill"] for m in missing} | set(remaining))
+    except Exception:
+        # The fallback must never fail a match that exact matching already
+        # handled: degrade to exact-only and log loudly for cost/health tracking.
+        logger.exception("semantic_fallback_embed_failed degrading_to=exact_only")
+        return 0.0, 0.0
+
+    pairs: list[tuple[float, int, str]] = []
+    for i, entry in enumerate(missing):
+        jd_skill = entry["skill"]
+        for resume_skill in remaining:
+            sim = _cosine_similarity(vectors[jd_skill], vectors[resume_skill])
+            if sim >= ADJACENT_SIMILARITY_THRESHOLD:
+                pairs.append((sim, i, resume_skill))
+    # Deterministic greedy: best similarity first, then input order.
+    pairs.sort(key=lambda t: (-t[0], t[1], t[2]))
+
+    promoted: dict[int, float] = {}
+    used_resume: set[str] = set()
+    for sim, i, resume_skill in pairs:
+        if i in promoted or resume_skill in used_resume:
+            continue
+        promoted[i] = sim
+        used_resume.add(resume_skill)
+
+    required_credit = 0.0
+    preferred_credit = 0.0
+    still_missing: list[dict] = []
+    for i, entry in enumerate(missing):
+        if i not in promoted:
+            still_missing.append(entry)
+            continue
+        sim = promoted[i]
+        resume_skill = next(r for _, j, r in pairs if j == i)
+        resume_entry = resume_by_norm[resume_skill]
+        matched.append(
+            {
+                "skill": resume_entry["skill"],
+                "required": entry["required"],
+                "evidence": resume_entry.get("evidence", ""),
+                "match_type": "adjacent",
+                "similar_to": entry["skill"],
+                "similarity": round(sim, 4),
+            }
+        )
+        if entry["required"]:
+            required_credit += sim
+        else:
+            preferred_credit += sim
+    missing[:] = still_missing
+    logger.info("adjacent_matches promoted=%d remaining_missing=%d", len(promoted), len(still_missing))
+    return required_credit, preferred_credit
+
+
+async def compute_match(
+    jd_parsed: dict,
+    resume_parsed: dict,
+    embedder: EmbeddingClient | None = None,
+) -> MatchComputation:
+    """Deterministically compare parsed JD vs parsed resume -> explainable result.
+
+    Exact normalized matching runs first and stays authoritative. When an
+    ``embedder`` is provided, JD skills that missed the exact pass get a
+    semantic fallback: each is compared via cosine similarity of per-skill
+    embeddings against unmatched resume skills, and sufficiently similar pairs
+    become "adjacent" matches earning fractional score credit. With no
+    embedder the comparison stays exact-only.
+    """
     required = [_normalise(s) for s in jd_parsed.get("required_skills", [])]
     preferred = [_normalise(s) for s in jd_parsed.get("preferred_skills", [])]
     min_exp = float(jd_parsed.get("min_experience_years", 0) or 0)
@@ -185,16 +322,19 @@ def compute_match(jd_parsed: dict, resume_parsed: dict) -> MatchComputation:
 
     matched: list[dict] = []
     missing: list[dict] = []
+    consumed: set[str] = set()
 
     matched_required = 0
     for skill in required:
         if skill in resume_by_norm:
             matched_required += 1
+            consumed.add(skill)
             matched.append(
                 {
                     "skill": resume_by_norm[skill]["skill"],
                     "required": True,
                     "evidence": resume_by_norm[skill].get("evidence", ""),
+                    "match_type": "exact",
                 }
             )
         else:
@@ -202,17 +342,27 @@ def compute_match(jd_parsed: dict, resume_parsed: dict) -> MatchComputation:
 
     for skill in preferred:
         if skill in resume_by_norm:
+            consumed.add(skill)
             matched.append(
                 {
                     "skill": resume_by_norm[skill]["skill"],
                     "required": False,
                     "evidence": resume_by_norm[skill].get("evidence", ""),
+                    "match_type": "exact",
                 }
             )
 
-    required_coverage = (matched_required / len(required)) if required else 1.0
+    # Semantic fallback: only for skills exact matching could not place.
+    adjacent_required_credit = 0.0
+    adjacent_preferred_credit = 0.0
+    if embedder is not None and missing:
+        adjacent_required_credit, adjacent_preferred_credit = await _apply_adjacent_matches(
+            embedder, missing, matched, resume_by_norm, consumed
+        )
+
+    required_coverage = ((matched_required + adjacent_required_credit) / len(required)) if required else 1.0
     matched_preferred = sum(1 for skill in preferred if skill in resume_by_norm)
-    preferred_coverage = (matched_preferred / len(preferred)) if preferred else 1.0
+    preferred_coverage = ((matched_preferred + adjacent_preferred_credit) / len(preferred)) if preferred else 1.0
     experience_score = min(exp_years / min_exp, 1.0) if min_exp > 0 else 1.0
 
     score = 100.0 * (W_REQUIRED * required_coverage + W_PREFERRED * preferred_coverage + W_EXPERIENCE * experience_score)
@@ -226,8 +376,17 @@ def compute_match(jd_parsed: dict, resume_parsed: dict) -> MatchComputation:
 
 async def generate_rationale(llm: LLMClient, jd_parsed: dict, resume_parsed: dict, match: MatchComputation) -> str:
     """Generate a short human-readable rationale from the deterministic facts."""
-    matched_required = [m["skill"] for m in match.matched_skills if m.get("required")]
-    matched_preferred = [m["skill"] for m in match.matched_skills if not m.get("required")]
+
+    def _label(m: dict) -> str:
+        # Adjacent matches are named as such so the recruiter-facing
+        # rationale never presents a semantic match as verbatim.
+        if m.get("match_type") == "adjacent":
+            pct = round(float(m.get("similarity", 0)) * 100)
+            return f"{m['skill']} (adjacent to {m.get('similar_to')}, ~{pct}% similar)"
+        return m["skill"]
+
+    matched_required = [_label(m) for m in match.matched_skills if m.get("required")]
+    matched_preferred = [_label(m) for m in match.matched_skills if not m.get("required")]
     missing_required = [m["skill"] for m in match.missing_skills]
     result = await llm.generate(
         _RATIONALE_PROMPT.format(

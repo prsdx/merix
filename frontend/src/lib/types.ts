@@ -129,6 +129,13 @@ export interface MatchedSkill {
   skill: string;
   required: boolean;
   evidence: string;
+  /** "exact" = normalized string equality; "adjacent" = semantic fallback.
+   *  Absent on legacy rows -> treat as exact. */
+  match_type?: "exact" | "adjacent";
+  /** Adjacent only: the JD skill this resume skill satisfies. */
+  similar_to?: string | null;
+  /** Adjacent only: cosine similarity (0-1). */
+  similarity?: number | null;
 }
 
 export interface MissingSkill {

@@ -37,10 +37,12 @@ async def run_batch_match_background(
     job_id: uuid.UUID,
     batch_job_id: uuid.UUID,
     llm: LLMClient | None = None,
+    embedder: EmbeddingClient | None = None,
 ) -> None:
     """Run match for every resume on a job and record results on the BatchJob.
 
-    Creates a fresh scoped session (RLS-pinned to *org_id*). Uses provided llm client or creates a new one.
+    Creates a fresh scoped session (RLS-pinned to *org_id*). Uses provided
+    clients or creates new ones.
 
     Concurrency model: resumes are processed in chunks of
     ``settings.MATCH_CONCURRENCY``. Within a chunk the LLM-bound work
@@ -54,13 +56,19 @@ async def run_batch_match_background(
     session = scoped_session(org_id)
     if llm is None:
         llm = get_llm_client(api_key=settings.LLM_API_KEY, model=settings.LLM_MODEL)
+    if embedder is None:
+        embedder = get_embedding_client(
+            provider=settings.EMBEDDING_PROVIDER,
+            api_key=settings.EMBEDDING_API_KEY,
+            model=settings.EMBEDDING_MODEL,
+        )
 
     async def match_llm_work(resume: Resume):
-        """LLM-only portion for one resume. No DB access — safe in parallel."""
+        """LLM+embedding-only portion for one resume. No DB access — safe in parallel."""
         parsed = resume.parsed
         if parsed is None:
             parsed = await matching.extract_resume(llm, resume.raw_text)
-        comp = matching.compute_match(job.parsed, parsed)
+        comp = await matching.compute_match(job.parsed, parsed, embedder)
         rationale = await matching.generate_rationale(llm, job.parsed, parsed, comp)
         return parsed, comp, rationale
 
