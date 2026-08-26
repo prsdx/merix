@@ -8,6 +8,7 @@ import { StatsBand } from "@/components/landing/stats-band";
 import { PipelineStory } from "@/components/landing/pipeline-story";
 import { BentoGrid } from "@/components/landing/bento-grid";
 import { ComparisonTable } from "@/components/landing/comparison-table";
+import { FounderNote } from "@/components/landing/founder-note";
 import { EarlyAccessInline } from "@/components/landing/early-access";
 import { FaqSection } from "@/components/landing/faq-section";
 import { EarlyAccessSection } from "@/components/landing/early-access";
@@ -36,6 +37,7 @@ export default function LandingPage() {
       <PipelineStory />
       <BentoGrid />
       <ComparisonTable />
+      <FounderNote />
       <EarlyAccessInline />
       <FaqSection />
       <EarlyAccessSection />
