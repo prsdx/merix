@@ -21,9 +21,7 @@ async def submit(db: AsyncSession, body: InterestRequest) -> dict:
         return {"status": "received"}
 
     normalized = body.email.strip().lower()
-    existing = await db.scalar(
-        select(InterestSignup).where(func.lower(InterestSignup.email) == normalized)
-    )
+    existing = await db.scalar(select(InterestSignup).where(func.lower(InterestSignup.email) == normalized))
     if existing is None:
         db.add(InterestSignup(email=normalized))
     # Repeat submissions just refresh updated_at via onupdate.
