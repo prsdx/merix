@@ -109,11 +109,15 @@ export function HeroSection() {
             </Magnetic>
             <a
               href="#how-it-works"
-              className="flex items-center justify-center gap-2 px-6 py-4 rounded-xl font-semibold text-sm text-[var(--text-primary)] bg-[var(--bg-subtle)] hover:bg-[var(--bg-elevated)] border border-[var(--border-hairline)] transition-colors cursor-pointer"
+              className="flex items-center justify-center gap-2 px-5 py-3 rounded-xl font-medium text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors cursor-pointer"
             >
               <span>Watch It Work</span>
+              <span aria-hidden="true">↓</span>
             </a>
           </div>
+          <p className="text-xs font-mono text-[var(--text-muted)] pt-3">
+            Free during early access — no credit card, no setup call required.
+          </p>
         </Reveal>
 
         <Reveal delay={1} y={14}>
