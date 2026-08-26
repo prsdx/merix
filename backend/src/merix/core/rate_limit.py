@@ -15,3 +15,5 @@ limiter = Limiter(key_func=get_remote_address)
 
 SIGNUP_RATE_LIMIT = "5/hour"
 LOGIN_RATE_LIMIT = "10/minute"
+# Public pre-auth form; per-IP cap to stop it becoming a write amplifier.
+INTEREST_RATE_LIMIT = "5/hour"
