@@ -106,7 +106,7 @@ const STAGES: Stage[] = [
     id: "inspect",
     kicker: "STEP 03",
     title: "Inspect evidence. Advance with proof.",
-    body: "A ranked leaderboard where every score opens into the exact resume sentences behind it. Advance, hold, or purge — your call, fully documented.",
+    body: "A ranked leaderboard where every score opens into the exact resume sentences behind it. Advance, hold, or pass — your call, fully documented.",
     mock: (
       <div className="merix-card card-glow overflow-hidden h-full flex flex-col">
         <div className="px-4 py-3 bg-[var(--bg-subtle)] border-b border-[var(--border-hairline)] flex justify-between items-center text-xs font-mono text-[var(--text-muted)]">

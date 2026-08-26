@@ -186,7 +186,7 @@ export function HeroDemoCard() {
               <div className="flex items-center gap-2">
                 <button className="px-3 py-1.5 rounded-lg text-sm font-semibold bg-[var(--accent-evidence-soft)] text-[var(--accent-evidence)] border border-[var(--accent-evidence-border)] hover:bg-[var(--accent-evidence)] hover:text-white transition-colors cursor-pointer">✓ Advance</button>
                 <button className="px-2.5 py-1.5 rounded-lg text-sm font-semibold bg-[var(--accent-gap-soft)] text-[var(--accent-gap)] border border-[var(--accent-gap-border)] transition-colors cursor-pointer">Hold</button>
-                <button className="px-2 py-1.5 rounded-lg text-sm font-semibold bg-[var(--accent-danger-soft)] text-[var(--accent-danger)] border border-[var(--accent-danger-border)] transition-colors cursor-pointer">Purge</button>
+                <button className="px-2 py-1.5 rounded-lg text-sm font-semibold bg-[var(--accent-danger-soft)] text-[var(--accent-danger)] border border-[var(--accent-danger-border)] transition-colors cursor-pointer">Pass</button>
               </div>
             </div>
           </div>
