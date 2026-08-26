@@ -14,25 +14,26 @@ interface Stat {
 
 const STATS: Stat[] = [
   {
-    value: 142,
-    label: "Resumes screened across campus drives today",
+    value: 100,
+    label: "Resumes per batch — the volume Merix is built for",
     accent: "text-[var(--text-primary)]",
-  },
-  {
-    value: 116,
-    label: "Shortlisted with 100% verbatim proof citations",
-    accent: "text-[var(--brand-primary)]",
   },
   {
     value: 8,
     prefix: "< ",
     suffix: " min",
-    label: "Average 100-resume batch turnaround",
+    label: "Target turnaround for a full 100-resume batch",
+    accent: "text-[var(--brand-primary)]",
+  },
+  {
+    value: 100,
+    suffix: "%",
+    label: "Of scored candidates carry verbatim evidence citations",
     accent: "text-[var(--accent-evidence)]",
   },
   {
     value: 0,
-    label: "Silent auto-rejects — every case reaches humans",
+    label: "Auto-rejects by design — every case reaches humans",
     accent: "text-[var(--accent-gap)]",
   },
 ];
@@ -42,6 +43,9 @@ export function StatsBand() {
     <section className="w-full border-y border-[var(--border-hairline)] bg-[var(--bg-subtle)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12">
         <Reveal y={20}>
+          <p className="text-center text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] pb-8">
+            Design targets — what every batch is engineered to deliver
+          </p>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-10">
             {STATS.map((s) => (
               <div key={s.label} className="text-center space-y-2 px-2">
