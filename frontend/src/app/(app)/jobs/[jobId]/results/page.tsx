@@ -198,7 +198,9 @@ function RankedResults() {
       rows.push([
         m.candidate_name || "Unknown",
         m.score,
-        m.matched_skills.map((s) => s.skill).join(", "),
+        m.matched_skills
+          .map((s) => (s.match_type === "adjacent" ? `${s.skill} (~${Math.round((s.similarity ?? 0) * 100)}% similar)` : s.skill))
+          .join(", "),
         m.missing_skills.map((s) => s.skill).join(", "),
         m.rationale,
       ]);
@@ -628,11 +630,17 @@ function RankedResults() {
 
                     {/* Skills Chips */}
                     <div className="col-span-3 flex flex-wrap gap-1 pr-2">
-                      {m.matched_skills.slice(0, 3).map((sk) => (
-                        <span key={sk.skill} className="tag-evidence text-[10px]">
-                          ✓ {sk.skill}
-                        </span>
-                      ))}
+                      {m.matched_skills.slice(0, 3).map((sk) =>
+                        sk.match_type === "adjacent" ? (
+                          <span key={sk.skill} className="tag-adjacent text-[10px]" title={`Adjacent match for "${sk.similar_to}" (${Math.round((sk.similarity ?? 0) * 100)}% similar)`}>
+                            ≈ {sk.skill}
+                          </span>
+                        ) : (
+                          <span key={sk.skill} className="tag-evidence text-[10px]">
+                            ✓ {sk.skill}
+                          </span>
+                        ),
+                      )}
                       {m.missing_skills.slice(0, 1).map((sk) => (
                         <span key={sk.skill} className="tag-gap text-[10px]">
                           ✗ {sk.skill}
@@ -675,11 +683,21 @@ function RankedResults() {
                               All Extracted Technical Competencies:
                             </div>
                             <div className="flex flex-wrap gap-1.5">
-                              {m.matched_skills.map((sk) => (
-                                <span key={sk.skill} className="tag-evidence">
-                                  ✓ {sk.skill}
-                                </span>
-                              ))}
+                              {m.matched_skills.map((sk) =>
+                                sk.match_type === "adjacent" ? (
+                                  <span
+                                    key={sk.skill}
+                                    className="tag-adjacent"
+                                    title={`Semantic match for JD skill "${sk.similar_to}"`}
+                                  >
+                                    ≈ {sk.skill} ({Math.round((sk.similarity ?? 0) * 100)}% similar)
+                                  </span>
+                                ) : (
+                                  <span key={sk.skill} className="tag-evidence">
+                                    ✓ {sk.skill}
+                                  </span>
+                                ),
+                              )}
                               {m.missing_skills.map((sk) => (
                                 <span key={sk.skill} className="tag-gap">
                                   ✕ {sk.skill} (Gap)

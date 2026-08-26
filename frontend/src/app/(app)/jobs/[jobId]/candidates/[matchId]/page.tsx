@@ -471,25 +471,49 @@ export default function CandidateDetailPage() {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {match?.matched_skills.map((skill) => (
-                  <div
-                    key={skill.skill}
-                    className="p-3 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border border-[var(--accent-evidence)]/20 space-y-1"
-                  >
-                    <div className="flex items-center gap-1.5 text-sm font-semibold text-[var(--accent-evidence)]">
-                      <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
-                      <span>{skill.skill}</span>
-                    </div>
-                    <div className="text-sm font-mono text-[var(--text-muted)] leading-relaxed">
-                      Verified from candidate career history
-                    </div>
-                    {skill.evidence && (
-                      <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg p-2.5 font-mono reading-text">
-                        &ldquo;{skill.evidence}&rdquo;
+                {match?.matched_skills.map((skill) => {
+                  const adjacent = skill.match_type === "adjacent";
+                  return (
+                    <div
+                      key={skill.skill}
+                      className={`p-3 rounded-xl bg-[var(--bg-subtle)] dark:bg-black/40 border space-y-1 ${
+                        adjacent
+                          ? "border-[var(--accent-adjacent)]/30"
+                          : "border-[var(--accent-evidence)]/20"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 text-sm font-semibold">
+                        {adjacent ? (
+                          <span className="flex items-center gap-1.5 text-[var(--accent-adjacent)]">
+                            <span aria-hidden>≈</span>
+                            <span>{skill.skill}</span>
+                            <span className="tag-adjacent text-[10px] uppercase tracking-wider">
+                              Adjacent · {Math.round((skill.similarity ?? 0) * 100)}% similar
+                            </span>
+                          </span>
+                        ) : (
+                          <span className="flex items-center gap-1.5 text-[var(--accent-evidence)]">
+                            <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                            <span>{skill.skill}</span>
+                          </span>
+                        )}
                       </div>
-                    )}
-                  </div>
-                ))}
+                      {adjacent && (
+                        <div className="text-xs font-mono text-[var(--accent-adjacent)] leading-relaxed">
+                          Semantic match for JD requirement &ldquo;{skill.similar_to}&rdquo; — not a verbatim keyword match.
+                        </div>
+                      )}
+                      <div className="text-sm font-mono text-[var(--text-muted)] leading-relaxed">
+                        Verified from candidate career history
+                      </div>
+                      {skill.evidence && (
+                        <div className="bg-teal-500/10 border border-teal-500/20 rounded-lg p-2.5 font-mono reading-text">
+                          &ldquo;{skill.evidence}&rdquo;
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
