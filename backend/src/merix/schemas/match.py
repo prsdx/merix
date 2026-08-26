@@ -3,6 +3,7 @@
 import uuid
 from datetime import datetime
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import BaseModel, Field
 
@@ -24,9 +25,21 @@ class ResumeResponse(BaseModel):
 
 
 class MatchedSkill(BaseModel):
+    """One JD requirement satisfied by the candidate's resume.
+
+    match_type distinguishes the three states recruiters see:
+      - "exact": normalised string equality (verbatim evidence).
+      - "adjacent": semantic fallback via embedding cosine similarity;
+        ``similar_to`` is the JD skill it satisfies and ``similarity`` is
+        the cosine score (0-1). Absent/None on legacy rows -> exact.
+    """
+
     skill: str
     required: bool
     evidence: str = ""
+    match_type: Literal["exact", "adjacent"] = "exact"
+    similar_to: str | None = None
+    similarity: float | None = None
 
 
 class MissingSkill(BaseModel):
