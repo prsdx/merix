@@ -8,6 +8,7 @@ import { StatsBand } from "@/components/landing/stats-band";
 import { PipelineStory } from "@/components/landing/pipeline-story";
 import { BentoGrid } from "@/components/landing/bento-grid";
 import { ComparisonTable } from "@/components/landing/comparison-table";
+import { EarlyAccessInline } from "@/components/landing/early-access";
 import { FaqSection } from "@/components/landing/faq-section";
 import { EarlyAccessSection } from "@/components/landing/early-access";
 import { TestimonialsCta } from "@/components/landing/testimonials-cta";
@@ -35,6 +36,7 @@ export default function LandingPage() {
       <PipelineStory />
       <BentoGrid />
       <ComparisonTable />
+      <EarlyAccessInline />
       <FaqSection />
       <EarlyAccessSection />
       {/* relative wrapper anchors FloatingCta's footer sentinel */}
