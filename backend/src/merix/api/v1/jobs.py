@@ -387,7 +387,26 @@ async def export_matches(
         # Same semantics as before: a missing resume row exports as "Unknown";
         # a present-but-unnamed one exports as empty.
         name = names[match.resume_id] if match.resume_id in names else "Unknown"
-        writer.writerow([name, match.score, ", ".join(match.matched_skills), ", ".join(match.missing_skills), match.rationale])
+
+        # matched_skills/missing_skills are lists of {skill, ...} dicts; label
+        # semantic adjacent matches explicitly so exported shortlists stay
+        # transparent about what is verbatim vs embedding-similar.
+        def fmt(entry: dict) -> str:
+            if isinstance(entry, str):
+                return entry
+            if entry.get("match_type") == "adjacent":
+                return f"{entry['skill']} (~{round(float(entry.get('similarity', 0)) * 100)}% similar)"
+            return str(entry["skill"])
+
+        writer.writerow(
+            [
+                name,
+                match.score,
+                ", ".join(fmt(s) for s in match.matched_skills),
+                ", ".join(fmt(s) for s in match.missing_skills),
+                match.rationale,
+            ]
+        )
 
     return Response(
         content=output.getvalue(),
