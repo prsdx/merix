@@ -10,6 +10,19 @@ Merix is an AI-powered resume-to-job-description matching platform for Indian re
 
 ---
 
+## ⚠️ Product Stage (read before writing any user-facing copy)
+
+Merix is **pre-launch / prototype stage with zero real users**. The product is real and works end-to-end, but there is no production traffic and no customers yet.
+
+Rules for all user-facing copy (landing page, in-app text, docs, outreach):
+
+- Frame performance figures ("<8 min per 100 resumes") as **design targets / built-for capabilities**, never as measured or observed results.
+- **No fabricated social proof**: no invented testimonials, customer names, adopter institutions, or fake "live activity" stats. Illustrative examples must be labelled as such.
+- **No unearned compliance claims**: say "built for DPDP Act 2023 compliance", never "certified".
+- Stage indicators (e.g. "Prototype · building with early users") should be honest but confident — early-stage-startup register, not apologetic.
+
+---
+
 ## Who is it for?
 
 - **Primary**: Indian campus placement cells and staffing agencies processing hundreds of resumes per job opening
@@ -45,6 +58,15 @@ Traditional ATS systems are black boxes: they reject resumes with no explanation
 
 - `services/verify.py` runs post-upload: liveness probes + GitHub existence checks on resume links → `parsed["link_verification"]` advisory flags (`ok / dead / fabricated / unknown / error / skipped`). Allowlist-only probing with the shared SSRF DNS guard; toggle via `LINK_VERIFY_ENABLED`. Recruiters see status dots on link chips. Flag-don't-reject throughout.
 - Remaining evidence-graph roadmap: corroboration scoring & evidence-weighted matching v2.
+
+### Task 15: Landing-page honesty pass (copy/framing only)
+
+The landing page presented prototype-stage claims as proven, live product usage. Fixed without touching design/layout/interactions:
+- Hero subheadline + trust chips reframed as designed-for capability; added "Prototype · Building with Early Users" badge; fabricated adopter-institution marquee replaced with target-audience segments.
+- Stats band's fabricated live activity (142 screened today / 116 shortlisted) relabelled as explicit design targets.
+- Hero demo "Purge" button relabelled "Pass"; pipeline-story copy aligned.
+- Six fabricated testimonials (fictional named people + measured metrics) replaced with first-party designed-outcome cards under an illustrative kicker; new "What stage is Merix at?" FAQ.
+- Removed false "DPDP Certified" banner claim and fake "All systems operational" footer status.
 
 
 
