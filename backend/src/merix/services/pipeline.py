@@ -95,7 +95,13 @@ async def add_resume(
     return resume
 
 
-async def run_match_for_resume(db: AsyncSession, llm: LLMClient, job: JobDescription, resume: Resume) -> MatchResult:
+async def run_match_for_resume(
+    db: AsyncSession,
+    llm: LLMClient,
+    embedder: EmbeddingClient,
+    job: JobDescription,
+    resume: Resume,
+) -> MatchResult:
     """Compute and persist an explainable match for one (job, resume) pair.
 
     Idempotent: updates the existing MatchResult for the pair if present.
@@ -105,7 +111,7 @@ async def run_match_for_resume(db: AsyncSession, llm: LLMClient, job: JobDescrip
     if resume.parsed is None:
         resume.parsed = await matching.extract_resume(llm, resume.raw_text)
 
-    comp = matching.compute_match(job.parsed, resume.parsed)
+    comp = await matching.compute_match(job.parsed, resume.parsed, embedder)
     rationale = await matching.generate_rationale(llm, job.parsed, resume.parsed, comp)
 
     existing = await db.scalar(select(MatchResult).where(MatchResult.job_id == job.id, MatchResult.resume_id == resume.id))
@@ -121,12 +127,17 @@ async def run_match_for_resume(db: AsyncSession, llm: LLMClient, job: JobDescrip
     return existing
 
 
-async def run_match_for_job(db: AsyncSession, llm: LLMClient, job: JobDescription) -> list[MatchResult]:
+async def run_match_for_job(
+    db: AsyncSession,
+    llm: LLMClient,
+    embedder: EmbeddingClient,
+    job: JobDescription,
+) -> list[MatchResult]:
     """Run the batch match: every resume for the job, ranked by score desc."""
     resumes = (await db.scalars(select(Resume).where(Resume.job_id == job.id))).all()
     results: list[MatchResult] = []
     for resume in resumes:
-        results.append(await run_match_for_resume(db, llm, job, resume))
+        results.append(await run_match_for_resume(db, llm, embedder, job, resume))
     results.sort(key=lambda r: r.score, reverse=True)
     logger.info("match_run job_id=%s resumes=%d", job.id, len(results))
     return results

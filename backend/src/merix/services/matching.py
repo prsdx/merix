@@ -17,7 +17,7 @@ import json
 import logging
 from dataclasses import dataclass, field
 
-from merix.clients.base import LLMClient, LLMResult
+from merix.clients.base import EmbeddingClient, LLMClient, LLMResult
 from merix.core.exceptions import ExtractionError
 
 logger = logging.getLogger("merix.services.matching")
@@ -173,8 +173,19 @@ async def extract_resume(llm: LLMClient, resume_text: str) -> dict:
         raise ExtractionError("Resume extraction failed, please retry") from None
 
 
-def compute_match(jd_parsed: dict, resume_parsed: dict) -> MatchComputation:
-    """Deterministically compare parsed JD vs parsed resume -> explainable result."""
+async def compute_match(
+    jd_parsed: dict,
+    resume_parsed: dict,
+    embedder: EmbeddingClient | None = None,
+) -> MatchComputation:
+    """Deterministically compare parsed JD vs parsed resume -> explainable result.
+
+    ``embedder`` enables the semantic fallback pass: JD skills that miss the
+    exact normalized comparison are compared via cosine similarity of per-skill
+    embeddings against unmatched resume skills before being declared missing.
+    When ``embedder`` is None the comparison stays exact-only (and free).
+    """
+
     required = [_normalise(s) for s in jd_parsed.get("required_skills", [])]
     preferred = [_normalise(s) for s in jd_parsed.get("preferred_skills", [])]
     min_exp = float(jd_parsed.get("min_experience_years", 0) or 0)

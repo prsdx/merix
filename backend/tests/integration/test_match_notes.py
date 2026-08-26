@@ -25,7 +25,7 @@ async def seeded_match(make_org_user):
             candidate_name="Jane Doe",
             consent_given=True,
         )
-        match = await pipeline.run_match_for_resume(session, FakeLLM(), jd, resume)
+        match = await pipeline.run_match_for_resume(session, FakeLLM(), FakeEmbedder(), jd, resume)
     return auth_headers(user_id), str(match.id)
 
 
