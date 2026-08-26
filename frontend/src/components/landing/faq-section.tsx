@@ -11,7 +11,7 @@ const FAQS = [
   },
   {
     q: "How fast is a batch of 100 resumes?",
-    a: "A typical 100-resume batch completes in under 8 minutes. Processing runs in parallel with async workers, and every candidate gets a full evidence-backed evaluation — not just a filter result.",
+    a: "Merix is engineered so a typical 100-resume batch completes in minutes. Processing runs in parallel with async workers, and every candidate gets a full evidence-backed evaluation — not just a filter result.",
   },
   {
     q: "Does Merix ever auto-reject candidates?",
@@ -24,6 +24,10 @@ const FAQS = [
   {
     q: "Can I export shortlists for my team?",
     a: "Yes. Ranked leaderboards export to clean CSV reports including scores, verdicts, and evidence citations — ready for placement cells, hiring committees, or client submission.",
+  },
+  {
+    q: "What stage is Merix at?",
+    a: "Merix is a pre-launch prototype in active development. The screening pipeline, evidence citations, and DPDP controls described here are built and working end-to-end — we're refining them with our first design partners now. Performance figures on this page are engineering targets, not benchmarks from production traffic.",
   },
 ];
 

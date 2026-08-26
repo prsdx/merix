@@ -13,7 +13,7 @@ const ROWS = [
   {
     label: "100-resume turnaround",
     legacy: "Days of manual skimming and spreadsheet triage",
-    merix: "Under 8 minutes with parallel async processing",
+    merix: "Engineered for minutes, not days — parallel async processing",
   },
   {
     label: "Candidate fate",

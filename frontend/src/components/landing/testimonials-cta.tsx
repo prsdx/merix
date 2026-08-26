@@ -3,77 +3,65 @@
 import Link from "next/link";
 import { Reveal, Marquee, Magnetic } from "./motion";
 
-const TESTIMONIALS = [
+const OUTCOMES = [
   {
-    metric: "318 hours",
-    metricClass: "text-[var(--brand-primary)]",
-    headline: "Saved across 4 campus placement drives",
-    quote:
-      "Merix processed 400 engineering applicants in 35 minutes with zero committee disputes on candidate ranking.",
-    author: "Prof. Rajesh Kulkarni • T&P Cell, Pune",
+    stat: "<8 min",
+    statClass: "text-[var(--brand-primary)]",
+    title: "Target turnaround for a 100-resume batch",
+    body: "Parallel async workers are engineered to rank an entire campus pile in minutes — not days of manual skimming.",
   },
   {
-    metric: "4.8× faster",
-    metricClass: "text-[var(--accent-evidence)]",
-    headline: "Shortlisting turnaround for tech staffing",
-    quote:
-      "Instead of re-reading 4-page resumes, our recruiters verify the verbatim monospace quote and schedule the same day.",
-    author: "Ananya Deshmukh • VP of Talent, Bengaluru",
+    stat: "100%",
+    statClass: "text-[var(--accent-evidence)]",
+    title: "Scores backed by verbatim evidence",
+    body: "Every point awarded cites the exact resume sentence that earned it, so any ranking can be audited in seconds.",
   },
   {
-    metric: "100% audit proof",
-    metricClass: "text-[var(--text-primary)]",
-    headline: "Defensibility under DPDP Act 2023",
-    quote:
-      "Every consent timestamp and 90-day auto-purge is logged. Enterprise clients approved our vendor security immediately.",
-    author: "Siddharth Rao • Engineering Director, Hyderabad",
+    stat: "70/20/10",
+    statClass: "text-[var(--text-primary)]",
+    title: "Your rubric, applied deterministically",
+    body: "JDs parse into required, preferred, and experience weights — the same rubric every time, no silent re-weighting.",
   },
   {
-    metric: "92% consensus",
-    metricClass: "text-[var(--brand-primary)]",
-    headline: "Committee alignment on first review",
-    quote:
-      "Our placement committee stopped arguing about rankings — the citations settle debates before they start.",
-    author: "Dr. Meera Iyer • Placement Dean, Chennai",
+    stat: "0",
+    statClass: "text-[var(--accent-gap)]",
+    title: "Auto-rejects, by design",
+    body: "Every applicant reaches human review with their complete dossier. Merix informs the decision; you make it.",
   },
   {
-    metric: "0 compliance flags",
-    metricClass: "text-[var(--accent-evidence)]",
-    headline: "Clean enterprise vendor onboarding",
-    quote:
-      "Security review took one afternoon. Consent logs and purge policies were already audit-ready.",
-    author: "Karan Malhotra • HR Head, Gurugram",
+    stat: "DPDP",
+    statClass: "text-[var(--accent-evidence)]",
+    title: "Compliance engineered in from day one",
+    body: "Consent logging, configurable retention windows, and one-click candidate erasure on an immutable audit trail.",
   },
   {
-    metric: "6× throughput",
-    metricClass: "text-[var(--text-primary)]",
-    headline: "Same team, six times the drives",
-    quote:
-      "We scaled from 3 campus drives per season to 18 without hiring a single extra coordinator.",
-    author: "Fatima Sheikh • Ops Lead, Hyderabad",
+    stat: "CSV",
+    statClass: "text-[var(--text-primary)]",
+    title: "Shortlists your committee can actually use",
+    body: "Ranked exports carry scores, verdicts, and citations attached — no screenshots, no lost context.",
   },
 ];
 
 export function TestimonialsCta() {
   return (
     <section className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-16 space-y-12">
-      {/* Infinite moving testimonial cards */}
+      {/* Designed-outcome cards (illustrative — no customer quotes yet) */}
       <Reveal y={24}>
+        <p className="text-center text-xs font-mono uppercase tracking-widest text-[var(--text-muted)] pb-6">
+          What early users can expect — designed outcomes, not case studies yet
+        </p>
         <Marquee
           duration={52}
-          items={TESTIMONIALS.map((t) => (
+          items={OUTCOMES.map((t) => (
             <div
-              key={t.author}
+              key={t.title}
               className="w-[330px] sm:w-[380px] p-6 rounded-2xl bg-[var(--bg-surface)] border border-[var(--border-hairline)] space-y-3 flex flex-col hover:border-[var(--border-subtle)] transition-colors"
             >
-              <div className={`text-xl font-mono font-bold ${t.metricClass}`}>{t.metric}</div>
-              <div className="text-sm font-bold text-[var(--text-primary)]">{t.headline}</div>
+              <div className={`text-xl font-mono font-bold ${t.statClass}`}>{t.stat}</div>
+              <div className="text-sm font-bold text-[var(--text-primary)]">{t.title}</div>
               <p className="text-sm text-[var(--text-secondary)] leading-relaxed flex-1">
-                &ldquo;{t.quote}&rdquo;
+                {t.body}
               </p>
-              <div className="pt-2 border-t border-[var(--border-hairline)] text-xs font-mono text-[var(--text-muted)]">
-                {t.author}
-              </div>
             </div>
           ))}
         />

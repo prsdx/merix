@@ -44,7 +44,7 @@ export function FloatingCta() {
             className="hidden sm:flex fixed bottom-5 right-5 z-50 items-center gap-2 pl-4 pr-1.5 py-1.5 rounded-full glass-nav glass-nav-scrolled shadow-lg"
           >
             <span className="text-xs font-mono text-[var(--text-muted)] whitespace-nowrap">
-              100 resumes • &lt;8 min
+              Built for 100-resume batches
             </span>
             <Link
               href="/signup"
