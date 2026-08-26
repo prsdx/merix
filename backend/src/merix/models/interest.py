@@ -27,6 +27,4 @@ class InterestSignup(Base, TimestampMixin):
     # mirror migration c41f9a7de208 exactly — declared here so autogenerate/
     # `alembic check` see the functional index as part of model metadata and
     # don't report it as drift.
-    __table_args__ = (
-        Index("ux_interest_signups_email", text("lower(email)"), unique=True),
-    )
+    __table_args__ = (Index("ux_interest_signups_email", text("lower(email)"), unique=True),)
