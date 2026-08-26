@@ -12,7 +12,7 @@ import pytest
 
 from merix.db import scoped_session
 from merix.services import pipeline
-from tests.helpers import FakeLLM, auth_headers, make_pdf
+from tests.helpers import FakeEmbedder, FakeLLM, auth_headers, make_pdf
 
 
 @pytest.fixture
@@ -80,7 +80,7 @@ async def test_vertical_slice_end_to_end(client, org_a):
     session = scoped_session(org_id)
     try:
         jd = await pipeline.get_job_or_404(session, uuid.UUID(job_id), org_id)
-        await pipeline.run_match_for_job(session, FakeLLM(), jd)
+        await pipeline.run_match_for_job(session, FakeLLM(), FakeEmbedder(), jd)
     finally:
         await session.close()
 
