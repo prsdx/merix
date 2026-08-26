@@ -98,3 +98,62 @@ jobs:
 
       - name: Run pytest
         run: uv run pytest -v --tb=short 2>&1
+
+  migration-drift:
+    name: Migration drift (alembic check)
+    runs-on: ubuntu-latest
+    needs: lint
+    defaults:
+      run:
+        working-directory: backend
+
+    # Ephemeral Postgres with pgvector preinstalled (models/migrations use the
+    # vector type). Fresh database every run: proves migrations build the full
+    # schema from scratch and that no model change is missing a migration.
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: drift_check
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql+asyncpg://postgres:postgres@localhost:5432/drift_check
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: "latest"
+
+      - name: Set up Python
+        run: uv python install 3.11
+
+      - name: Install all dependencies
+        run: uv sync --group dev
+
+      # No migration creates the extension (it was provisioned manually on
+      # Supabase), so create it here before migrating — same as prod setup.
+      - name: Enable pgvector extension
+        run: |
+          docker exec "$(docker ps -qf name=postgres)" psql -U postgres -d drift_check \
+            -c "CREATE EXTENSION IF NOT EXISTS vector;"
+
+      - name: Apply all migrations to empty database
+        run: uv run alembic upgrade head
+
+      # Fails the build when model changes lack a corresponding migration
+      # (same comparison autogenerate uses). Limitation: it cannot catch what
+      # autogenerate cannot see (e.g. enum value changes, data migrations).
+      - name: Check models match migrated schema
+        run: uv run alembic check
