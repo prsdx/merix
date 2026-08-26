@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Task 18: Two-tier CI pipeline**
+  - **The problem**: every push ran the full 148-test suite, whose integration half is network-bound to the shared Supabase dev database (~25–30 min per run) — slow feedback on branches, and concurrent runs doubled DB contention.
+  - **The split**: fast tier (lint ~12s + unit tests ~13s + migration drift ~33s ≈ **1 minute total**) runs on every push/PR; the DB-backed integration suite now gates only `main` pushes and a nightly `schedule` trigger, so regressions still block deploys even when nothing merges.
+  - No tests changed — workflow wiring only (`ci.yml`).
+
 - **Task 17: Deploy-migration safety — closing the outage class behind `match_results.status`**
   - **Deploy-time migrations**: confirmed the free-plan-correct mechanism (chained `uv run alembic upgrade head` before Uvicorn in `render.yaml`'s start command; move to `preDeployCommand` on a paid plan) and verified it fail-closed + idempotent: re-running against the up-to-date production database is a clean no-op.
   - **CI drift gate**: new `migration-drift` job — ephemeral `pgvector/pgvector:pg16` container, `CREATE EXTENSION vector`, `alembic upgrade head` from empty (proves migrations build the whole schema), then `alembic check`. Fails the build on model changes without a migration. Known limitation: only catches what autogenerate sees (not enum value edits or data migrations).

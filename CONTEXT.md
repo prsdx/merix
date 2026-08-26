@@ -238,6 +238,12 @@ backend/
 - **Drift fix found en route**: `alembic check` immediately caught real drift — migration `c41f9a7de208` creates a functional unique index on `lower(email)`, but `InterestSignup` never declared it, so autogenerate wanted to remove it. Fixed on the model side (`__table_args__` functional index), migration history untouched.
 - **Verification**: production `alembic current == heads == c41f9a7de208` (no further drift); `alembic upgrade head` re-run against up-to-date production = idempotent no-op (exit 0); full CI sequence rehearsed on an ephemeral scratch database (empty DB -> pgvector -> 10 migrations -> check, all exit 0); negative test confirms the gate fails on an unmigrated model change; 92 unit tests pass, ruff clean.
 
+### Task 18: Two-tier CI pipeline
+
+- **Problem**: every push ran the full suite; the integration half is network-bound to shared Supabase (~25–30 min/run on GitHub runners), so branch feedback was slow and concurrent runs contended on the same dev DB.
+- **Split** (`ci.yml`): fast tier — Lint + Unit tests + Migration drift, ~1 minute total — runs on every push/PR. Full tier — `integration-tests` (the old DB-backed job) — gates only pushes to `main` plus a nightly schedule (`0 3 * * *`), so slow-suite regressions still block deploys.
+- First run verified: lint 12s / unit 13s / drift 33s green; drift-job failure from its first attempt diagnosed via job logs (`docker ps -qf name=postgres` matched nothing because Actions names service containers after the image slug — "postgres" is only the network alias) and fixed with an `ancestor=` image filter.
+
 ---
 
 ## What's Next - Task 10: Vercel Deployment & Final Pitch-Readiness Pass
