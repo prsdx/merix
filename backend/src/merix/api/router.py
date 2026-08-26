@@ -8,6 +8,7 @@ from merix.api.v1 import (
     batch_jobs,
     candidates,
     health,
+    interest,
     jobs,
     matches,
     orgs,
@@ -16,6 +17,7 @@ from merix.api.v1 import (
 api_router = APIRouter()
 api_router.include_router(health.router, tags=["health"])
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
+api_router.include_router(interest.router, prefix="/interest", tags=["interest"])
 api_router.include_router(orgs.router, prefix="/orgs", tags=["orgs"])
 api_router.include_router(admin.router, prefix="/admin", tags=["admin"])
 api_router.include_router(jobs.router, prefix="/jobs", tags=["jobs"])

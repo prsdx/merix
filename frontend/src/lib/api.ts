@@ -144,6 +144,14 @@ export const api = {
     return request<CurrentUser>("/auth/me");
   },
 
+  // Interest (public — pre-signup design-partner leads)
+  async submitInterest(email: string, website = ""): Promise<{ status: string }> {
+    return request<{ status: string }>("/interest", {
+      method: "POST",
+      body: JSON.stringify({ email, website }),
+    });
+  },
+
   // Organisations
   async getMyOrg(): Promise<Organisation> {
     return request<Organisation>("/orgs/me");

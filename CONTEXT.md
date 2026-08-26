@@ -68,6 +68,14 @@ The landing page presented prototype-stage claims as proven, live product usage.
 - Six fabricated testimonials (fictional named people + measured metrics) replaced with first-party designed-outcome cards under an illustrative kicker; new "What stage is Merix at?" FAQ.
 - Removed false "DPDP Certified" banner claim and fake "All systems operational" footer status.
 
+### Task 16: Early-access design-partner signup (landing page)
+
+One-field interest capture for the prototype's "building with early users" story:
+- **Backend**: `POST /api/interest` (public, pre-auth) — email-only schema with an invisible honeypot field (non-empty ⇒ silently discarded), slowapi rate limit `5/hour` per IP (`INTEREST_RATE_LIMIT`), service upserts by lowercased email so repeats never duplicate or 409.
+- **Storage**: new `interest_signups` table (id, email case-insensitive unique via `lower(email)` index, source, timestamps). Deliberately INSERT-only for `merix_app`: RLS insert-only policy and **no SELECT grant**, so leads are never readable through the API — only via Supabase service role/dashboard.
+- **Frontend**: `EarlyAccessSection` between FAQ and final CTA — single email input + submit button (zero friction by design), success/error states, wired via `api.submitInterest()`.
+- ⚠️ **Deploy note**: migration `c41f9a7de208` applies automatically on next Render deploy (`alembic upgrade head` in start command); verify `alembic current == heads` against production after deploying.
+
 
 
 

@@ -3,6 +3,7 @@
 from merix.models.audit import AuditEvent
 from merix.models.base import Base, TimestampMixin
 from merix.models.batch_job import BatchJob
+from merix.models.interest import InterestSignup
 from merix.models.job import EMBEDDING_DIM, JobDescription
 from merix.models.match import MatchResult
 from merix.models.match_note import MatchNote
@@ -15,6 +16,7 @@ __all__ = [
     "TimestampMixin",
     "EMBEDDING_DIM",
     "BatchJob",
+    "InterestSignup",
     "JobDescription",
     "Resume",
     "MatchResult",
