@@ -6,6 +6,7 @@ import "./globals.css";
 import { AuthProvider } from "@/lib/auth-context";
 import { ThemeProvider } from "@/lib/theme-context";
 import { LiquidBackground } from "@/components/liquid-background";
+import { Analytics } from "@vercel/analytics/react";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -42,6 +43,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </AuthProvider>
         </ThemeProvider>
+        {/* Pageview + Web Vitals tracking; no-ops when not deployed on Vercel */}
+        <Analytics />
       </body>
     </html>
   );
