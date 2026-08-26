@@ -2,7 +2,7 @@
 
 import uuid
 
-from sqlalchemy import String
+from sqlalchemy import Index, String, text
 from sqlalchemy.orm import Mapped, mapped_column
 
 from merix.models.base import Base, TimestampMixin, uuid_pk
@@ -22,3 +22,11 @@ class InterestSignup(Base, TimestampMixin):
     id: Mapped[uuid.UUID] = uuid_pk()
     email: Mapped[str] = mapped_column(String(255), nullable=False)
     source: Mapped[str] = mapped_column(String(50), nullable=False, default="landing_page")
+
+    # Case-insensitive uniqueness (repeat submissions upsert cleanly). Must
+    # mirror migration c41f9a7de208 exactly — declared here so autogenerate/
+    # `alembic check` see the functional index as part of model metadata and
+    # don't report it as drift.
+    __table_args__ = (
+        Index("ux_interest_signups_email", text("lower(email)"), unique=True),
+    )
