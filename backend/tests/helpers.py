@@ -5,7 +5,10 @@ embedding, and GoTrue clients. Tokens are real HS256 JWTs minted locally
 and verified by the exact production code path (merix.core.security).
 """
 
+import hashlib
 import json
+import math
+import random
 import uuid
 from datetime import UTC, datetime, timedelta
 
@@ -57,12 +60,27 @@ class FakeLLM:
         return LLMResult(text="Strong match on Python and SQL.", prompt_tokens=5, completion_tokens=5)
 
 
+def _fake_vector(text: str) -> list[float]:
+    """Deterministic pseudo-random unit vector seeded from the text.
+
+    Different strings get dissimilar vectors (cosine concentrates near 0 for
+    768-dim Gaussian vectors), identical strings get identical vectors — so
+    the semantic adjacent-match fallback behaves realistically in tests
+    without an embedding API. A constant vector would be wrong: every pair
+    would have cosine 1.0 and everything would look "adjacent".
+    """
+    rng = random.Random(int(hashlib.md5(text.lower().strip().encode()).hexdigest(), 16))
+    vec = [rng.gauss(0.0, 1.0) for _ in range(DIM)]
+    norm = math.sqrt(sum(x * x for x in vec)) or 1.0
+    return [x / norm for x in vec]
+
+
 class FakeEmbedder:
     async def embed(self, text: str):
-        return [0.01] * DIM
+        return _fake_vector(text)
 
     async def embed_batch(self, texts):
-        return [[0.01] * DIM for _ in texts]
+        return [_fake_vector(t) for t in texts]
 
 
 def make_token(
