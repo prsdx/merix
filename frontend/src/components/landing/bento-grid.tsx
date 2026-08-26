@@ -66,8 +66,8 @@ export function BentoGrid() {
               &lt;8<span className="text-lg text-[var(--text-muted)]"> min</span>
             </div>
             <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
-              A full 100-resume campus batch completes before your coffee does — parallel async
-              workers, zero queue babysitting.
+              A full 100-resume campus batch is designed to finish before your coffee does —
+              parallel async workers, zero queue babysitting.
             </p>
           </SpotlightCard>
         </StaggerItem>

@@ -20,8 +20,8 @@ export default function LandingPage() {
       {/* Top Banner Notice */}
       <div className="w-full bg-[var(--text-primary)] text-[var(--bg-canvas)] text-xs font-mono py-2 px-4 text-center border-b border-[var(--border-hairline)] flex items-center justify-center gap-2">
         <span className="w-2 h-2 rounded-full bg-[var(--accent-evidence)] animate-pulse" />
-        <span>India DPDP Act (2023) Certified Screening Pipeline</span>
-        <span className="opacity-60 hidden sm:inline">• Automated 90-Day Purge &amp; Right to Erasure</span>
+        <span>Built for India DPDP Act (2023) Compliance</span>
+        <span className="opacity-60 hidden sm:inline">• Configurable Retention &amp; Right-to-Erasure Tooling</span>
       </div>
 
       <AppNavbar />
@@ -62,8 +62,8 @@ export default function LandingPage() {
           </nav>
 
           <div className="flex items-center gap-2 text-xs opacity-80">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-evidence)] animate-pulse" />
-            <span>All systems operational</span>
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--brand-primary)]" />
+            <span>Prototype — building with early users</span>
           </div>
         </div>
       </footer>

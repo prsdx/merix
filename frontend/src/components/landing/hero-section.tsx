@@ -7,19 +7,19 @@ import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { AnimatedHeadline, Reveal, Marquee, Magnetic } from "./motion";
 import { HeroDemoCard } from "./hero-demo-card";
 
-const INSTITUTIONS = [
-  "IIT BOMBAY PLACEMENT",
-  "NIT SURATHKAL T&P",
-  "BITS PILANI",
-  "IIM CALCUTTA",
-  "APEX STAFFING BENGALURU",
-  "TECHRECRUIT PUNE",
+const AUDIENCE_SEGMENTS = [
+  "CAMPUS PLACEMENT CELLS",
+  "T&P OFFICES",
+  "STAFFING AGENCIES",
+  "HIRING COMMITTEES",
+  "RECRUITMENT OPS TEAMS",
+  "VOLUME HIRING DESKS",
 ];
 
 const TRUST_CHIPS = [
   "DPDP Act 2023 Compliant",
   "Zero auto-rejects",
-  "< 8 min per 100 resumes",
+  "Designed for <8 min per 100-resume batches",
 ];
 
 export function HeroSection() {
@@ -69,9 +69,14 @@ export function HeroSection() {
       {/* Centered cinematic content */}
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-20 pb-12 lg:pt-28 flex flex-col items-center text-center gap-6">
         <Reveal y={16}>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-mono font-semibold uppercase tracking-wider bg-[var(--brand-soft)] text-[var(--brand-primary)] border border-[var(--brand-border)]">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-evidence)] animate-pulse" />
-            <span>Candidate Screening Instrument</span>
+          <div className="flex flex-wrap items-center justify-center gap-2">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-mono font-semibold uppercase tracking-wider bg-[var(--brand-soft)] text-[var(--brand-primary)] border border-[var(--brand-border)]">
+              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-evidence)]" />
+              <span>Candidate Screening Instrument</span>
+            </div>
+            <div className="inline-flex items-center px-3 py-1 rounded-md text-xs font-mono font-semibold uppercase tracking-wider bg-[var(--bg-subtle)] text-[var(--text-secondary)] border border-[var(--border-hairline)]">
+              Prototype · Building with Early Users
+            </div>
           </div>
         </Reveal>
 
@@ -85,8 +90,9 @@ export function HeroSection() {
 
         <Reveal delay={0.7} y={18}>
           <p className="max-w-2xl text-base sm:text-lg text-[var(--text-secondary)] leading-relaxed font-sans">
-            Merix screens 100 candidate resumes in 8 minutes against your exact 70/20/10 rubric —
-            and cites the verbatim quote behind every point, so you can defend every decision.
+            Merix is built to screen 100 candidate resumes in minutes against your exact
+            70/20/10 rubric — citing the verbatim quote behind every point, so you can defend
+            every decision.
           </p>
         </Reveal>
 
@@ -130,10 +136,10 @@ export function HeroSection() {
         <HeroDemoCard />
       </div>
 
-      {/* Institution marquee */}
+      {/* Audience segments marquee */}
       <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pb-16 pt-6 space-y-5">
         <p className="text-center text-xs font-mono uppercase tracking-widest text-[var(--text-muted)]">
-          Adopted across placement bureaus &amp; staffing pipelines
+          Built for India&apos;s campus placement &amp; staffing pipelines
         </p>
         <div className="relative">
           {/* Warm shimmer band that brightens names passing center */}
@@ -143,7 +149,7 @@ export function HeroSection() {
           />
           <Marquee
             duration={30}
-            items={INSTITUTIONS.map((name) => (
+            items={AUDIENCE_SEGMENTS.map((name) => (
               <span
                 key={name}
                 className="flex items-center gap-x-10 text-sm font-mono font-bold text-[var(--text-secondary)] opacity-60 whitespace-nowrap"
