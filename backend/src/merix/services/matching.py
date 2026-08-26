@@ -13,13 +13,12 @@ Pipeline per (job, resume):
 
 from __future__ import annotations
 
-import json
 import logging
 import math
 from dataclasses import dataclass, field
 
-from merix.clients.base import EmbeddingClient, LLMClient, LLMResult
-from merix.core.exceptions import ExtractionError
+from merix.clients.base import EmbeddingClient, LLMClient
+from merix.core.llm_guard import generate_json, generate_text
 
 logger = logging.getLogger("merix.services.matching")
 
@@ -119,33 +118,6 @@ def _normalise(skill: str) -> str:
     return skill.strip().lower()
 
 
-def _parse_json(text: str) -> dict:
-    """Parse JSON from an LLM response, tolerating markdown fences."""
-    cleaned = text.strip()
-    if cleaned.startswith("```"):
-        # strip ```json ... ``` fences
-        lines = cleaned.splitlines()
-        lines = [ln for ln in lines if not ln.strip().startswith("```")]
-        cleaned = "\n".join(lines).strip()
-    return json.loads(cleaned)
-
-
-def _log_malformed(kind: str, result: LLMResult) -> None:
-    """Log the raw LLM output when it fails to parse as JSON.
-
-    completion_tokens hitting the max_tokens cap exactly is the signature of
-    a truncated response; keep the raw text around for debugging.
-    """
-    logger.error(
-        "llm_%s_extraction_malformed_json completion_tokens=%d finish_reason=%s truncated=%s raw_response=%.2000r",
-        kind,
-        result.completion_tokens,
-        result.finish_reason,
-        result.truncated,
-        result.text,
-    )
-
-
 @dataclass
 class MatchComputation:
     """The explainable result of matching one resume to one job."""
@@ -157,18 +129,19 @@ class MatchComputation:
 
 
 async def extract_jd(llm: LLMClient, jd_text: str) -> dict:
-    """Extract structured requirements from JD text via the LLM."""
-    result = await llm.generate(
-        _JD_EXTRACT_PROMPT.format(jd_text=jd_text),
+    """Extract structured requirements from JD text via the LLM.
+
+    Routed through llm_guard.generate_json: truncation/malformed output is
+    retried once at a doubled budget and otherwise raised as ExtractionError.
+    """
+    return await generate_json(
+        llm,
+        call_name="jd_extraction",
+        prompt=_JD_EXTRACT_PROMPT.format(jd_text=jd_text),
         system=_JD_EXTRACT_SYSTEM,
         temperature=0.0,
         max_tokens=_JD_EXTRACT_MAX_TOKENS,
     )
-    try:
-        return _parse_json(result.text)
-    except json.JSONDecodeError:
-        _log_malformed("jd", result)
-        raise ExtractionError("Job description extraction failed, please retry") from None
 
 
 async def extract_resume(llm: LLMClient, resume_text: str) -> dict:
@@ -176,20 +149,19 @@ async def extract_resume(llm: LLMClient, resume_text: str) -> dict:
 
     The budget is 4096 tokens: the response carries one {skill, evidence}
     object per skill, so long resumes routinely exceed 1024 (which truncated
-    the JSON mid-string in production). Parsing failures are raised as a
-    retryable ExtractionError instead of leaking a JSONDecodeError 500.
+    the JSON mid-string in production). Routed through
+    llm_guard.generate_json — a still-truncated response retries once at a
+    doubled budget and then raises a retryable ExtractionError instead of
+    leaking a JSONDecodeError 500.
     """
-    result = await llm.generate(
-        _RESUME_EXTRACT_PROMPT.format(resume_text=resume_text),
+    return await generate_json(
+        llm,
+        call_name="resume_extraction",
+        prompt=_RESUME_EXTRACT_PROMPT.format(resume_text=resume_text),
         system=_RESUME_EXTRACT_SYSTEM,
         temperature=0.0,
         max_tokens=_RESUME_EXTRACT_MAX_TOKENS,
     )
-    try:
-        return _parse_json(result.text)
-    except json.JSONDecodeError:
-        _log_malformed("resume", result)
-        raise ExtractionError("Resume extraction failed, please retry") from None
 
 
 def _cosine_similarity(a: list[float], b: list[float]) -> float:
@@ -388,8 +360,13 @@ async def generate_rationale(llm: LLMClient, jd_parsed: dict, resume_parsed: dic
     matched_required = [_label(m) for m in match.matched_skills if m.get("required")]
     matched_preferred = [_label(m) for m in match.matched_skills if not m.get("required")]
     missing_required = [m["skill"] for m in match.missing_skills]
-    result = await llm.generate(
-        _RATIONALE_PROMPT.format(
+    # Plain-text call routed through llm_guard.generate_text: a length-capped
+    # response (finish_reason "length", or cap-hit ending mid-sentence) is
+    # retried once at a doubled budget rather than silently served clipped.
+    return await generate_text(
+        llm,
+        call_name="rationale_generation",
+        prompt=_RATIONALE_PROMPT.format(
             score=match.score,
             matched_required=", ".join(matched_required) or "none",
             missing_required=", ".join(missing_required) or "none",
@@ -401,14 +378,3 @@ async def generate_rationale(llm: LLMClient, jd_parsed: dict, resume_parsed: dic
         temperature=0.0,
         max_tokens=_RATIONALE_MAX_TOKENS,
     )
-    if result.truncated:
-        # Plain-text output: truncation cannot crash anything downstream, it
-        # just silently serves a mid-sentence rationale to recruiters. Log
-        # loudly so a future budget increase is driven by real evidence.
-        logger.warning(
-            "rationale_truncated completion_tokens=%d finish_reason=%s text=%.200r",
-            result.completion_tokens,
-            result.finish_reason,
-            result.text,
-        )
-    return result.text.strip()

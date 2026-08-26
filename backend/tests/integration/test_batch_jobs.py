@@ -27,7 +27,7 @@ from merix.models.batch_job import BatchJob
 from merix.models.resume import Resume
 from merix.services import pipeline
 from merix.services.batch import run_batch_match_background
-from tests.helpers import FakeLLM, auth_headers, make_pdf
+from tests.helpers import FakeEmbedder, FakeLLM, auth_headers, make_pdf
 
 # ── helpers ────────────────────────────────────────────────────────────
 
@@ -71,7 +71,7 @@ async def _run_pipeline_and_update_batch_job(org_id, job_id, batch_job_id):
     session = scoped_session(org_id)
     try:
         jd = await pipeline.get_job_or_404(session, uuid.UUID(job_id), org_id)
-        await pipeline.run_match_for_job(session, FakeLLM(), jd)
+        await pipeline.run_match_for_job(session, FakeLLM(), FakeEmbedder(), jd)
 
         batch_job = await session.get(BatchJob, uuid.UUID(batch_job_id))
         if batch_job is not None:

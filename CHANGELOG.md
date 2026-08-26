@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Task 16: LLM response guard (`core/llm_guard.py`) — truncation/malformation handled once, not per call site**
+  - All LLM calls (`extract_jd` JSON@2048, `extract_resume` JSON@4096, `generate_rationale` text@512) route through `generate_json()` / `generate_text()`: completeness+well-formedness validation, one automatic retry at doubled token budget, typed `ExtractionError` on persistent failure (never a leaked `JSONDecodeError`), structured per-attempt failure logs (`llm_response_invalid call=… reason=… finish_reason=… raw_head=…`) for Render log diagnosability.
+  - Rationale truncation is now caught too (finish_reason or cap-hit ending mid-sentence) instead of being served silently clipped.
+  - 11 new unit tests (`test_llm_guard.py`) simulate truncated responses end-to-end; full suite green (148 passed) after fixing 4 pre-existing stale `run_match_for_job` integration call sites missing the Task-15 embedder argument.
+
 - **Task 15: Semantic adjacent-skill matching — the embeddings are finally used**
   - **The gap closed**: `compute_match()` previously did exact normalized-string comparison only, even though full-document embeddings were computed and stored for every resume/JD. The product pitch (semantic matching, not keyword matching) is now actually implemented — as an **additive fallback**, not a replacement: exact match first (unchanged, free, transparent), semantic pass second.
   - **Semantic fallback** (`services/matching.py`): JD skills (required *and* preferred) that miss the exact normalized comparison are compared via cosine similarity of **per-skill embeddings** against each unconsumed resume skill. Pairs scoring ≥ `ADJACENT_SIMILARITY_THRESHOLD` (**0.80**) become "adjacent matches" instead of gaps; unrelated pairs stay missing. Greedy one-to-one assignment (best pair first) so one resume skill can't satisfy two JD requirements. Threshold rationale in code: short skill-string embeddings run an inflated baseline (unrelated terms ~0.4–0.6, adjacent ~0.78–0.92); recalibrate once a labelled evaluation set exists (PRD §5).
