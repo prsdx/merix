@@ -376,6 +376,7 @@ async def compute_match(
 
 async def generate_rationale(llm: LLMClient, jd_parsed: dict, resume_parsed: dict, match: MatchComputation) -> str:
     """Generate a short human-readable rationale from the deterministic facts."""
+
     def _label(m: dict) -> str:
         # Adjacent matches are named as such so the recruiter-facing
         # rationale never presents a semantic match as verbatim.
