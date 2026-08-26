@@ -221,7 +221,9 @@ Do not mark any step as done just because the code was written or the file compi
 
 - Any Alembic migration added to the codebase must be applied to the actual production database as part of the same task that introduces it. "The migration file exists in the repo" is **not** the same as "done."
 - Before considering any schema-changing task complete, verify that `alembic current` matches `alembic heads` against production — not just the one column/table you touched.
-- In deploys, migrations must run before the app starts (`alembic upgrade head` chained into Render's start command, or as a Pre-Deploy Command once on a paid plan). Never ship model/code changes that assume a schema the deployed database doesn't have yet.
+- In deploys, migrations must run before the app starts. The mechanism is plan-dependent and already wired in `render.yaml`: on the **free plan**, `alembic upgrade head` is chained into the start command before Uvicorn (fail-closed — a failed migration prevents boot); once on a paid plan, move it to Render's `preDeployCommand`. Never ship model/code changes that assume a schema the deployed database doesn't have yet.
+- Model changes without a corresponding migration are a build failure: CI runs `alembic check` against an ephemeral pgvector database migrated from scratch (`migration-drift` job). If you change a model, add/extend a migration in the same PR — do not weaken or skip this job.
+- Model metadata must stay declarable-in-SQLAlchemy-complete: anything created outside column definitions by migrations (functional indexes, constraints) must be mirrored in the model's `__table_args__`, or the drift check will flag it.
 
 ---
 

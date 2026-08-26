@@ -8,6 +8,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Task 17: Deploy-migration safety — closing the outage class behind `match_results.status`**
+  - **Deploy-time migrations**: confirmed the free-plan-correct mechanism (chained `uv run alembic upgrade head` before Uvicorn in `render.yaml`'s start command; move to `preDeployCommand` on a paid plan) and verified it fail-closed + idempotent: re-running against the up-to-date production database is a clean no-op.
+  - **CI drift gate**: new `migration-drift` job — ephemeral `pgvector/pgvector:pg16` container, `CREATE EXTENSION vector`, `alembic upgrade head` from empty (proves migrations build the whole schema), then `alembic check`. Fails the build on model changes without a migration. Known limitation: only catches what autogenerate sees (not enum value edits or data migrations).
+  - **Real drift caught & fixed**: `InterestSignup` model was missing the functional unique index (`lower(email)`) its own migration created — declared in `__table_args__`, no migration history touched. Production verified `alembic current == heads == c41f9a7de208`.
+  - AGENT.md Migration Discipline updated with the mechanism choice, the CI-gate requirement, and the mirror-migrations-in-models rule.
+
 - **Task 16: LLM response guard (`core/llm_guard.py`) — truncation/malformation handled once, not per call site**
   - All LLM calls (`extract_jd` JSON@2048, `extract_resume` JSON@4096, `generate_rationale` text@512) route through `generate_json()` / `generate_text()`: completeness+well-formedness validation, one automatic retry at doubled token budget, typed `ExtractionError` on persistent failure (never a leaked `JSONDecodeError`), structured per-attempt failure logs (`llm_response_invalid call=… reason=… finish_reason=… raw_head=…`) for Render log diagnosability.
   - Rationale truncation is now caught too (finish_reason or cap-hit ending mid-sentence) instead of being served silently clipped.
